@@ -1,6 +1,6 @@
 {
   "name": "random_math_question_generator",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -30,6 +30,9 @@
   "description": "Random math question generator made with HTML, CSS, and JS.",
   "devDependencies": {
     "@tauri-apps/cli": "^2",
+    "@types/mathjs": "^9.4.1",
+    "@types/node": "^25.2.3",
+    "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-copy": "^0.1.6",
