@@ -1,10 +1,9 @@
 import {defineConfig} from "vite";
 import {createHtmlPlugin} from "vite-plugin-html";
 import {readFileSync} from "fs";
-import {join} from "path";
-
-let packageJson=JSON.parse(readFileSync(join(__dirname, "package.json"), "utf-8"));
-let version=packageJson.version;
+import {join } from "path";
+const packageJson=JSON.parse(readFileSync(join(__dirname, "package.json"), "utf-8"));
+const version=packageJson.version;
 export default defineConfig({
     root: "src",
     publicDir: "../public",

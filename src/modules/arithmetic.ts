@@ -1,0 +1,54 @@
+import {questionArea} from "../script.js";
+
+export function generateAddition(): void{
+    if (!questionArea) return;
+    let num1: number=parseFloat(((Math.random()*1500)-1000).toFixed(3));
+    let num2: number=parseFloat((Math.random()*1500).toFixed(3));
+    questionArea.innerHTML=`\$${num1}+${num2}=\$`;
+    window.correctAnswer={
+        correct: (num1+num2).toFixed(3)
+    };
+    if (window.MathJax&&window.MathJax.typeset){
+        window.MathJax.typeset();
+    }
+}
+export function generateSubtraction(): void{
+    if (!questionArea) return;
+    let num1: number=parseFloat(((Math.random()*1500)-1000).toFixed(3));
+    let num2: number=parseFloat((Math.random()*1500).toFixed(3));
+    questionArea.innerHTML=`\$${num1}-${num2}=\$`;
+    window.correctAnswer={
+        correct: (num1-num2).toFixed(3)
+    };
+    if (window.MathJax&&window.MathJax.typeset){
+        window.MathJax.typeset();
+    }
+}
+export function generateMultiplication(): void{
+    if (!questionArea) return;
+    let num1: number=parseFloat(((Math.random()*1500)-1000).toFixed(2));
+    let num2: number=parseFloat((Math.random()*1500).toFixed(2));
+    questionArea.innerHTML=`\$${num1} \\times ${num2}=\$<br>Round your answer to two decimal places`;
+    let actualAnswer: number=num1*num2;
+    window.correctAnswer={
+        correct: (Math.round(actualAnswer*100) / 100).toFixed(2),
+        alternate: actualAnswer.toFixed(5)
+    };
+    if (window.MathJax&&window.MathJax.typeset){
+        window.MathJax.typeset();
+    }
+}
+export function generateDivision(): void{
+    if (!questionArea) return;
+    let num1: number=parseFloat(((Math.random()*1500)-1000).toFixed(2));
+    let num2: number=parseFloat((Math.random()*1500).toFixed(2));
+    questionArea.innerHTML=`\$${num1} \\div ${num2}=\$<br>Round your answer to two decimal places`;
+    let actualAnswer: number=num1 / num2;
+    window.correctAnswer={
+        correct: (Math.round(actualAnswer*100) / 100).toFixed(2),
+        alternate: actualAnswer.toFixed(5)
+    };
+    if (window.MathJax&&window.MathJax.typeset){
+        window.MathJax.typeset();
+    }
+}

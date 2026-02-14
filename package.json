@@ -7,7 +7,8 @@
     "start": "vite preview",
     "dev": "vite",
     "build": "vite build",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "build:typescript": "npx tsc --noEmit"
   },
   "keywords": [
     "math",
