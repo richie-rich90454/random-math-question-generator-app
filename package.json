@@ -4,11 +4,12 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "vite preview",
     "dev": "vite",
-    "build": "vite build",
-    "tauri": "tauri",
-    "build:typescript": "npx tsc --noEmit"
+    "start": "vite preview",
+    "build:typescript": "tsc --noEmit",
+    "build:web": "vite build",
+    "build": "npm run build:typescript && npm run build:web",
+    "tauri": "tauri"
   },
   "keywords": [
     "math",

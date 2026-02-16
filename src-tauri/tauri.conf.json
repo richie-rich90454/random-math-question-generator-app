@@ -5,9 +5,9 @@
     "identifier": "com.richierich.mathgen",
     "build": {
         "frontendDist": "../dist",
-        "devUrl": "http://localhost:1331",
         "beforeDevCommand": "npm run dev",
-        "beforeBuildCommand": "npm run build"
+        "beforeBuildCommand": "",
+        "devUrl": "http://localhost:1331"
     },
     "app": {
         "windows": [
@@ -26,10 +26,16 @@
     },
     "bundle": {
         "active": true,
-        "targets": "all",
+        "targets": [
+            "nsis",
+            "dmg",
+            "appimage",
+            "deb"
+        ],
         "icon": [
             "icons/icon.png",
-            "icons/icon.ico"
+            "icons/icon.ico",
+            "icons/icon.icns"
         ]
     }
 }
