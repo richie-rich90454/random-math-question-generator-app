@@ -29,7 +29,7 @@ jobs:
       - name: Build frontend
         run: npm run build:web
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6  # Upgraded for Node 24 speed
         with:
           name: web-dist
           path: dist/
@@ -52,7 +52,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
 
           - name: macos-intel
-            os: macos-15-intel  # Stable until 2027; use macos-26-large for beta macOS 26 Intel
+            os: macos-15-intel
             target: x86_64-apple-darwin
 
           - name: macos-arm
@@ -67,26 +67,51 @@ jobs:
           node-version: 24
           cache: 'npm'
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2.8.2  # pinned for stability
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.89.0  # pinned stable
         with:
           targets: ${{ matrix.target }}
 
       - run: npm ci
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: web-dist
           path: dist/
 
+      # ----- Sync Tauri version with GitHub Release tag -----
+      - name: Sync tauri.conf.json version
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"   # e.g., v1.2.3
+          echo "Updating tauri.conf.json version to $TAG"
+          VERSION="${TAG#v}"
+
+          # Install jq if needed
+          if ! command -v jq >/dev/null 2>&1; then
+            if [[ "$RUNNER_OS" == "Linux" ]]; then
+              sudo apt-get update && sudo apt-get install -y jq
+            elif [[ "$RUNNER_OS" == "macOS" ]]; then
+              brew install jq
+            else
+              choco install jq
+            fi
+          fi
+
+          jq --arg v "$VERSION" '.package.version=$v | .tauri.bundle.version=$v' src-tauri/tauri.conf.json > tmp.json && mv tmp.json src-tauri/tauri.conf.json
+          echo "tauri.conf.json updated:"
+          jq '.' src-tauri/tauri.conf.json
+
+      # ----- Safe frontend verification -----
       - name: Verify frontend files
         shell: bash
         run: |
-          ls -la dist/ || { echo "Frontend dist/ directory is empty!"; exit 1; }
-          find dist/ -type f | head -n 10
+          ls -la dist/
+          echo "First few files in dist/ (recursive):"
+          find dist/ -type f -print -quit
 
-      # Platform-specific dependencies
+      # ----- Platform-specific dependencies -----
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
@@ -101,32 +126,34 @@ jobs:
             libgtk-3-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
+            libxdo-dev \      # Added for modern plugin support
             patchelf \
-            libclang-dev \
-            libappindicator3-dev \
-            libayatana-indicator3-dev \
-            libdbusmenu-gtk3-dev
+            fakeroot
 
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
-        run: |
-          brew install create-dmg libimobiledevice
+        run: brew install create-dmg
 
-      # Build Tauri
+      - name: Install Windows dependencies (NSIS)
+        if: runner.os == 'Windows'
+        run: choco install nsis
+
+      # ----- Build Tauri with verbose output -----
       - name: Build Tauri
         run: npx @tauri-apps/cli build --target ${{ matrix.target }} --verbose
 
-      # Debug output
+      # ----- Debug: list release / bundle -----
       - name: List release / bundle contents
         shell: bash
         run: |
-          echo "Listing target/release/"
+          echo "Contents of target/release/:"
           ls -la src-tauri/target/${{ matrix.target }}/release/ 2>/dev/null || echo "No release folder"
-          echo -e "\nListing bundle/"
+          echo -e "\nBundle files (if any):"
           find src-tauri/target/${{ matrix.target }}/release/bundle/ -type f 2>/dev/null || echo "No bundle folder"
 
+      # ----- Upload artifacts (fail if empty) -----
       - name: Upload desktop artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: desktop-${{ matrix.name }}
           path: src-tauri/target/${{ matrix.target }}/release/bundle/
@@ -141,7 +168,7 @@ jobs:
 
     steps:
       - name: Download all built artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: artifacts/
           pattern: desktop-*
