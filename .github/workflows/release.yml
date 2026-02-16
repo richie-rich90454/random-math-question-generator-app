@@ -23,8 +23,12 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm run build:typescript
-      - run: npm run build:web
+
+      - name: TypeScript check
+        run: npm run build:typescript
+
+      - name: Build frontend
+        run: npm run build:web
 
       - uses: actions/upload-artifact@v4
         with:
@@ -32,7 +36,7 @@ jobs:
           path: dist/
 
   build-desktop:
-    name: Desktop (${{ matrix.target }})
+    name: Desktop (${{ matrix.name }})
     needs: build-web
     runs-on: ${{ matrix.os }}
 
@@ -40,16 +44,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
+          - name: windows-x64
+            os: windows-latest
             target: x86_64-pc-windows-msvc
 
-          - os: ubuntu-latest
+          - name: linux-x64
+            os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
 
-          - os: macos-15-intel
+          - name: macos-intel
+            os: macos-15-intel
             target: x86_64-apple-darwin
 
-          - os: macos-latest
+          - name: macos-arm
+            os: macos-latest
             target: aarch64-apple-darwin
 
     steps:
@@ -87,22 +95,15 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install create-dmg
 
-      - name: Build Tauri (WITH BUNDLES)
-        run: |
-          npx @tauri-apps/cli build \
-            --target ${{ matrix.target }} \
-            --bundles all
+      - name: Build Tauri
+        run: npx @tauri-apps/cli build --target ${{ matrix.target }}
 
-      - name: Debug bundle output
-        run: |
-          echo "==== bundle tree ===="
-          find src-tauri/target -maxdepth 5 || true
-
-      - uses: actions/upload-artifact@v4
+      - name: Upload desktop artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: desktop-${{ matrix.target }}
+          name: desktop-${{ matrix.name }}
           path: src-tauri/target/${{ matrix.target }}/release/bundle/
-          if-no-files-found: warn
+          if-no-files-found: error
 
   release:
     name: Publish Release
@@ -116,13 +117,13 @@ jobs:
         with:
           path: artifacts/
 
-      - run: find artifacts -type f
+      - name: List artifacts
+        run: find artifacts -type f
 
       - uses: softprops/action-gh-release@v1
         with:
           files: |
             artifacts/**/*.exe
-            artifacts/**/*.msi
             artifacts/**/*.dmg
             artifacts/**/*.AppImage
             artifacts/**/*.deb
