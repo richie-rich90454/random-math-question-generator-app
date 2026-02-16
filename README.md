@@ -1,7 +1,7 @@
 # Random Math Question Generator 🧮 available at [math.richardsblogs.com](https://math.richardsblogs.com)
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/richie-rich90454/random_math_question_generator?style=social)](https://github.com/richie-rich90454/random_math_question_generator)
+[![GitHub stars](https://img.shields.io/github/stars/richie-rich90454/random-math-question-generator-app?style=social)](https://github.com/richie-rich90454/random-math-question-generator-app)
 [![Live Demo](https://img.shields.io/badge/demo-live-green.svg)](https://math.richardsblogs.com/)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)](https://nodejs.org/)
 [![Tauri](https://img.shields.io/badge/tauri-%2324C8DB.svg?style=for-the-badge&logo=tauri&logoColor=%23FFFFFF)](https://tauri.app/)
@@ -41,7 +41,7 @@ Try it now: **[https://math.richardsblogs.com/](https://math.richardsblogs.com/)
 
 ```bash
 # Clone the repository
-git clone https://github.com/richie-rich90454/random_math_question_generator.git
+git clone https://github.com/richie-rich90454/random-math-question-generator-app.git
 cd random_math_question_generator
 
 # Install dependencies
@@ -124,6 +124,10 @@ random_math_question_generator/
 ├── LICENSE                      # Apache 2.0 License
 ├── CODE_OF_CONDUCT.md           # Community guidelines
 ├── OFL-Noto_Sans.txt            # Font license
+├── .github/                     # GitHub Actions workflows
+│   └── workflows/
+│       ├── release.yml          # Automated release build workflow
+│       └── TEST_INSTRUCTIONS.md # Workflow testing instructions
 └── README.md                    # This file
 ```
 
@@ -174,6 +178,28 @@ npm run tauri build -- --target x86_64-apple-darwin
 npm run tauri build -- --target x86_64-unknown-linux-gnu
 ```
 
+### Automated Releases with GitHub Actions
+The project includes a GitHub Actions workflow that automatically builds and packages the application for all platforms when a new release is created.
+
+**Supported Platforms:**
+- **Windows**: 32-bit & 64-bit (.exe installers)
+- **macOS**: Intel x64 & Apple Silicon (.dmg bundles)
+- **Linux**: 32-bit, 64-bit, ARM64 (.AppImage & .deb packages)
+
+**How to create a release:**
+1. Go to GitHub repository → Releases → Create a new release
+2. Create a tag (e.g., `v3.0.1`)
+3. Add release title and description
+4. Click "Publish release"
+
+The workflow will automatically:
+- Build the web application
+- Build desktop apps for all 7 platforms
+- Generate release notes with download links
+- Upload all artifacts to the release
+
+**Cost**: FREE for public repositories (uses ~105 minutes of GitHub Actions time per release)
+
 ## 🤝 Contributing
 
 We welcome contributions! Here's how you can help:
@@ -185,7 +211,7 @@ We welcome contributions! Here's how you can help:
 
 ### Development Setup
 ```bash
-git clone https://github.com/richie-rich90454/random_math_question_generator.git
+git clone https://github.com/richie-rich90454/random-math-question-generator-app.git
 cd random_math_question_generator
 npm install
 
@@ -222,7 +248,7 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 ## 🔗 Links
 
 - **Live Demo**: [https://math.richardsblogs.com/](https://math.richardsblogs.com/)
-- **GitHub Repository**: [https://github.com/richie-rich90454/random_math_question_generator](https://github.com/richie-rich90454/random_math_question_generator)
+- **GitHub Repository**: [https://github.com/richie-rich90454/random-math-question-generator-app](https://github.com/richie-rich90454/random-math-question-generator-app)
 - **Main Website**: [https://www.richardsblogs.com](https://www.richardsblogs.com)
 - **Tauri Framework**: [https://tauri.app/](https://tauri.app/)
 - **Vite Build Tool**: [https://vitejs.dev/](https://vitejs.dev/)
