@@ -39,7 +39,6 @@ jobs:
     name: Desktop (${{ matrix.name }})
     needs: build-web
     runs-on: ${{ matrix.os }}
-
     strategy:
       fail-fast: false
       matrix:
@@ -47,15 +46,12 @@ jobs:
           - name: windows-x64
             os: windows-latest
             target: x86_64-pc-windows-msvc
-
           - name: linux-x64
             os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-
           - name: macos-intel
             os: macos-15-intel
             target: x86_64-apple-darwin
-
           - name: macos-arm
             os: macos-latest
             target: aarch64-apple-darwin
@@ -81,7 +77,12 @@ jobs:
           name: web-dist
           path: dist/
 
-      - name: Linux deps
+      # Verify frontend files are present
+      - name: Check frontend dist
+        run: ls -la dist/ || (echo "dist/ is empty!" && exit 1)
+
+      # Linux dependencies (including fakeroot for .deb)
+      - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
@@ -89,15 +90,26 @@ jobs:
             libwebkit2gtk-4.1-dev \
             libappindicator3-dev \
             librsvg2-dev \
-            patchelf
+            patchelf \
+            fakeroot
 
-      - name: macOS deps
+      # macOS dependencies (create-dmg)
+      - name: Install macOS dependencies
         if: runner.os == 'macOS'
         run: brew install create-dmg
 
+      # Build Tauri with verbose output
       - name: Build Tauri
-        run: npx @tauri-apps/cli build --target ${{ matrix.target }}
+        run: npx @tauri-apps/cli build --target ${{ matrix.target }} --verbose
 
+      # Debug: show what was produced
+      - name: List release folder
+        run: ls -la src-tauri/target/${{ matrix.target }}/release/ || echo "No release folder"
+
+      - name: List bundle folder
+        run: ls -la src-tauri/target/${{ matrix.target }}/release/bundle/ || echo "No bundle folder"
+
+      # Upload artifacts – fail if no files
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -117,7 +129,7 @@ jobs:
         with:
           path: artifacts/
 
-      - name: List artifacts
+      - name: List all artifacts
         run: find artifacts -type f
 
       - uses: softprops/action-gh-release@v1
@@ -127,3 +139,4 @@ jobs:
             artifacts/**/*.dmg
             artifacts/**/*.AppImage
             artifacts/**/*.deb
+            artifacts/**/*.msi
