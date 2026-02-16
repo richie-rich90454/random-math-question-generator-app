@@ -1,14 +1,15 @@
-# Random Math Question Generator 🧮 available at [math.richardsblogs.com](https://math.richardsblogs.com)
+# RandMatQuGeA (Random Math Question Generator App) 🧮 available at [math.richardsblogs.com](https://math.richardsblogs.com)
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/richie-rich90454/random-math-question-generator-app?style=social)](https://github.com/richie-rich90454/random-math-question-generator-app)
 [![Live Demo](https://img.shields.io/badge/demo-live-green.svg)](https://math.richardsblogs.com/)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tauri](https://img.shields.io/badge/tauri-%2324C8DB.svg?style=for-the-badge&logo=tauri&logoColor=%23FFFFFF)](https://tauri.app/)
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 
-A comprehensive, free online math question generator that helps students practice algebra, calculus, trigonometry, and more with instant answer verification. Available as both a web application and cross-platform desktop app. Perfect for students, educators, and anyone looking to improve their math skills!
+A comprehensive, free online math question generator built with TypeScript that helps students practice algebra, calculus, trigonometry, and more with instant answer verification. Available as both a web application and cross-platform desktop app. Perfect for students, educators, and anyone looking to improve their math skills!
 
 ## ✨ Key Features
 
@@ -20,6 +21,7 @@ A comprehensive, free online math question generator that helps students practic
 - **🎲 Unlimited Questions**: Generate endless practice problems
 - **💡 Educational Focus**: Designed specifically for learning and practice
 - **🖥️ Cross-Platform Desktop App**: Native desktop application built with Tauri (Windows, macOS, Linux)
+- **🔒 Type Safety**: Built with TypeScript for robust, maintainable code
 
 ### Supported Math Topics
 
@@ -76,11 +78,12 @@ npm run tauri build
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: HTML5, CSS3 (Custom Properties), JavaScript (ES6 Modules)
+- **Frontend**: HTML5, CSS3 (Custom Properties), TypeScript (ES2020)
 - **Math Rendering**: [MathJax](https://www.mathjax.org/) for beautiful mathematical notation
-- **Build Tool**: [Vite](https://vitejs.dev/) for fast development and optimized builds
-- **Math Engine**: [Math.js](https://mathjs.org/) for complex calculations
+- **Build Tool**: [Vite](https://vitejs.dev/) with TypeScript support for fast development and optimized builds
+- **Math Engine**: [Math.js](https://mathjs.org/) for complex calculations with TypeScript definitions
 - **Desktop Framework**: [Tauri](https://tauri.app/) with Rust for secure, lightweight native applications
+- **Type Safety**: TypeScript with strict configuration for robust code maintenance
 - **Build Tools**: Terser for minification, CSSNano for CSS optimization
 - **Package Manager**: npm with Node.js
 
@@ -90,18 +93,19 @@ npm run tauri build
 random_math_question_generator/
 ├── src/                          # Source code directory
 │   ├── index.html               # Main web application interface
-│   ├── script.js                # Core application logic (ES6 modules)
+│   ├── script.ts                # Core application logic (TypeScript)
 │   ├── style.css                # Responsive styling
 │   ├── robots.txt               # Search engine directives
 │   ├── sitemap.xml              # SEO sitemap
-│   ├── modules/                 # Modular math question generators
-│   │   ├── math.js              # Main math module loader
-│   │   ├── algebra.js           # Algebraic operations
-│   │   ├── arithmetic.js        # Basic arithmetic
-│   │   ├── calculus.js          # Calculus problems
-│   │   ├── linearAlgebra.js     # Matrix and vector operations
-│   │   ├── trigonometry.js      # Trigonometric functions
-│   │   └── discreteMathematics.js # Combinatorics and probability
+│   ├── types/                   # TypeScript type definitions
+│   │   └── global.d.ts          # Global type declarations
+│   ├── modules/                 # Modular math question generators (TypeScript)
+│   │   ├── algebra.ts           # Algebraic operations
+│   │   ├── arithmetic.ts        # Basic arithmetic
+│   │   ├── calculus.ts          # Calculus problems
+│   │   ├── linearAlgebra.ts     # Matrix and vector operations
+│   │   ├── trigonometry.ts      # Trigonometric functions
+│   │   └── discreteMathematics.ts # Combinatorics and probability
 │   ├── components/              # UI components
 │   ├── utils/                   # Utility functions
 │   └── assets/                  # Static assets
@@ -117,8 +121,13 @@ random_math_question_generator/
 │   ├── apple-touch-icon.png     # iOS app icon
 │   ├── NotoSans-VariableFont_wdth_wght.ttf # Custom font
 │   └── mathjax/                 # MathJax library
+├── plans/                       # Development plans and documentation
+│   ├── typescript-migration-plan.md      # TypeScript migration plan
+│   └── typescript-migration-checklist.md # Migration implementation checklist
 ├── dist/                        # Build output directory
-├── vite.config.js               # Vite build configuration
+├── vite.config.ts               # Vite build configuration (TypeScript)
+├── tsconfig.json                # TypeScript configuration
+├── tsconfig.node.json           # TypeScript configuration for Node
 ├── package.json                 # Project configuration and dependencies
 ├── package-lock.json            # Dependency lock file
 ├── LICENSE                      # Apache 2.0 License
@@ -135,19 +144,19 @@ random_math_question_generator/
 
 ### Smart Answer Checking
 - Supports multiple correct answer formats
-- Handles mathematical equivalences
-- Provides detailed feedback
+- Handles mathematical equivalences using Math.js
+- Provides detailed feedback with TypeScript type safety
 - Supports keyboard shortcuts
 
 ### Educational Design
 - Progressive difficulty levels
-- Clear mathematical notation
+- Clear mathematical notation with MathJax
 - Instant feedback for learning
 - Mobile-friendly interface
 
 ### Performance Optimized
 - Fast server response times
-- Optimized bundle sizes with Vite
+- Optimized bundle sizes with Vite and TypeScript
 - Efficient math calculations
 - Responsive design
 
@@ -156,6 +165,12 @@ random_math_question_generator/
 - Small bundle sizes
 - Secure sandboxing
 - Windows, macOS, and Linux support
+
+### TypeScript Benefits
+- **Type Safety**: Catch errors at compile time rather than runtime
+- **Better IDE Support**: Enhanced autocomplete, refactoring, and documentation
+- **Improved Maintainability**: Clear type definitions make code easier to understand
+- **Modern Development**: Leverages latest ECMAScript features with type checking
 
 ## 🚀 Deployment
 
@@ -176,6 +191,18 @@ npm run tauri build
 npm run tauri build -- --target x86_64-pc-windows-msvc
 npm run tauri build -- --target x86_64-apple-darwin
 npm run tauri build -- --target x86_64-unknown-linux-gnu
+```
+
+### TypeScript Development
+```bash
+# Type checking
+npm run build:typescript
+
+# Development with hot reload
+npm run dev
+
+# Production build
+npm run build
 ```
 
 ### Automated Releases with GitHub Actions
@@ -220,16 +247,20 @@ npm run dev
 
 # For desktop app development
 npm run tauri dev
+
+# For TypeScript type checking
+npm run build:typescript
 ```
 
 ## 📊 Project Stats
 
 - **25+** Math topics supported
-- **1000+** Lines of educational code
+- **1500+** Lines of educational TypeScript code
 - **5** Major math categories
 - **Unlimited** Question combinations
 - **Instant** Answer verification
 - **Cross-platform** Desktop application
+- **TypeScript** for robust development
 
 ## 🌟 Why Star This Project?
 
@@ -240,6 +271,7 @@ npm run tauri dev
 - **🎯 Practical**: Real-world educational tool
 - **📚 Comprehensive**: Covers high school to college-level math
 - **🖥️ Native Desktop**: Lightweight, secure desktop application
+- **🔒 Type Safe**: Built with TypeScript for reliability
 
 ## 📄 License
 
@@ -252,6 +284,7 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 - **Main Website**: [https://www.richardsblogs.com](https://www.richardsblogs.com)
 - **Tauri Framework**: [https://tauri.app/](https://tauri.app/)
 - **Vite Build Tool**: [https://vitejs.dev/](https://vitejs.dev/)
+- **TypeScript**: [https://www.typescriptlang.org/](https://www.typescriptlang.org/)
 
 ---
 
