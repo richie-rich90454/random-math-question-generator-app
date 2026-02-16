@@ -11,16 +11,15 @@ env:
 
 jobs:
   build-web:
-    name: Build Web
+    name: Build Web Assets
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
+          cache: 'npm'
 
       - run: npm ci
 
@@ -34,9 +33,10 @@ jobs:
         with:
           name: web-dist
           path: dist/
+          if-no-files-found: error
 
   build-desktop:
-    name: Desktop (${{ matrix.name }})
+    name: Build Desktop (${{ matrix.name }})
     needs: build-web
     runs-on: ${{ matrix.os }}
     strategy:
@@ -46,12 +46,15 @@ jobs:
           - name: windows-x64
             os: windows-latest
             target: x86_64-pc-windows-msvc
+
           - name: linux-x64
             os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+
           - name: macos-intel
-            os: macos-15-intel
+            os: macos-15-intel  # Stable until 2027; use macos-26-large for beta macOS 26 Intel
             target: x86_64-apple-darwin
+
           - name: macos-arm
             os: macos-latest
             target: aarch64-apple-darwin
@@ -62,7 +65,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
+          cache: 'npm'
 
       - uses: Swatinem/rust-cache@v2
 
@@ -77,39 +80,51 @@ jobs:
           name: web-dist
           path: dist/
 
-      # Verify frontend files are present
-      - name: Check frontend dist
-        run: ls -la dist/ || (echo "dist/ is empty!" && exit 1)
+      - name: Verify frontend files
+        shell: bash
+        run: |
+          ls -la dist/ || { echo "Frontend dist/ directory is empty!"; exit 1; }
+          find dist/ -type f | head -n 10
 
-      # Linux dependencies (including fakeroot for .deb)
+      # Platform-specific dependencies
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libssl-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
             librsvg2-dev \
             patchelf \
-            fakeroot
+            libclang-dev \
+            libappindicator3-dev \
+            libayatana-indicator3-dev \
+            libdbusmenu-gtk3-dev
 
-      # macOS dependencies (create-dmg)
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
-        run: brew install create-dmg
+        run: |
+          brew install create-dmg libimobiledevice
 
-      # Build Tauri with verbose output
+      # Build Tauri
       - name: Build Tauri
         run: npx @tauri-apps/cli build --target ${{ matrix.target }} --verbose
 
-      # Debug: show what was produced
-      - name: List release folder
-        run: ls -la src-tauri/target/${{ matrix.target }}/release/ || echo "No release folder"
+      # Debug output
+      - name: List release / bundle contents
+        shell: bash
+        run: |
+          echo "Listing target/release/"
+          ls -la src-tauri/target/${{ matrix.target }}/release/ 2>/dev/null || echo "No release folder"
+          echo -e "\nListing bundle/"
+          find src-tauri/target/${{ matrix.target }}/release/bundle/ -type f 2>/dev/null || echo "No bundle folder"
 
-      - name: List bundle folder
-        run: ls -la src-tauri/target/${{ matrix.target }}/release/bundle/ || echo "No bundle folder"
-
-      # Upload artifacts – fail if no files
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -117,26 +132,36 @@ jobs:
           path: src-tauri/target/${{ matrix.target }}/release/bundle/
           if-no-files-found: error
 
-  release:
-    name: Publish Release
+  publish-release:
+    name: Publish Assets to Release
     needs: build-desktop
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download all built artifacts
+        uses: actions/download-artifact@v4
         with:
           path: artifacts/
+          pattern: desktop-*
+          merge-multiple: true
 
-      - name: List all artifacts
-        run: find artifacts -type f
+      - name: Show downloaded files
+        run: |
+          echo "Downloaded artifacts structure:"
+          find artifacts -type f -print | sort
 
-      - uses: softprops/action-gh-release@v1
+      - name: Publish artifacts to GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
+          fail_on_unmatched_files: true
           files: |
             artifacts/**/*.exe
-            artifacts/**/*.dmg
+            artifacts/**/*.msi
             artifacts/**/*.AppImage
             artifacts/**/*.deb
-            artifacts/**/*.msi
+            artifacts/**/*.rpm
+            artifacts/**/*.dmg
+            artifacts/**/*.tar.gz
+            artifacts/**/*.zip
