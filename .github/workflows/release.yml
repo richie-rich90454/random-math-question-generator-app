@@ -13,35 +13,20 @@ jobs:
   build-web:
     name: Build Web
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
+      - run: npm run build:typescript
+      - run: npm run build:web
 
-      - name: TypeScript check
-        run: npm run build:typescript
-
-      - name: Get version
-        id: version
-        shell: bash
-        run: |
-          echo "version=$(node -p 'require("./package.json").version')" >> "$GITHUB_OUTPUT"
-          
-      - name: Build frontend
-        run: npm run build:web
-
-      - name: Upload frontend artifacts
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: web-dist
           path: dist/
@@ -70,29 +55,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      - name: Download frontend
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: web-dist
           path: dist/
 
-      - name: Linux dependencies
+      - name: Linux deps
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
@@ -102,15 +83,22 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      - name: macOS dependencies
+      - name: macOS deps
         if: runner.os == 'macOS'
         run: brew install create-dmg
 
-      - name: Build Tauri
-        run: npx @tauri-apps/cli build --target ${{ matrix.target }}
+      - name: Build Tauri (WITH BUNDLES)
+        run: |
+          npx @tauri-apps/cli build \
+            --target ${{ matrix.target }} \
+            --bundles all
 
-      - name: Upload desktop artifacts
-        uses: actions/upload-artifact@v4
+      - name: Debug bundle output
+        run: |
+          echo "==== bundle tree ===="
+          find src-tauri/target -maxdepth 5 || true
+
+      - uses: actions/upload-artifact@v4
         with:
           name: desktop-${{ matrix.target }}
           path: src-tauri/target/${{ matrix.target }}/release/bundle/
@@ -128,11 +116,13 @@ jobs:
         with:
           path: artifacts/
 
-      - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v1
+      - run: find artifacts -type f
+
+      - uses: softprops/action-gh-release@v1
         with:
           files: |
             artifacts/**/*.exe
+            artifacts/**/*.msi
             artifacts/**/*.dmg
             artifacts/**/*.AppImage
             artifacts/**/*.deb
