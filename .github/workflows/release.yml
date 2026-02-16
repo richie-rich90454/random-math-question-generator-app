@@ -17,8 +17,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -36,10 +35,10 @@ jobs:
         id: version
         shell: bash
         run: |
-          echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+          echo "version=$(node -e "console.log(require('./package.json').version)")" >> "$GITHUB_OUTPUT"
 
       - name: Build frontend
-        run: npm run build
+        run: npm run build:web
 
       - name: Upload frontend artifacts
         uses: actions/upload-artifact@v4
@@ -56,22 +55,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Windows
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-          # macOS Intel
-          - os: macos-13
-            target: x86_64-apple-darwin
-          # macOS Apple Silicon
-          - os: macos-latest
-            target: aarch64-apple-darwin
-          # Linux
+
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
 
+          - os: macos-13
+            target: x86_64-apple-darwin
+
+          - os: macos-latest
+            target: aarch64-apple-darwin
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -79,10 +76,9 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2
 
-      - name: Setup Rust toolchain
+      - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -96,7 +92,7 @@ jobs:
           name: web-dist
           path: dist/
 
-      - name: Install Linux deps
+      - name: Linux dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
@@ -106,15 +102,12 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      - name: Install macOS deps
+      - name: macOS dependencies
         if: runner.os == 'macOS'
         run: brew install create-dmg
 
-      - name: Build Tauri desktop
+      - name: Build Tauri
         run: npx @tauri-apps/cli build --target ${{ matrix.target }}
-
-      - name: List desktop bundle (debug)
-        run: ls -R src-tauri/target/${{ matrix.target }}/release/bundle/
 
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v4
@@ -131,13 +124,9 @@ jobs:
       contents: write
 
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           path: artifacts/
-
-      - name: List artifacts (debug)
-        run: find artifacts -type f
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v1
