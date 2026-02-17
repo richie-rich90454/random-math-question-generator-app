@@ -53,6 +53,8 @@ jobs:
           node-version: 24
           cache: 'npm'
       - uses: Swatinem/rust-cache@v2.8.2
+        with:
+          workspaces: "./src-tauri -> target"
       - uses: dtolnay/rust-toolchain@1.89.0
         with:
           targets: ${{ matrix.target }}
@@ -82,27 +84,33 @@ jobs:
       - name: Build Tauri
         run: npx @tauri-apps/cli build --target ${{ matrix.target }} --verbose
 
-      - name: Debug full target tree
-        if: always()
+      - name: Verify bundles exist
         shell: bash
         run: |
-          echo "=== Full target tree ==="
-          find src-tauri/target -type d -name "bundle" -o -type f \( -name "*.app" -o -name "*.dmg" -o -name "*.exe" -o -name "*.msi" \) 2>/dev/null | head -50 || true
-          echo "=== Checking release directory directly ==="
-          ls -la src-tauri/target/${{ matrix.target }}/release/ || true
+          SEARCH_DIR="target"
+          echo "Searching for bundle files in $SEARCH_DIR"
+          if [ "${{ runner.os }}" == "macOS" ]; then
+            found=$(find "$SEARCH_DIR" \( -type d -name "*.app" -o -type f -name "*.dmg" \) 2>/dev/null)
+          else
+            found=$(find "$SEARCH_DIR" -type f \( -name "*.exe" -o -name "*.msi" \) 2>/dev/null)
+          fi
+          if [ -z "$found" ]; then
+            echo "Error: No bundle files found in $SEARCH_DIR"
+            exit 1
+          fi
+          echo "Found bundle files:"
+          echo "$found"
 
-      # Temporarily disabled strict verification – upload what we can find
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v6
         with:
           name: desktop-${{ matrix.name }}
           path: |
-            src-tauri/target/${{ matrix.target }}/release/bundle/**
-            src-tauri/target/${{ matrix.target }}/release/*.app
-            src-tauri/target/${{ matrix.target }}/release/*.dmg
-            src-tauri/target/${{ matrix.target }}/release/*.exe
-            src-tauri/target/${{ matrix.target }}/release/*.msi
-          if-no-files-found: warn
+            target/**/*.exe
+            target/**/*.msi
+            target/**/*.app
+            target/**/*.dmg
+          if-no-files-found: error
 
   publish-release:
     name: Publish Assets to Release
