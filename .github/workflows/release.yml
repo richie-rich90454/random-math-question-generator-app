@@ -15,20 +15,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: 'npm'
-
       - run: npm ci
-
       - name: TypeScript check
         run: npm run build:typescript
-
       - name: Build frontend
         run: npm run build:web
-
       - uses: actions/upload-artifact@v6
         with:
           name: web-dist
@@ -46,41 +41,28 @@ jobs:
           - name: windows-x64
             os: windows-latest
             target: x86_64-pc-windows-msvc
-
-          - name: linux-x64
-            os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-
           - name: macos-intel
             os: macos-15-intel
             target: x86_64-apple-darwin
-
           - name: macos-arm
             os: macos-latest
             target: aarch64-apple-darwin
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: 'npm'
-
       - uses: Swatinem/rust-cache@v2.8.2
-
       - uses: dtolnay/rust-toolchain@1.89.0
         with:
           targets: ${{ matrix.target }}
-
       - run: npm ci
-
       - uses: actions/download-artifact@v6
         with:
           name: web-dist
           path: dist/
-
-      # ----- Sync Tauri version -----
       - name: Sync Tauri version
         shell: bash
         run: |
@@ -89,47 +71,19 @@ jobs:
           echo "Setting Tauri version to $VERSION"
           jq --arg v "$VERSION" '.version=$v' src-tauri/tauri.conf.json > tmp.json && mv tmp.json src-tauri/tauri.conf.json
           jq '.' src-tauri/tauri.conf.json
-
-      # ----- Verify frontend -----
       - name: Verify frontend files
         shell: bash
         run: |
           ls -la dist/
           find dist/ -type f -print -quit
-
-      # ----- Platform dependencies -----
-      - name: Install Linux dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            build-essential \
-            curl \
-            wget \
-            file \
-            libssl-dev \
-            libgtk-3-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            libxdo-dev \
-            patchelf \
-            fakeroot \
-            libfuse2 || true
-
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
         run: brew install create-dmg
-
       - name: Install Windows dependencies
         if: runner.os == 'Windows'
         run: choco install nsis -y
-
-      # ----- Build Tauri -----
       - name: Build Tauri
         run: npx @tauri-apps/cli build --target ${{ matrix.target }} --verbose
-
-      # ----- Debug release output (updated to show bundle) -----
       - name: List release files
         shell: bash
         run: |
@@ -143,21 +97,17 @@ jobs:
           else
             echo "No bundle directory found."
           fi
-
-      # ----- Fail if no bundle produced (now checks inside bundle/) -----
       - name: Ensure bundles exist
         shell: bash
         run: |
           BUNDLE_DIR="src-tauri/target/${{ matrix.target }}/release/bundle"
-          found=$(find "$BUNDLE_DIR" -type f \( -name "*.exe" -o -name "*.msi" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.dmg" \) 2>/dev/null)
+          found=$(find "$BUNDLE_DIR" -type f \( -name "*.exe" -o -name "*.msi" -o -name "*.dmg" \) 2>/dev/null)
           if [ -z "$found" ]; then
             echo "Error: No bundle files found in $BUNDLE_DIR"
             exit 1
           fi
           echo "Found bundle files:"
           echo "$found"
-
-      # ----- Upload artifacts (entire bundle tree) -----
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v6
         with:
@@ -179,11 +129,9 @@ jobs:
           path: artifacts/
           pattern: desktop-*
           merge-multiple: true
-
       - name: Show downloaded files
         run: |
           find artifacts -type f -print | sort
-
       - name: Publish artifacts
         uses: softprops/action-gh-release@v2
         with:
@@ -191,9 +139,6 @@ jobs:
           files: |
             artifacts/**/*.exe
             artifacts/**/*.msi
-            artifacts/**/*.AppImage
-            artifacts/**/*.deb
-            artifacts/**/*.rpm
             artifacts/**/*.dmg
             artifacts/**/*.tar.gz
             artifacts/**/*.zip
