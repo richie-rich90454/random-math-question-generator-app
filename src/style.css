@@ -151,7 +151,6 @@ body{
     overflow: hidden;
     background: var(--app-bg);
 }
-/* Make the app-bar draggable for Tauri */
 .app-bar{
     height: var(--app-bar-height);
     background: var(--surface);
@@ -161,9 +160,8 @@ body{
     z-index: 100;
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    -webkit-app-region: drag; /* Tauri: whole bar draggable */
+    -webkit-app-region: drag;
 }
-/* But exclude interactive elements from drag region */
 .app-bar-content button,
 .app-bar-content .icon-button{
     -webkit-app-region: no-drag;
