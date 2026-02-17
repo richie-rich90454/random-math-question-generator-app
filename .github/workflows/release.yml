@@ -64,12 +64,25 @@ jobs:
           name: web-dist
           path: dist/
 
-      - name: Sync Tauri version
+      - name: Sync Tauri version from tag
         shell: bash
         run: |
           TAG="${GITHUB_REF_NAME:-${GITHUB_REF##*/}}"
-          VERSION="${TAG#v}"
-          jq --arg v "$VERSION" '.version=$v' src-tauri/tauri.conf.json > tmp.json && mv tmp.json src-tauri/tauri.conf.json
+          # Remove leading 'v' if present and trim whitespace/newlines
+          VERSION=$(echo "${TAG#v}" | xargs)
+          echo "Tag: '$TAG' → Version: '$VERSION'"
+          if [ -z "$VERSION" ]; then
+            echo "Error: Could not extract version from tag"
+            exit 1
+          fi
+          jq --arg v "$VERSION" '.version = $v' src-tauri/tauri.conf.json > tmp.json && mv tmp.json src-tauri/tauri.conf.json
+          # Verify the updated version
+          UPDATED_VERSION=$(jq -r '.version' src-tauri/tauri.conf.json)
+          echo "Updated tauri.conf.json version: '$UPDATED_VERSION'"
+          if [ "$UPDATED_VERSION" != "$VERSION" ]; then
+            echo "Error: Failed to update version in tauri.conf.json"
+            exit 1
+          fi
 
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
@@ -88,10 +101,8 @@ jobs:
         shell: bash
         run: |
           if [ "${{ runner.os }}" == "macOS" ]; then
-            # macOS: find .app directories or .dmg files inside bundle/
             found=$(find target -path "*/bundle/*" \( -type d -name "*.app" -o -type f -name "*.dmg" \) 2>/dev/null)
           else
-            # Windows: find installer files inside bundle/ (exe or msi)
             found=$(find target -path "*/bundle/*" -type f \( -name "*.exe" -o -name "*.msi" \) 2>/dev/null)
           fi
           if [ -z "$found" ]; then
