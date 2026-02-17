@@ -8,6 +8,8 @@
 [![Tauri](https://img.shields.io/badge/tauri-%2324C8DB.svg?style=for-the-badge&logo=tauri&logoColor=%23FFFFFF)](https://tauri.app/)
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+![Offline First](https://img.shields.io/badge/offline-first-success)
+![Lightweight](https://img.shields.io/badge/binary-lightweight-blue)
 
 A comprehensive, free online math question generator built with TypeScript that helps students practice algebra, calculus, trigonometry, and more with instant answer verification. Available as both a web application and cross-platform desktop app. Perfect for students, educators, and anyone looking to improve their math skills!
 
@@ -20,8 +22,35 @@ A comprehensive, free online math question generator built with TypeScript that 
 - **🔢 Math Notation Support**: Beautiful mathematical rendering with MathJax
 - **🎲 Unlimited Questions**: Generate endless practice problems
 - **💡 Educational Focus**: Designed specifically for learning and practice
-- **🖥️ Cross-Platform Desktop App**: Native desktop application built with Tauri (Windows, macOS, Linux)
+- **🖥️ Cross-Platform Desktop App**: Native desktop application built with Tauri (Windows, macOS, Linux with Linux support comming soon)
 - **🔒 Type Safety**: Built with TypeScript for robust, maintainable code
+
+### ❓ Why Not Just Use AI Generated Questions/Answers?
+
+- No distractions or potentially hallucinated answers
+- Unlimited structured practice
+- Instant correctness verification
+- Works offline as a desktop app
+- Fully open-source & transparent
+
+## 🖥️ Why a Desktop App?
+
+- Works fully offline
+- No browser distractions
+- Faster startup and lower memory usage than Electron apps
+- Secure sandboxing with Rust + Tauri
+- Ideal for focused study sessions
+
+## 📦 Install (No Node.js/Rust environment Required)
+
+Download the latest installer from **GitHub Releases**:
+
+- Windows: `.exe`
+- macOS: `.dmg`
+- Linux: `.AppImage` / `.deb` (comming soon)
+
+➡️ https://github.com/richie-rich90454/random-math-question-generator-app/releases
+
 
 ### Supported Math Topics
 
