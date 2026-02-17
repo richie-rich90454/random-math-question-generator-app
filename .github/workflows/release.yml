@@ -67,8 +67,9 @@ jobs:
       - name: Sync Tauri version from tag
         shell: bash
         run: |
-          TAG="${GITHUB_REF_NAME:-${GITHUB_REF##*/}}"
-          # Remove leading 'v' if present and trim whitespace/newlines
+          # Get tag from GITHUB_REF (e.g., refs/tags/v1.2.3)
+          TAG="${GITHUB_REF#refs/tags/}"
+          # Remove leading 'v' if present and trim whitespace
           VERSION=$(echo "${TAG#v}" | xargs)
           echo "Tag: '$TAG' → Version: '$VERSION'"
           if [ -z "$VERSION" ]; then
@@ -76,7 +77,7 @@ jobs:
             exit 1
           fi
           jq --arg v "$VERSION" '.version = $v' src-tauri/tauri.conf.json > tmp.json && mv tmp.json src-tauri/tauri.conf.json
-          # Verify the updated version
+          # Verify the update
           UPDATED_VERSION=$(jq -r '.version' src-tauri/tauri.conf.json)
           echo "Updated tauri.conf.json version: '$UPDATED_VERSION'"
           if [ "$UPDATED_VERSION" != "$VERSION" ]; then
