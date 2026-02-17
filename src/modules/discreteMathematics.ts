@@ -24,8 +24,9 @@ export function generatePermutation(): void{
             questionArea.innerHTML=`\\( P(${n}, ${r}) \\)`;
             window.correctAnswer={
                 correct: nPr(n, r).toString(),
-                alternate: `nPr(${n},${r})`
+                alternate: `P(${n},${r})`
             };
+            window.expectedFormat="Enter a whole number or expression like P(5,3)";
             break;
         case "equation":{
             let val=nPr(n, r);
@@ -34,6 +35,7 @@ export function generatePermutation(): void{
                 correct: n.toString(),
                 alternate: `${n}`
             };
+            window.expectedFormat="Enter a whole number";
             break;
         }
         case "word":{
@@ -44,6 +46,7 @@ export function generatePermutation(): void{
                 correct: nPr(n, r).toString(),
                 alternate: `P(${n},${r})`
             };
+            window.expectedFormat="Enter a whole number or expression like P(5,2)";
             break;
         }
         case "circular":
@@ -52,6 +55,7 @@ export function generatePermutation(): void{
                 correct: factorial(n-1).toString(),
                 alternate: `(${n}-1)!`
             };
+            window.expectedFormat="Enter a whole number or factorial expression";
             break;
         case "identical":{
             let k=Math.floor(Math.random()*(n-1))+1;
@@ -60,6 +64,7 @@ export function generatePermutation(): void{
                 correct: (factorial(n)/factorial(k)).toString(),
                 alternate: `${n}!/${k}!`
             };
+            window.expectedFormat="Enter a whole number or fraction like 5!/2!";
             break;
         }
         case "withReplacement":
@@ -68,6 +73,7 @@ export function generatePermutation(): void{
                 correct: Math.pow(n, r).toString(),
                 alternate: `${n}^${r}`
             };
+            window.expectedFormat="Enter a whole number or power expression like 5^3";
             break;
     }
     window.MathJax?.typeset();
@@ -84,8 +90,9 @@ export function generateCombination(): void{
             questionArea.innerHTML=`\\( C(${n}, ${r}) \\)`;
             window.correctAnswer={
                 correct: nCr(n, r).toString(),
-                alternate: `nCr(${n},${r})`
+                alternate: `C(${n},${r})`
             };
+            window.expectedFormat="Enter a whole number or expression like C(5,2)";
             break;
         case "equation":{
             let val=nCr(n, r);
@@ -94,6 +101,7 @@ export function generateCombination(): void{
                 correct: n.toString(),
                 alternate: `${n}`
             };
+            window.expectedFormat="Enter a whole number";
             break;
         }
         case "word":{
@@ -104,6 +112,7 @@ export function generateCombination(): void{
                 correct: nCr(n, r).toString(),
                 alternate: `C(${n},${r})`
             };
+            window.expectedFormat="Enter a whole number or expression like C(5,2)";
             break;
         }
         case "complement":
@@ -112,6 +121,7 @@ export function generateCombination(): void{
                 correct: nCr(n, r).toString(),
                 alternate: `C(${n},${r})`
             };
+            window.expectedFormat="Enter a whole number or expression like C(5,2)";
             break;
         case "paths":{
             let g=Math.floor(Math.random()*4)+3;
@@ -120,6 +130,7 @@ export function generateCombination(): void{
                 correct: nCr(2*g, g).toString(),
                 alternate: `C(${2*g},${g})`
             };
+            window.expectedFormat="Enter a whole number or expression like C(6,3)";
             break;
         }
         case "multiset":
@@ -128,6 +139,7 @@ export function generateCombination(): void{
                 correct: nCr(n+r-1, r).toString(),
                 alternate: `C(${n+r-1},${r})`
             };
+            window.expectedFormat="Enter a whole number or expression like C(8,3)";
             break;
     }
     window.MathJax?.typeset();
@@ -147,6 +159,7 @@ export function generateProbability(): void{
             content.push(`A bag contains <span class="math">\\(${total}\\)</span> marbles, <span class="math">\\(${favorable}\\)</span> of which are red. What is the probability of drawing a red marble?`);
             plainCorrectAnswer=prob;
             window.correctAnswer={ correct: prob, alternate: `${favorable}/${total}` };
+            window.expectedFormat="Enter a decimal (e.g., 0.35) or fraction (e.g., 7/20)";
             break;
         }
         case "conditional":{
@@ -157,6 +170,7 @@ export function generateProbability(): void{
             content.push(`Given <span class="math">\\(${total}\\)</span> items, <span class="math">\\(${eventA}\\)</span> are type A, and <span class="math">\\(${eventB}\\)</span> of those are also type B. Find the probability of type B given type A.`);
             plainCorrectAnswer=probB;
             window.correctAnswer={ correct: probB, alternate: `${eventB}/${eventA}` };
+            window.expectedFormat="Enter a decimal or fraction";
             break;
         }
         case "independent":{
@@ -165,7 +179,8 @@ export function generateProbability(): void{
             let probBoth=(parseFloat(probA)*parseFloat(probB)).toFixed(2);
             content.push(`The probability of event A is <span class="math">\\(${probA}\\)</span>, and event B is <span class="math">\\(${probB}\\)</span>. If A and B are independent, find the probability of both occurring.`);
             plainCorrectAnswer=probBoth;
-            window.correctAnswer={ correct: probBoth, alternate: `${probA} \\times ${probB}` };
+            window.correctAnswer={ correct: probBoth, alternate: `${probA} * ${probB}` };
+            window.expectedFormat="Enter a decimal or product expression";
             break;
         }
         case "mutually_exclusive":{
@@ -175,6 +190,7 @@ export function generateProbability(): void{
             content.push(`Events A and B are mutually exclusive with <span class="math">\\(P(A)=${probA}\\)</span> and <span class="math">\\(P(B)=${probB}\\)</span>. Find the probability of A or B occurring.`);
             plainCorrectAnswer=probEither;
             window.correctAnswer={ correct: probEither, alternate: `${probA}+${probB}` };
+            window.expectedFormat="Enter a decimal or sum expression";
             break;
         }
         case "bayes":{
@@ -184,7 +200,8 @@ export function generateProbability(): void{
             let probAgivenB=(parseFloat(probBgivenA)*parseFloat(probA)/parseFloat(probB)).toFixed(2);
             content.push(`Given <span class="math">\\(P(A)=${probA}\\)</span>, <span class="math">\\(P(B)=${probB}\\)</span>, and <span class="math">\\(P(B|A)=${probBgivenA}\\)</span>, find <span class="math">\\(P(A|B)\\)</span>.`);
             plainCorrectAnswer=probAgivenB;
-            window.correctAnswer={ correct: probAgivenB, alternate: `\\frac{${probBgivenA} \\cdot ${probA}}{${probB}}` };
+            window.correctAnswer={ correct: probAgivenB, alternate: `(${probBgivenA} * ${probA}) / ${probB}` };
+            window.expectedFormat="Enter a decimal or expression";
             break;
         }
         case "binomial":{
@@ -195,7 +212,8 @@ export function generateProbability(): void{
             let prob=(nCr(n, k)*Math.pow(parseFloat(p), k)*Math.pow(parseFloat(q), n-k)).toFixed(2);
             content.push(`A trial has a success probability of <span class="math">\\(${p}\\)</span>. In <span class="math">\\(${n}\\)</span> trials, find the probability of exactly <span class="math">\\(${k}\\)</span> successes.`);
             plainCorrectAnswer=prob;
-            window.correctAnswer={ correct: prob, alternate: `C(${n},${k}) \\cdot ${p}^{${k}} \\cdot ${q}^{${n-k}}` };
+            window.correctAnswer={ correct: prob, alternate: `C(${n},${k}) * ${p}^${k} * ${q}^${n-k}` };
+            window.expectedFormat="Enter a decimal or expression";
             break;
         }
         case "expected_value":{
@@ -207,6 +225,7 @@ export function generateProbability(): void{
             content.push(`A random variable takes values <span class="math">\\(${values.join(", ")}\\)</span> with probabilities <span class="math">\\(${probs.join(", ")}\\)</span>. Find the expected value.`);
             plainCorrectAnswer=expected;
             window.correctAnswer={ correct: expected, alternate: expected };
+            window.expectedFormat="Enter a decimal number";
             break;
         }
         case "complement":{
@@ -215,6 +234,7 @@ export function generateProbability(): void{
             content.push(`If <span class="math">\\(P(A)=${probA}\\)</span>, find <span class="math">\\(P(\\text{not } A)\\)</span>.`);
             plainCorrectAnswer=probNotA;
             window.correctAnswer={ correct: probNotA, alternate: `1-${probA}` };
+            window.expectedFormat="Enter a decimal or expression like 1-0.25";
             break;
         }
         case "permutation_combination":{
@@ -226,6 +246,7 @@ export function generateProbability(): void{
             content.push(`Calculate <div class="math display">\\[${symbol}(${n}, ${r})\\]</div>`);
             plainCorrectAnswer=answer.toString();
             window.correctAnswer={ correct: answer.toString(), alternate: `${symbol}(${n},${r})` };
+            window.expectedFormat="Enter a whole number or expression like C(5,2)";
             break;
         }
         case "geometric":{
@@ -234,20 +255,19 @@ export function generateProbability(): void{
             let prob=(Math.pow(1-parseFloat(p), k-1)*parseFloat(p)).toFixed(2);
             content.push(`A trial has success probability <span class="math">\\(${p}\\)</span>. Find the probability of the first success on the <span class="math">\\(${k}${getOrdinal(k)}\\)</span> trial.`);
             plainCorrectAnswer=prob;
-            window.correctAnswer={ correct: prob, alternate: `${p} \\cdot ${(1-parseFloat(p)).toFixed(2)}^{${k-1}}` };
+            window.correctAnswer={ correct: prob, alternate: `${p} * ${(1-parseFloat(p)).toFixed(2)}^{${k-1}}` };
+            window.expectedFormat="Enter a decimal or expression";
             break;
         }
     }
     let container=document.createElement("div");
     container.innerHTML=content.join("<br>");
     questionArea.appendChild(container);
+    // Ensure correct and alternate are set before typesetting
     window.MathJax?.typesetPromise?.([container]).then(()=>{
-        if (window.correctAnswer){
-            window.correctAnswer.correct=plainCorrectAnswer.replace(/\s+/g, "").toLowerCase();
-        }
+        // Already set, no need to overwrite
     });
 }
-
 function getOrdinal(n: number): string{
     let s=["th", "st", "nd", "rd"];
     let v=n%100;

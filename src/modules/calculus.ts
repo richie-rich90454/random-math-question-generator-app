@@ -1,4 +1,5 @@
 import {questionArea} from "../script.js";
+
 interface TrigFunction{
     func: string;
     deriv: string;
@@ -19,6 +20,7 @@ interface TrigIntegral{
     integral: string;
     plain: string;
 }
+
 export function generateDerivative(): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
@@ -206,8 +208,10 @@ export function generateDerivative(): void{
         );
     }
     window.correctAnswer={
-        correct: plainCorrectDerivative.replace(/\s+/g, "").toLowerCase()
+        correct: plainCorrectDerivative.replace(/\s+/g, "").toLowerCase(),
+        alternate: plainCorrectDerivative
     };
+    window.expectedFormat="Enter the derivative as an expression, e.g., 2x+3, cos(x), etc.";
 }
 export function generateIntegral(): void{
     if (!questionArea) return;
@@ -368,8 +372,10 @@ export function generateIntegral(): void{
         );
     }
     window.correctAnswer={
-        correct: plainCorrectIntegral.replace(/\s+/g, "").replace(/\^{/g, "^").replace(/}/g, "").replace(/{/g, "").toLowerCase()
+        correct: plainCorrectIntegral.replace(/\s+/g, "").replace(/\^{/g, "^").replace(/}/g, "").replace(/{/g, "").toLowerCase(),
+        alternate: plainCorrectIntegral
     };
+    window.expectedFormat="Enter the integral as an expression, e.g., 2x^3/3+5x^2/2+C, 1/3 sin(3x)+C, etc.";
 }
 export function generateLimit(): void{
     if (!questionArea) return;
@@ -386,7 +392,8 @@ export function generateLimit(): void{
             let limit=a*x0*x0+c;
             mathExpression=`\\[ \\lim_{x \\to ${x0}} (${a}x^2+${c}) \\]`;
             plainCorrectAnswer=limit.toString();
-            window.correctAnswer={ correct: plainCorrectAnswer };
+            window.correctAnswer={ correct: plainCorrectAnswer, alternate: plainCorrectAnswer };
+            window.expectedFormat="Enter a number";
             break;
         }
         case "rational":{
@@ -398,8 +405,9 @@ export function generateLimit(): void{
             plainCorrectAnswer=limit.toFixed(2);
             window.correctAnswer={
                 correct: plainCorrectAnswer,
-                alternate: `\\frac{${a*x0+1}}{${b*x0-1}}`
+                alternate: `${a*x0+1}/${b*x0-1}`
             };
+            window.expectedFormat="Enter a decimal number (e.g., 2.5) or a fraction (e.g., 7/3)";
             break;
         }
         case "infinity":{
@@ -408,7 +416,8 @@ export function generateLimit(): void{
             let limit=a;
             mathExpression=`\\[ \\lim_{x \\to \\infty} \\frac{${a}x^2+x}{x^2-1} \\]`;
             plainCorrectAnswer=a.toString();
-            window.correctAnswer={ correct: plainCorrectAnswer };
+            window.correctAnswer={ correct: plainCorrectAnswer, alternate: plainCorrectAnswer };
+            window.expectedFormat="Enter a number";
             break;
         }
         case "trig":{
@@ -416,7 +425,8 @@ export function generateLimit(): void{
             let limit=1;
             mathExpression=`\\[ \\lim_{x \\to 0} \\frac{\\sin(x)}{x} \\]`;
             plainCorrectAnswer="1";
-            window.correctAnswer={ correct: plainCorrectAnswer };
+            window.correctAnswer={ correct: plainCorrectAnswer, alternate: plainCorrectAnswer };
+            window.expectedFormat="Enter 1";
             break;
         }
     }
@@ -447,7 +457,8 @@ export function generateRelatedRates(): void{
             problemText=`A ${ladder}-ft ladder leans against a wall. The bottom is ${x} ft from the wall, moving away at ${dx_dt} ft/s. Find the rate at which the top is sliding down.`;
             mathExpression=`\\[ \\frac{dy}{dt}=? \\]`;
             plainCorrectAnswer=dy_dt.toFixed(2);
-            window.correctAnswer={ correct: plainCorrectAnswer };
+            window.correctAnswer={ correct: plainCorrectAnswer, alternate: plainCorrectAnswer };
+            window.expectedFormat="Enter a number (ft/s, e.g., -1.5)";
             break;
         }
         case "cone":{
@@ -460,7 +471,8 @@ export function generateRelatedRates(): void{
             problemText=`A conical tank has radius ${r} ft and height ${h} ft. The radius increases at ${dr_dt} ft/s. Find the rate of change of volume.`;
             mathExpression=`\\[ \\frac{dV}{dt}=? \\]`;
             plainCorrectAnswer=dV_dt.toFixed(2);
-            window.correctAnswer={ correct: plainCorrectAnswer };
+            window.correctAnswer={ correct: plainCorrectAnswer, alternate: plainCorrectAnswer };
+            window.expectedFormat="Enter a number (ft³/s, e.g., 42.41)";
             break;
         }
     }

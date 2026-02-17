@@ -10,6 +10,7 @@ interface Vector2D{
     x: number;
     y: number;
 }
+
 export function generateMatrix(): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
@@ -36,8 +37,9 @@ export function generateMatrix(): void{
             questionArea.innerHTML=`Add: \$${matrixToString(A)}+${matrixToString(B)}\$`;
             window.correctAnswer={
                 correct: `[${result.a},${result.b},${result.c},${result.d}]`,
-                alternate: matrixToString(result),
+                alternate: `[${result.a}, ${result.b}, ${result.c}, ${result.d}]`
             };
+            window.expectedFormat="Enter as [a,b,c,d] or a b;c d";
             break;
         }
         case "subtract":{
@@ -51,9 +53,10 @@ export function generateMatrix(): void{
             };
             questionArea.innerHTML=`Subtract: \$${matrixToString(A)}-${matrixToString(B)}\$`;
             window.correctAnswer={
-                correct: `(${result.a},${result.b},${result.c},${result.d})`,
-                alternate: matrixToString(result),
+                correct: `[${result.a},${result.b},${result.c},${result.d}]`,
+                alternate: `[${result.a}, ${result.b}, ${result.c}, ${result.d}]`
             };
+            window.expectedFormat="Enter as [a,b,c,d] or a b;c d";
             break;
         }
         case "multiply":{
@@ -68,8 +71,9 @@ export function generateMatrix(): void{
             questionArea.innerHTML=`Multiply: \$${matrixToString(A)} \\times ${matrixToString(B)}\$`;
             window.correctAnswer={
                 correct: `[${result.a},${result.b},${result.c},${result.d}]`,
-                alternate: matrixToString(result),
+                alternate: `[${result.a}, ${result.b}, ${result.c}, ${result.d}]`
             };
+            window.expectedFormat="Enter as [a,b,c,d] or a b;c d";
             break;
         }
         case "inverse":{
@@ -88,9 +92,10 @@ export function generateMatrix(): void{
             };
             questionArea.innerHTML=`Find inverse of \$${matrixToString(A)}\$`;
             window.correctAnswer={
-                correct: `inv(${inv.a},${inv.b},${inv.c},${inv.d})`,
-                alternate: matrixToString(inv),
+                correct: `[${inv.a},${inv.b},${inv.c},${inv.d}]`,
+                alternate: `[${inv.a}, ${inv.b}, ${inv.c}, ${inv.d}]`
             };
+            window.expectedFormat="Enter as [a,b,c,d] or a b;c d";
             break;
         }
         case "system":{
@@ -102,12 +107,13 @@ export function generateMatrix(): void{
                 b: +(A.c*x+A.d*y).toFixed(2)
             };
             questionArea.innerHTML=`Solve:<br>
-        \$${A.a}x+${A.b}y=${B.a}\$<br>
-        \$${A.c}x+${A.d}y=${B.b}\$`;
+                \$${A.a}x+${A.b}y=${B.a}\$<br>
+                \$${A.c}x+${A.d}y=${B.b}\$`;
             window.correctAnswer={
                 correct: `x=${x}, y=${y}`,
-                alternate: `(${x},${y})`,
+                alternate: `(${x}, ${y})`
             };
+            window.expectedFormat="Enter as \"x=..., y=...\" or (x,y)";
             break;
         }
         case "transpose":{
@@ -115,9 +121,10 @@ export function generateMatrix(): void{
             let result: Matrix2x2={ a: A.a, b: A.c, c: A.b, d: A.d };
             questionArea.innerHTML=`Find transpose of \$${matrixToString(A)}\$`;
             window.correctAnswer={
-                correct: `tr(${result.a},${result.b},${result.c},${result.d})`,
-                alternate: matrixToString(result),
+                correct: `[${result.a},${result.b},${result.c},${result.d}]`,
+                alternate: `[${result.a}, ${result.b}, ${result.c}, ${result.d}]`
             };
+            window.expectedFormat="Enter as [a,b,c,d] or a b;c d";
             break;
         }
         case "scalar_mult":{
@@ -131,9 +138,10 @@ export function generateMatrix(): void{
             };
             questionArea.innerHTML=`Multiply \$${matrixToString(A)}\$ by ${k}`;
             window.correctAnswer={
-                correct: `scl(${result.a},${result.b},${result.c},${result.d})`,
-                alternate: matrixToString(result),
+                correct: `[${result.a},${result.b},${result.c},${result.d}]`,
+                alternate: `[${result.a}, ${result.b}, ${result.c}, ${result.d}]`
             };
+            window.expectedFormat="Enter as [a,b,c,d] or a b;c d";
             break;
         }
         case "power":{
@@ -146,9 +154,10 @@ export function generateMatrix(): void{
             };
             questionArea.innerHTML=`Compute \$${matrixToString(A)}^2\$`;
             window.correctAnswer={
-                correct: `pow(${result.a},${result.b},${result.c},${result.d})`,
-                alternate: matrixToString(result),
+                correct: `[${result.a},${result.b},${result.c},${result.d}]`,
+                alternate: `[${result.a}, ${result.b}, ${result.c}, ${result.d}]`
             };
+            window.expectedFormat="Enter as [a,b,c,d] or a b;c d";
             break;
         }
         case "row_echelon":{
@@ -165,9 +174,10 @@ export function generateMatrix(): void{
             };
             questionArea.innerHTML=`Find row-echelon form of \$${matrixToString(A)}\$`;
             window.correctAnswer={
-                correct: `ref(${result.a},${result.b},${result.c},${result.d})`,
-                alternate: matrixToString(result),
+                correct: `[${result.a},${result.b},${result.c},${result.d}]`,
+                alternate: `[${result.a}, ${result.b}, ${result.c}, ${result.d}]`
             };
+            window.expectedFormat="Enter as [a,b,c,d] or a b;c d";
             break;
         }
     }
@@ -175,6 +185,7 @@ export function generateMatrix(): void{
         window.MathJax.typeset();
     }
 }
+
 export function generateVector(): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
@@ -202,8 +213,9 @@ export function generateVector(): void{
             questionArea.innerHTML=`Find the magnitude of \\(\\langle ${x.toFixed(1)}, ${y.toFixed(1)} \\rangle\\).`;
             window.correctAnswer={
                 correct: mag,
-                alternate: mag,
+                alternate: mag
             };
+            window.expectedFormat="Enter a number (e.g., 5.83)";
             break;
         }
         case "direction":{
@@ -212,8 +224,9 @@ export function generateVector(): void{
             questionArea.innerHTML=`Find the direction angle (in degrees) of \\(\\langle ${x.toFixed(1)}, ${y.toFixed(1)} \\rangle\\).`;
             window.correctAnswer={
                 correct: angle,
-                alternate: angle,
+                alternate: angle
             };
+            window.expectedFormat="Enter a number (degrees, e.g., 53.1)";
             break;
         }
         case "unit":{
@@ -224,8 +237,9 @@ export function generateVector(): void{
             questionArea.innerHTML=`Find the unit vector in the direction of \\(\\langle ${x.toFixed(1)}, ${y.toFixed(1)} \\rangle\\).`;
             window.correctAnswer={
                 correct: `<${ux}, ${uy}>`,
-                alternate: `\\langle ${ux}, ${uy} \\rangle`,
+                alternate: `<${ux}, ${uy}>`
             };
+            window.expectedFormat="Enter as <x, y> or (x, y)";
             break;
         }
         case "dot":{
@@ -235,8 +249,9 @@ export function generateVector(): void{
             questionArea.innerHTML=`Calculate \\(\\langle ${v1.x.toFixed(1)}, ${v1.y.toFixed(1)} \\rangle \\cdot \\langle ${v2.x.toFixed(1)}, ${v2.y.toFixed(1)} \\rangle\\).`;
             window.correctAnswer={
                 correct: product,
-                alternate: product,
+                alternate: product
             };
+            window.expectedFormat="Enter a number (e.g., 12.5)";
             break;
         }
         case "angle":{
@@ -249,8 +264,9 @@ export function generateVector(): void{
             questionArea.innerHTML=`Find the angle (in degrees) between \\(\\langle ${v1.x.toFixed(1)}, ${v1.y.toFixed(1)} \\rangle\\) and \\(\\langle ${v2.x.toFixed(1)}, ${v2.y.toFixed(1)} \\rangle\\).`;
             window.correctAnswer={
                 correct: angle,
-                alternate: angle,
+                alternate: angle
             };
+            window.expectedFormat="Enter a number (degrees, e.g., 45.0)";
             break;
         }
         case "projection":{
@@ -263,8 +279,9 @@ export function generateVector(): void{
             questionArea.innerHTML=`Find the projection of \\(\\langle ${v1.x.toFixed(1)}, ${v1.y.toFixed(1)} \\rangle\\) onto \\(\\langle ${v2.x.toFixed(1)}, ${v2.y.toFixed(1)} \\rangle\\).`;
             window.correctAnswer={
                 correct: `<${projX}, ${projY}>`,
-                alternate: `\\langle ${projX}, ${projY} \\rangle`,
+                alternate: `<${projX}, ${projY}>`
             };
+            window.expectedFormat="Enter as <x, y> or (x, y)";
             break;
         }
         case "parametric":{
@@ -274,8 +291,9 @@ export function generateVector(): void{
             questionArea.innerHTML=`Write the parametric equations for the line that passes through \\((${pointX}, ${pointY})\\) and has direction vector \\(\\langle ${dir.x.toFixed(1)}, ${dir.y.toFixed(1)} \\rangle\\).`;
             window.correctAnswer={
                 correct: `x=${pointX}+${dir.x.toFixed(1)}t, y=${pointY}+${dir.y.toFixed(1)}t`,
-                alternate: `x=${pointX}+${dir.x.toFixed(1)}t, y=${pointY}+${dir.y.toFixed(1)}t`,
+                alternate: `<${pointX}+${dir.x.toFixed(1)}t, ${pointY}+${dir.y.toFixed(1)}t>`
             };
+            window.expectedFormat="Enter as \"x=...t, y=...t\" or <..., ...>";
             break;
         }
         case "polar_convert":{
@@ -286,8 +304,9 @@ export function generateVector(): void{
             questionArea.innerHTML=`Convert the polar coordinate \\((${r}, ${theta}^{\\circ})\\) to Cartesian coordinates.`;
             window.correctAnswer={
                 correct: `(${x}, ${y})`,
-                alternate: `(${x}, ${y})`,
+                alternate: `(${x}, ${y})`
             };
+            window.expectedFormat="Enter as (x, y)";
             break;
         }
         case "cartesian_convert":{
@@ -297,8 +316,9 @@ export function generateVector(): void{
             questionArea.innerHTML=`Convert the Cartesian coordinate \\((${x.toFixed(1)}, ${y.toFixed(1)})\\) to polar coordinates. Answer with (r, degrees), no need to add deg.`;
             window.correctAnswer={
                 correct: `(${r}, ${theta})`,
-                alternate: `(${r}, ${theta}^{\\circ})`,
+                alternate: `(${r}, ${theta})`
             };
+            window.expectedFormat="Enter as (r, θ) e.g., (5.0, 53.1)";
             break;
         }
         case "polar_graph":{
@@ -309,16 +329,18 @@ export function generateVector(): void{
                 let center=(parseFloat(a)/2).toFixed(2);
                 window.correctAnswer={
                     correct: `A circle with center at (0, ${center}) and radius ${center}`,
-                    alternate: `Circle: center (0, ${center}), radius ${center}`,
+                    alternate: `Circle: center (0, ${center}), radius ${center}`
                 };
+                window.expectedFormat="Enter as \"A circle with center at (x, y) and radius r\"";
             }
             else{
                 questionArea.innerHTML=`Describe the graph of the polar equation \\(r=${a}\\cos\\theta\\). Use the format "A circle with center at (x, y) and radius (radius)" Use two decimal places.`;
                 let center=(parseFloat(a)/2).toFixed(2);
                 window.correctAnswer={
                     correct: `A circle with center at (${center}, 0) and radius ${center}`,
-                    alternate: `Circle: center (${center}, 0), radius ${center}`,
+                    alternate: `Circle: center (${center}, 0), radius ${center}`
                 };
+                window.expectedFormat="Enter as \"A circle with center at (x, y) and radius r\"";
             }
             break;
         }
@@ -329,8 +351,9 @@ export function generateVector(): void{
             questionArea.innerHTML=`A particle starts at \\((${posX}, ${posY})\\) and moves with constant velocity \\(\\langle ${v.x.toFixed(1)}, ${v.y.toFixed(1)} \\rangle\\). Write the position vector as a function of time \\(t\\).`;
             window.correctAnswer={
                 correct: `<${posX}+${v.x.toFixed(1)}t, ${posY}+${v.y.toFixed(1)}t>`,
-                alternate: `\\langle ${posX}+${v.x.toFixed(1)}t, ${posY}+${v.y.toFixed(1)}t \\rangle`,
+                alternate: `x=${posX}+${v.x.toFixed(1)}t, y=${posY}+${v.y.toFixed(1)}t`
             };
+            window.expectedFormat="Enter as <x0+vx*t, y0+vy*t> or parametric form";
             break;
         }
         case "de_moivre":{
@@ -339,11 +362,12 @@ export function generateVector(): void{
             let n=Math.floor(Math.random()*3+2);
             let newR=(Math.pow(parseFloat(r), n)).toFixed(2);
             let newTheta=(theta*n) % 360;
-            questionArea.innerHTML=`Compute \\((${r}(\\cos ${theta}^{\\circ}+i\\sin ${theta}^{\\circ}))^{${n}}\\) using De Moivre's Theorem. Answer with degrees (no need to add deg).`;
+            questionArea.innerHTML=`Compute \\((${r}(\\cos ${theta}^{\\circ}+i\\sin ${theta}^{\\circ}))^{${n}}\\) using De Moivre"s Theorem. Answer with degrees (no need to add deg).`;
             window.correctAnswer={
                 correct: `${newR} cis ${newTheta}`,
-                alternate: `${newR}(\\cos ${newTheta}^{\\circ}+i\\sin ${newTheta}^{\\circ})`,
+                alternate: `${newR}(cos ${newTheta}° + i sin ${newTheta}°)`
             };
+            window.expectedFormat="Enter as \"r cis θ\" e.g., \"8 cis 120\" or expanded form";
             break;
         }
         case "add":{
@@ -354,8 +378,9 @@ export function generateVector(): void{
             questionArea.innerHTML=`Find the sum of the vectors \\(\\langle ${v1.x.toFixed(1)}, ${v1.y.toFixed(1)} \\rangle\\) and \\(\\langle ${v2.x.toFixed(1)}, ${v2.y.toFixed(1)} \\rangle\\).`;
             window.correctAnswer={
                 correct: `<${sumX}, ${sumY}>`,
-                alternate: `\\langle ${sumX}, ${sumY} \\rangle`,
+                alternate: `<${sumX}, ${sumY}>`
             };
+            window.expectedFormat="Enter as <x, y> or (x, y)";
             break;
         }
         case "subtract":{
@@ -366,8 +391,9 @@ export function generateVector(): void{
             questionArea.innerHTML=`Subtract \\(\\langle ${v2.x.toFixed(1)}, ${v2.y.toFixed(1)} \\rangle\\) from \\(\\langle ${v1.x.toFixed(1)}, ${v1.y.toFixed(1)} \\rangle\\).`;
             window.correctAnswer={
                 correct: `<${diffX}, ${diffY}>`,
-                alternate: `\\langle ${diffX}, ${diffY} \\rangle`,
+                alternate: `<${diffX}, ${diffY}>`
             };
+            window.expectedFormat="Enter as <x, y> or (x, y)";
             break;
         }
         case "parametric_to_cartesian":{
@@ -379,8 +405,9 @@ export function generateVector(): void{
             let yIntercept=(parseFloat(y0)-parseFloat(slope)*parseFloat(x0)).toFixed(2);
             window.correctAnswer={
                 correct: `y=${slope}x+${yIntercept}`,
-                alternate: `y=${slope}(x-${x0})+${y0}`,
+                alternate: `y=${slope}x+${yIntercept}`
             };
+            window.expectedFormat="Enter as \"y=mx+b\"";
             break;
         }
         default:

@@ -8,7 +8,6 @@ import type {Topic} from "./types/global";
 import * as math from "mathjs";
 import {getCurrentWindow, type Window} from "@tauri-apps/api/window";
 
-// DOM Elements
 export let questionArea: HTMLElement | null=document.getElementById("question-area");
 let topicGrid: HTMLElement | null=document.getElementById("topic-grid");
 let currentTopicDisplay: HTMLElement | null=document.getElementById("current-topic");
@@ -18,11 +17,11 @@ let answerResults: HTMLElement | null=document.getElementById("answer-results");
 let checkAnswerButton: HTMLButtonElement | null=document.getElementById("check-answer") as HTMLButtonElement | null;
 let themeToggle: HTMLButtonElement | null=document.getElementById("theme-toggle") as HTMLButtonElement | null;
 let helpButton: HTMLButtonElement | null=document.getElementById("help-button") as HTMLButtonElement | null;
-
-// Initialize global correctAnswer
+let expectedFormatDiv: HTMLElement | null=document.getElementById("expected-format");
 window.correctAnswer={correct: ""};
-// Application state
+window.expectedFormat="";
 let selectedTopic: string | null=null;
+let questionTimeout: ReturnType<typeof setTimeout>;
 let topics: Topic[]=[
 {id: "add", name: "Addition", icon: "+", category: "Arithmetic"},
 {id: "subtrt", name: "Subtraction", icon: "-", category: "Arithmetic"},
@@ -49,7 +48,6 @@ let topics: Topic[]=[
 {id: "lim", name: "Limits", icon: "lim", category: "Calculus"},
 {id: "relRates", name: "Related Rates", icon: "dx/dt", category: "Calculus"}
 ];
-// Safely attempt to get the Tauri window (only works inside Tauri)
 let appWindow: Window | null=null;
 try{
     appWindow=getCurrentWindow();
@@ -57,44 +55,40 @@ try{
 catch (e){
     console.log("Not running in Tauri environment, theme sync disabled.");
 }
-// Function to apply theme based on Tauri theme or manual
-function applyTheme(theme: 'light' | 'dark'): void{
+function applyTheme(theme: "light" | "dark"): void{
     let root=document.documentElement;
-    if (theme==='dark'){
-        root.classList.add('dark');
-        root.classList.remove('light');
+    if (theme==="dark"){
+        root.classList.add("dark");
+        root.classList.remove("light");
     }
     else{
-        root.classList.add('light');
-        root.classList.remove('dark');
+        root.classList.add("light");
+        root.classList.remove("dark");
     }
-    localStorage.setItem('theme', theme);
+    localStorage.setItem("theme", theme);
     updateMathJaxColors();
-    // Also update the Tauri window frame if available
     if (appWindow){
         appWindow.setTheme(theme).catch(err=>console.log("Failed to set window theme:", err));
     }
 }
-// Initialize theme from Tauri, fallback to localStorage/prefers-color-scheme
 async function initializeTheme(): Promise<void>{
     if (appWindow){
         try{
             let tauriTheme=await appWindow.theme();
-            applyTheme(tauriTheme ?? 'light');
+            applyTheme(tauriTheme ?? "light");
             return;
         }
         catch (e){
             console.log("Failed to get Tauri theme, falling back.");
         }
     }
-    // Fallback
-    let savedTheme=localStorage.getItem('theme');
-    let prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (savedTheme==='dark'||(!savedTheme&&prefersDark)){
-        applyTheme('dark');
+    let savedTheme=localStorage.getItem("theme");
+    let prefersDark=window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (savedTheme==="dark"||(!savedTheme&&prefersDark)){
+        applyTheme("dark");
     }
     else{
-        applyTheme('light');
+        applyTheme("light");
     }
 }
 function initApp(): void{
@@ -142,6 +136,7 @@ function generateQuestion(): void{
         return;
     }
     if (!answerResults||!userAnswer||!questionArea||!checkAnswerButton) return;
+    clearTimeout(questionTimeout);
     answerResults.innerHTML=`
     <div class="empty-state">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
@@ -152,13 +147,14 @@ function generateQuestion(): void{
   `;
     answerResults.className="results-display";
     userAnswer.value="";
+    if (expectedFormatDiv) expectedFormatDiv.textContent="";
     questionArea.innerHTML=`
     <div class="loading-state">
       <div class="spinner"></div>
       <p>Generating question...</p>
     </div>
   `;
-    setTimeout(()=>{
+    questionTimeout=setTimeout(()=>{
         if (!questionArea||!userAnswer||!checkAnswerButton) return;
         switch (selectedTopic){
             case "add":
@@ -237,6 +233,9 @@ function generateQuestion(): void{
                 questionArea.innerHTML=`<div class="empty-state"><p>Please select a topic to generate a question</p></div>`;
                 return;
         }
+        if (expectedFormatDiv&&window.expectedFormat){
+            expectedFormatDiv.textContent="Expected format: "+window.expectedFormat;
+        }
         userAnswer.disabled=false;
         checkAnswerButton.disabled=false;
         userAnswer.focus();
@@ -244,7 +243,44 @@ function generateQuestion(): void{
         if (window.MathJax&&window.MathJax.typesetPromise){
             window.MathJax.typesetPromise([questionArea]).catch((err: any)=>console.log("MathJax typeset error:", err));
         }
-}, 500);
+    }, 100);
+}
+function isAnswerCorrect(userInput: string, correct: any, alternate: any): boolean{
+    const trimmedInput=userInput.replace(/\s+/g, "");
+    const isValidNumber=(s: string): boolean=>{
+        return /^-?\d*\.?\d+(?:[eE][-+]?\d+)?$/.test(s);
+    };
+    if (isValidNumber(trimmedInput)){
+        let userNum=parseFloat(userInput);
+        if (!isNaN(userNum)){
+            let correctNum=parseFloat(correct);
+            if (!isNaN(correctNum)&&Math.abs(userNum - correctNum) < 1e-8) return true;
+            let altNum=parseFloat(alternate);
+            if (!isNaN(altNum)&&Math.abs(userNum - altNum) < 1e-8) return true;
+        }
+    }
+    const normalize=(input: string): string | number=>{
+        let cleaned=input.replace(/°/g, "");
+        try{
+            let simplified=math.simplify(cleaned);
+            if ((simplified as any).isConstantNode&&(simplified as any).value!=null){
+                return parseFloat((simplified as any).value);
+            }
+            return simplified.toString();
+        }
+        catch (e){
+            return cleaned.replace(/\s+/g, "").toLowerCase();
+        }
+    };
+    let userNorm=normalize(userInput);
+    let possible=[correct, alternate].filter(v=>v!==undefined);
+    for (let ans of possible){
+        let ansNorm=normalize(ans);
+        if (userNorm===ansNorm) return true;
+        if (typeof userNorm==="number"&&typeof ansNorm==="number"&&Math.abs(userNorm - ansNorm) < 1e-8) return true;
+        if (typeof ans==="string"&&userInput.replace(/\s+/g, "").toLowerCase()===ans.replace(/\s+/g, "").toLowerCase()) return true;
+    }
+    return false;
 }
 function checkAnswer(): void{
     if (!selectedTopic){
@@ -257,58 +293,9 @@ function checkAnswer(): void{
         showNotification("Please enter an answer before checking", "warning");
         return;
     }
-    let isCorrect=false;
-    let normalizeAnswer=(input: string): string | number=>{
-        try{
-            let simplified=math.simplify(input);
-            if ((simplified as any).isConstantNode&&(simplified as any).value != null){
-                return parseFloat((simplified as any).value);
-            }
-            return simplified.toString();
-        }
-        catch (e){
-            return input.replace(/\s+/g, "").toLowerCase();
-        }
-    };
-    let numericEquals=(a: number, b: number, tol=1e-8): boolean=>Math.abs(a - b) < tol;
-
-    if (selectedTopic==="ser"){
-        let cleanCorrect=window.correctAnswer.correct.replace(/[^a-z]/gi, "").toLowerCase();
-        if (cleanCorrect==="converges"||cleanCorrect==="diverges"){
-            let cleanUserInput=userInput.replace(/[^a-z]/gi, "").toLowerCase();
-            if (cleanCorrect==="converges"){
-                isCorrect=cleanUserInput==="converge"||cleanUserInput==="converges";
-            }
-            else{
-                isCorrect=cleanUserInput==="diverge"||cleanUserInput==="diverges";
-            }
-        }
-        else{
-            let userNum=parseFloat(userInput);
-            let correctNum=parseFloat(window.correctAnswer.correct);
-            if (!isNaN(userNum)&&!isNaN(correctNum)){
-                isCorrect=numericEquals(userNum, correctNum);
-            }
-            else{
-                let userNorm=normalizeAnswer(userInput);
-                let possibleAnswers=[window.correctAnswer.correct, window.correctAnswer.alternate].filter(ans=>ans!==undefined);
-                isCorrect=possibleAnswers.some(ans=>normalizeAnswer(ans as string)===userNorm);
-            }
-        }
-    }
-    else{
-        let formattedTypes=["deri", "mtrx", "vctr", "root", "inte", "sin", "cos", "tan", "cosec", "sec", "cot", "log"];
-        if (formattedTypes.includes(selectedTopic)){
-            let userNorm=normalizeAnswer(userInput);
-            let possibleAnswers=[window.correctAnswer.correct, window.correctAnswer.alternate].filter(ans=>ans!==undefined);
-            isCorrect=possibleAnswers.some(ans=>normalizeAnswer(ans as string)===userNorm);
-        }
-        else{
-            let userNum=parseFloat(userInput);
-            let correctNum=parseFloat(window.correctAnswer.correct);
-            isCorrect=!isNaN(userNum)&&!isNaN(correctNum)&&numericEquals(userNum, correctNum);
-        }
-    }
+    let correct=window.correctAnswer.correct;
+    let alternate=window.correctAnswer.alternate;
+    let isCorrect=isAnswerCorrect(userInput, correct, alternate);
     if (isCorrect){
         answerResults.innerHTML=`
       <div class="result-success">
@@ -389,10 +376,10 @@ function setupEventListeners(): void{
     themeToggle.addEventListener("click", function (){
         let isDark=document.documentElement.classList.contains("dark");
         if (isDark){
-            applyTheme('light');
+            applyTheme("light");
         }
         else{
-            applyTheme('dark');
+            applyTheme("dark");
         }
     });
     helpButton.addEventListener("click", function (){
@@ -404,7 +391,6 @@ function updateMathJaxColors(): void{
         window.MathJax.typesetPromise().catch((err: any)=>console.log("MathJax re-render error:", err));
     }
 }
-// Add additional styles
 let additionalStyles=document.createElement("style");
 additionalStyles.textContent=`
   .category-title{
@@ -496,9 +482,14 @@ additionalStyles.textContent=`
     border: 3px solid var(--border);
     border-top-color: var(--primary);
   }
+  .expected-format {
+    margin-top: var(--spacing-xs);
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    font-style: italic;
+  }
 `;
 document.head.appendChild(additionalStyles);
-// Initialize app
 if (document.readyState==="loading"){
     document.addEventListener("DOMContentLoaded", initApp);
 }

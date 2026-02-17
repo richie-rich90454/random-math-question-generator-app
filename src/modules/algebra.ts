@@ -7,32 +7,35 @@ interface SeriesType{
 
 export function generateLogarithm(): void{
     if (!questionArea) return;
-
     questionArea.innerHTML="";
     let types=["basic", "change_base", "equation", "properties", "exponential_form"];
     let type=types[Math.floor(Math.random()*types.length)];
     let base=Math.floor(Math.random()*4)+2;
     let arg=Math.pow(base, Math.floor(Math.random()*4)+1);
     let newBase=Math.floor(Math.random()*3)+2;
+    let hint="";
     switch (type){
         case "basic":{
             let answer=(Math.log(arg)/Math.log(base)).toFixed(2);
             questionArea.innerHTML=`Evaluate: \\( \\log_{${base}} ${arg} \\)`;
             window.correctAnswer={
                 correct: answer,
-                alternate: `\\log_{${base}} ${arg}=${answer}`
+                alternate: answer
             };
+            hint="Enter a decimal number, e.g., 2.5";
             break;
         }
         case "change_base":{
             let numerator=Math.log(arg)/Math.log(newBase);
             let denominator=Math.log(base)/Math.log(newBase);
             let numericAnswer=(numerator/denominator).toFixed(2);
+            let expr=`log_${newBase}(${arg})/log_${newBase}(${base})`;
             questionArea.innerHTML=`Express \\( \\log_{${base}} ${arg} \\) in base \\( ${newBase} \\)`;
             window.correctAnswer={
                 correct: numericAnswer,
-                alternate: `\\frac{\\log_{${newBase}} ${arg}}{\\log_{${newBase}} ${base}}=${numericAnswer}`
+                alternate: expr
             };
+            hint="Enter as fraction (e.g., log3(8)/log3(2)) or decimal";
             break;
         }
         case "equation":{
@@ -40,20 +43,19 @@ export function generateLogarithm(): void{
             questionArea.innerHTML=`Solve for \\( x \\): \\( ${base}^{x}=${Math.pow(base, exponent)} \\)`;
             window.correctAnswer={
                 correct: exponent.toString(),
-                alternate: `x=${exponent}`
+                alternate: exponent.toString()
             };
+            hint="Enter a whole number";
             break;
         }
         case "properties":{
             let a=Math.floor(Math.random()*8)+2;
             let b=Math.floor(Math.random()*8)+2;
             let logSum=(Math.log(a*b)/Math.log(base)).toFixed(2);
-            let logA=(Math.log(a)/Math.log(base)).toFixed(2);
-            let logB=(Math.log(b)/Math.log(base)).toFixed(2);
             questionArea.innerHTML=`Evaluate: \\( \\log_{${base}} (${a} \\times ${b}) \\)`;
             window.correctAnswer={
                 correct: logSum,
-                alternate: `\\log_{${base}} ${a}+\\log_{${base}} ${b}=${logA}+${logB}=${logSum}`
+                alternate: `\\log_{${base}} ${a}+\\log_{${base}} ${b}=${(Math.log(a)/Math.log(base)).toFixed(2)}+${(Math.log(b)/Math.log(base)).toFixed(2)}=${logSum}`
             };
             break;
         }
@@ -63,11 +65,13 @@ export function generateLogarithm(): void{
             questionArea.innerHTML=`If \\( \\log_{${base}} x=${exponent} \\), find \\( x \\)`;
             window.correctAnswer={
                 correct: result.toString(),
-                alternate: `${base}^{${exponent}}=${result}`
+                alternate: `${base}^${exponent}`
             };
+            hint="Enter a number or expression (e.g., 8 or 2^3)";
             break;
         }
     }
+    window.expectedFormat=hint;
     if (window.MathJax&&window.MathJax.typeset){
         window.MathJax.typeset();
     }
@@ -79,6 +83,7 @@ export function generateExponent(): void{
     let type=types[Math.floor(Math.random()*types.length)];
     let base=Math.floor(Math.random()*4)+2;
     let exponent=Math.floor(Math.random()*5)+2;
+    let hint="";
     switch (type){
         case "basic":
             questionArea.innerHTML=`Evaluate: \\( ${base}^{${exponent}} \\)`;
@@ -86,6 +91,7 @@ export function generateExponent(): void{
                 correct: Math.pow(base, exponent).toString(),
                 alternate: Math.pow(base, exponent).toString()
             };
+            hint="Enter a number";
             break;
         case "solve":{
             let power=Math.pow(base, exponent);
@@ -94,6 +100,7 @@ export function generateExponent(): void{
                 correct: exponent.toString(),
                 alternate: exponent.toString()
             };
+            hint="Enter a whole number";
             break;
         }
         case "laws":{
@@ -101,9 +108,10 @@ export function generateExponent(): void{
             let b=Math.floor(Math.random()*3)+2;
             questionArea.innerHTML=`Simplify: \\( (${base}^{${a}}) \\times (${base}^{${b}}) \\)`;
             window.correctAnswer={
-                correct: `${base}<sup>${a+b}</sup>`,
-                alternate: Math.pow(base, a+b).toString()
+                correct: Math.pow(base, a+b).toString(),
+                alternate: `${base}^${a+b}`
             };
+            hint="Enter a number (e.g., 32) or an expression (e.g., 2^5)";
             break;
         }
         case "growth":{
@@ -112,8 +120,9 @@ export function generateExponent(): void{
             let factor=(1+parseFloat(rate)/100).toFixed(3);
             window.correctAnswer={
                 correct: factor,
-                alternate: `1+${parseFloat(rate)/100}`
+                alternate: factor
             };
+            hint="Enter a decimal (e.g., 1.05)";
             break;
         }
         case "compare":{
@@ -123,13 +132,16 @@ export function generateExponent(): void{
             let e2=Math.floor(Math.random()*4)+2;
             questionArea.innerHTML=`Which is larger: \\( ${b1}^{${e1}} \\) or \\( ${b2}^{${e2}} \\)?`;
             let vals=[Math.pow(b1, e1), Math.pow(b2, e2)];
+            let largerExpr=vals[0]>vals[1]?`${b1}^${e1}`:`${b2}^${e2}`;
             window.correctAnswer={
-                correct: vals[0] > vals[1] ? `${b1}^${e1}` : `${b2}^${e2}`,
-                alternate: Math.max(...vals).toString()
+                correct: Math.max(...vals).toString(),
+                alternate: largerExpr
             };
+            hint="Enter the larger value (e.g., 32) or the expression (e.g., 2^5)";
             break;
         }
     }
+    window.expectedFormat=hint;
     if (window.MathJax&&window.MathJax.typeset){
         window.MathJax.typeset();
     }
@@ -144,6 +156,7 @@ export function generateFactorial(): void{
     let factorial=(num: number): number=>{
         return Array.from({ length: num }, (_, i)=> i+1).reduce((a, b)=> a*b, 1);
     };
+    let hint="";
     switch (type){
         case "basic":
             questionArea.innerHTML=`Calculate \\( ${n}! \\)`;
@@ -151,6 +164,7 @@ export function generateFactorial(): void{
                 correct: factorial(n).toString(),
                 alternate: factorial(n).toString()
             };
+            hint="Enter a whole number";
             break;
         case "division":{
             let result=Array.from({ length: n-k }, (_, i)=> n-i).reduce((a, b)=> a*b, 1);
@@ -159,6 +173,7 @@ export function generateFactorial(): void{
                 correct: result.toString(),
                 alternate: (factorial(n)/factorial(k)).toString()
             };
+            hint="Enter a whole number";
             break;
         }
         case "equation":{
@@ -168,15 +183,17 @@ export function generateFactorial(): void{
                 correct: n.toString(),
                 alternate: n.toString()
             };
+            hint="Enter a whole number";
             break;
         }
         case "approximation":{
-            questionArea.innerHTML=`Estimate \\( ${n}! \\) using Stirling's approximation`;
+            questionArea.innerHTML=`Estimate \\( ${n}! \\) using Stirling"s approximation`;
             let stirling=Math.sqrt(2*Math.PI*n)*Math.pow(n/Math.E, n);
             window.correctAnswer={
                 correct: stirling.toFixed(0),
                 alternate: Math.round(stirling).toString()
             };
+            hint="Enter a rounded whole number";
             break;
         }
         case "prime":{
@@ -185,7 +202,7 @@ export function generateFactorial(): void{
             questionArea.innerHTML=`Find the exponent of \\( ${prime} \\) in \\( ${n}! \\) (prime factorization)`;
             let count=0;
             let temp=n;
-            while (temp > 0){
+            while (temp>0){
                 temp=Math.floor(temp/prime);
                 count+=temp;
             }
@@ -193,9 +210,11 @@ export function generateFactorial(): void{
                 correct: count.toString(),
                 alternate: count.toString()
             };
+            hint="Enter a whole number";
             break;
         }
     }
+    window.expectedFormat=hint;
     if (window.MathJax&&window.MathJax.typeset){
         window.MathJax.typeset();
     }
@@ -207,6 +226,7 @@ export function generateSeries(): void{
     let type=types[Math.floor(Math.random()*types.length)];
     let mathExpression="";
     let plainCorrectAnswer="";
+    let hint="";
     switch (type){
         case "arithmetic_sum":{
             let a1=Math.floor(Math.random()*10)+1;
@@ -216,11 +236,12 @@ export function generateSeries(): void{
             mathExpression=`Find the sum of the first ${n} terms of the arithmetic sequence: \\[ S_n=\\frac{n}{2} [2a_1+(n-1)d] \\] where \\( a_1=${a1} \\) and \\( d=${d} \\).`;
             plainCorrectAnswer=sum.toString();
             window.correctAnswer={correct: plainCorrectAnswer};
+            hint="Enter a number";
             break;
         }
         case "geometric_sum":{
             let a1=Math.floor(Math.random()*5)+1;
-            let rValue=(Math.random() < 0.5 ? -1 : 1)*(Math.random()*0.9+0.1);
+            let rValue=(Math.random() < 0.5?-1:1)*(Math.random()*0.9+0.1);
             let r=rValue.toFixed(2);
             let n=Math.floor(Math.random()*8)+3;
             let sum=a1*(1-Math.pow(rValue, n))/(1-rValue);
@@ -228,8 +249,9 @@ export function generateSeries(): void{
             plainCorrectAnswer=sum.toFixed(2);
             window.correctAnswer={
                 correct: plainCorrectAnswer,
-                alternate: `\\frac{${a1}(1-${r}^{${n}})}{1-${r}}`
+                alternate: `(${a1}*(1-${r}^${n}))/(1-${r})`
             };
+            hint="Enter a decimal or the formula (e.g., 2.5 or (3*(1-0.5^4))/(1-0.5))";
             break;
         }
         case "convergence":{
@@ -237,7 +259,11 @@ export function generateSeries(): void{
             let chosen=seriesTypes[Math.floor(Math.random()*seriesTypes.length)];
             mathExpression=`Determine if the series converges or diverges: \\[ \\sum_{n=1}^{\\infty} ${chosen.expr} \\]`;
             plainCorrectAnswer=chosen.conv;
-            window.correctAnswer={ correct: plainCorrectAnswer, alternate: plainCorrectAnswer };
+            window.correctAnswer={
+                correct: plainCorrectAnswer,
+                alternate: plainCorrectAnswer==="converges"?"converge":"diverge"
+            };
+            hint="Enter \"converges\" or \"diverges\"";
             break;
         }
         case "nth_term":{
@@ -248,9 +274,11 @@ export function generateSeries(): void{
             mathExpression=`Find the ${n}${getOrdinal(n)} term of the arithmetic sequence: \\[ a_n=a_1+(n-1)d \\] where \\( a_1=${a1} \\) and \\( d=${d} \\).`;
             plainCorrectAnswer=an.toString();
             window.correctAnswer={correct: plainCorrectAnswer};
+            hint="Enter a number";
             break;
         }
     }
+    window.expectedFormat=hint;
     let mathContainer=document.createElement("div");
     mathContainer.innerHTML=mathExpression;
     questionArea.appendChild(mathContainer);
@@ -286,6 +314,7 @@ export function generateRoot(): void{
         correct: correctRoot,
         alternate: correctRoot
     };
+    window.expectedFormat="Enter a whole number";
 }
 export function getOrdinal(n: number): string{
     let s=["th", "st", "nd", "rd"];

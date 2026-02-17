@@ -14,6 +14,7 @@ export function generateSin(): void{
                 let value=Math.sin(angle*Math.PI/180).toFixed(2);
                 questionArea.innerHTML=`Evaluate \$\\sin(${angle}^\\circ)\$`;
                 window.correctAnswer={ correct: value, alternate: value };
+                window.expectedFormat="Enter a decimal number (e.g., 0.5)";
             }
             else{
                 let radianAngles=[
@@ -38,6 +39,7 @@ export function generateSin(): void{
                 let value=Math.sin(obj.value).toFixed(2);
                 questionArea.innerHTML=`Evaluate \$\\sin(${obj.label})\$`;
                 window.correctAnswer={ correct: value, alternate: value };
+                window.expectedFormat="Enter a decimal number (e.g., 0.5)";
             }
             break;
         }
@@ -45,15 +47,24 @@ export function generateSin(): void{
             let k=(Math.random()*2-1).toFixed(2);
             let isDegree=Math.random()<0.5;
             let solutions: string[]=[];
+            let plainNumbers: string[]=[];
             let principal=Math.asin(parseFloat(k));
             if (isDegree){
                 let principalDeg=principal*180/Math.PI;
                 let sol1=principalDeg;
                 let sol2=180-principalDeg;
                 [sol1, sol2].forEach(sol =>{
-                    if (sol>=0&&sol<360) solutions.push(`${sol.toFixed(0)}deg`);
+                    if (sol>=0&&sol<360) {
+                        solutions.push(`${sol.toFixed(0)}°`);
+                        plainNumbers.push(sol.toFixed(0));
+                    }
                 });
                 questionArea.innerHTML=`Solve \$\\sin\\theta=${k}\$ (in degrees)`;
+                window.correctAnswer={
+                    correct: solutions.join(", "),
+                    alternate: plainNumbers.join(", ")
+                };
+                window.expectedFormat="Enter angles in degrees, e.g., 30°, 150° or just 30, 150";
             }
             else{
                 let sol1=principal;
@@ -62,14 +73,19 @@ export function generateSin(): void{
                     if (sol>=0&&sol<2*Math.PI) solutions.push(sol.toFixed(2));
                 });
                 questionArea.innerHTML=`Solve \$\\sin\\theta=${k}\$ (in radians)`;
+                window.correctAnswer={
+                    correct: solutions.join(", "),
+                    alternate: solutions.join(", ")
+                };
+                window.expectedFormat="Enter angles in radians, e.g., 0.52, 2.62";
             }
-            window.correctAnswer={ correct: solutions.join(", "), alternate: solutions.join(", ") };
             break;
         }
         case "amplitude":{
             let A=(Math.random()*4+1).toFixed(1);
             questionArea.innerHTML=`Find the amplitude of \$y=${A}\\sin(3x+\\pi/4)\$`;
             window.correctAnswer={ correct: A, alternate: A };
+            window.expectedFormat="Enter a number (e.g., 2.5)";
             break;
         }
         case "period":{
@@ -77,8 +93,9 @@ export function generateSin(): void{
             questionArea.innerHTML=`What is the period of \$y=\\sin(${B}x)\$?`;
             window.correctAnswer={
                 correct: (2*Math.PI/B).toFixed(2)+" radians",
-                alternate: `\\frac{2\\pi}{${B}}`
+                alternate: `(2π)/${B} radians`
             };
+            window.expectedFormat="Enter as 'x radians' or '2π/B radians'";
             break;
         }
         case "phase_shift":{
@@ -90,6 +107,7 @@ export function generateSin(): void{
                 correct: shiftText,
                 alternate: (parseFloat(C)==0)?"0":`-${C}`
             };
+            window.expectedFormat="Enter as 'x units left/right' or '-x'";
             break;
         }
         case "law_sines":{
@@ -101,6 +119,7 @@ export function generateSin(): void{
                 In triangle ABC, ∠A=${angleA}deg, ∠B=${angleB}deg, and side a=${sideA}.<br>
                 Find side b.`;
             window.correctAnswer={ correct: sideB, alternate: sideB };
+            window.expectedFormat="Enter a number (e.g., 7.2)";
             break;
         }
         case "unit_circle":{
@@ -110,11 +129,13 @@ export function generateSin(): void{
             let sinVal=Math.sin(angle*Math.PI/180).toFixed(2);
             questionArea.innerHTML=`Find the coordinates on the unit circle for an angle of ${angle}deg (format: (cos, sin))`;
             window.correctAnswer={ correct: `(${cosVal}, ${sinVal})`, alternate: `(${cosVal}, ${sinVal})` };
+            window.expectedFormat="Enter as (cos, sin) e.g., (0.71, 0.71)";
             break;
         }
         case "identity":{
             questionArea.innerHTML=`Complete the identity: \$\\sin^2\\theta+\\cos^2\\theta=\\; ?\$`;
             window.correctAnswer={ correct: "1", alternate: "one"};
+            window.expectedFormat="Enter '1'";
             break;
         }
         default:
@@ -136,6 +157,7 @@ export function generateCosine(): void{
                 let value=Math.cos(angle*Math.PI/180).toFixed(2);
                 questionArea.innerHTML=`Evaluate \$\\cos(${angle}^\\circ)\$`;
                 window.correctAnswer={ correct: value, alternate: value };
+                window.expectedFormat="Enter a decimal number (e.g., 0.5)";
             }
             else{
                 let radianAngles=[
@@ -152,6 +174,7 @@ export function generateCosine(): void{
                 let value=Math.cos(obj.value).toFixed(2);
                 questionArea.innerHTML=`Evaluate \$\\cos(${obj.label})\$`;
                 window.correctAnswer={ correct: value, alternate: value };
+                window.expectedFormat="Enter a decimal number (e.g., -0.5)";
             }
             break;
         }
@@ -159,15 +182,24 @@ export function generateCosine(): void{
             let k=(Math.random()*2-1).toFixed(2);
             let isDegree=Math.random()<0.5;
             let solutions: string[]=[];
+            let plainNumbers: string[]=[];
             let principal=Math.acos(parseFloat(k));
             if (isDegree){
                 let principalDeg=principal*180/Math.PI;
                 let sol1=principalDeg;
                 let sol2=360-principalDeg;
                 [sol1, sol2].forEach(sol =>{
-                    if (sol>=0&&sol<360) solutions.push(`${sol.toFixed(0)}deg`);
+                    if (sol>=0&&sol<360) {
+                        solutions.push(`${sol.toFixed(0)}°`);
+                        plainNumbers.push(sol.toFixed(0));
+                    }
                 });
                 questionArea.innerHTML=`Solve \$\\cos\\theta=${k}\$ (in degrees)`;
+                window.correctAnswer={
+                    correct: solutions.join(", "),
+                    alternate: plainNumbers.join(", ")
+                };
+                window.expectedFormat="Enter angles in degrees, e.g., 60°, 300° or just 60, 300";
             }
             else{
                 let sol1=principal;
@@ -176,14 +208,19 @@ export function generateCosine(): void{
                     if (sol>=0&&sol<2*Math.PI) solutions.push(sol.toFixed(2));
                 });
                 questionArea.innerHTML=`Solve \$\\cos\\theta=${k}\$ (in radians)`;
+                window.correctAnswer={
+                    correct: solutions.join(", "),
+                    alternate: solutions.join(", ")
+                };
+                window.expectedFormat="Enter angles in radians, e.g., 1.05, 5.24";
             }
-            window.correctAnswer={ correct: solutions.join(", "), alternate: solutions.join(", ") };
             break;
         }
         case "amplitude":{
             let A=(Math.random()*4+1).toFixed(1);
             questionArea.innerHTML=`Find the amplitude of \$y=${A}\\cos(2x-\\pi/3)\$`;
             window.correctAnswer={ correct: A, alternate: A };
+            window.expectedFormat="Enter a number (e.g., 2.5)";
             break;
         }
         case "period":{
@@ -191,8 +228,9 @@ export function generateCosine(): void{
             questionArea.innerHTML=`What is the period of \$y=\\cos(${B}x)\$?`;
             window.correctAnswer={
                 correct: (2*Math.PI/B).toFixed(2)+" radians",
-                alternate: `\\frac{2\\pi}{${B}}`
+                alternate: `(2π)/${B} radians`
             };
+            window.expectedFormat="Enter as 'x radians' or '2π/B radians'";
             break;
         }
         case "phase_shift":{
@@ -204,6 +242,7 @@ export function generateCosine(): void{
                 correct: shiftText,
                 alternate: (parseFloat(C)==0)?"0":`-${C}`
             };
+            window.expectedFormat="Enter as 'x units left/right' or '-x'";
             break;
         }
         case "law_cosines":{
@@ -216,11 +255,13 @@ export function generateCosine(): void{
                 In triangle ABC, sides a=${a}, b=${b}, and ∠C=${angleC}deg.<br>
                 Find side c.`;
             window.correctAnswer={ correct: c, alternate: c };
+            window.expectedFormat="Enter a number (e.g., 7.2)";
             break;
         }
         case "identity":{
             questionArea.innerHTML=`Complete the identity: \$\\cos^2\\theta+\\sin^2\\theta=\\; ?\$`;
             window.correctAnswer={ correct: "1", alternate: "one"};
+            window.expectedFormat="Enter '1'";
             break;
         }
         default:
@@ -240,6 +281,7 @@ export function generateTangent(): void{
             let value=Math.tan(angle*Math.PI/180).toFixed(2);
             questionArea.innerHTML=`Evaluate \$\\tan(${angle}^\\circ)\$`;
             window.correctAnswer={ correct: value, alternate: value };
+            window.expectedFormat="Enter a decimal number (e.g., 1.0)";
             break;
         }
         case "solve":{
@@ -249,11 +291,19 @@ export function generateTangent(): void{
             if (isDegree){
                 let principalDeg=principal*180/Math.PI;
                 questionArea.innerHTML=`Solve \$\\tan\\theta=${k}\$ (in degrees, give the principal solution)`;
-                window.correctAnswer={ correct: `${principalDeg.toFixed(0)}deg+180degn`, alternate: `${principalDeg.toFixed(0)}deg+180degn` };
+                window.correctAnswer={
+                    correct: `${principalDeg.toFixed(0)}°+180°n`,
+                    alternate: `${principalDeg.toFixed(0)}+180n`
+                };
+                window.expectedFormat="Enter as 'θ°+180°n' e.g., '45°+180°n' or '45+180n'";
             }
             else{
                 questionArea.innerHTML=`Solve \$\\tan\\theta=${k}\$ (in radians, give the principal solution)`;
-                window.correctAnswer={ correct: `${principal.toFixed(2)}+\\pi n`, alternate: `${principal.toFixed(2)}+\\pi n` };
+                window.correctAnswer={
+                    correct: `${principal.toFixed(2)}+πn`,
+                    alternate: `${principal.toFixed(2)}+πn`
+                };
+                window.expectedFormat="Enter as 'θ+πn' e.g., '0.79+πn'";
             }
             break;
         }
@@ -262,8 +312,9 @@ export function generateTangent(): void{
             questionArea.innerHTML=`What is the period of \$y=\\tan(${B}x)\$?`;
             window.correctAnswer={
                 correct: (Math.PI/B).toFixed(2)+" radians",
-                alternate: `\\frac{\\pi}{${B}}`
+                alternate: `π/${B} radians`
             };
+            window.expectedFormat="Enter as 'x radians' or 'π/B radians'";
             break;
         }
         case "asymptote":{
@@ -274,14 +325,16 @@ export function generateTangent(): void{
             }
             questionArea.innerHTML=`Find the vertical asymptotes of \$y=\\tan(${B}x)\$`;
             window.correctAnswer={
-                correct: asymptotes.join(", "),
-                alternate: `x=\\frac{\\pi}{2\\cdot${B}}+\\frac{\\pi k}{${B}}`
+                correct: `x=π/(2*${B}) + πk/${B}`,
+                alternate: `x=π/(2*${B}) + πk/${B}`
             };
+            window.expectedFormat="Enter as 'x=π/(2B) + πk/B'";
             break;
         }
         case "identity":{
             questionArea.innerHTML=`Complete the identity: \$1+\\tan^2\\theta=\\; ?\$`;
-            window.correctAnswer={ correct: "sec^2theta", alternate: "\\sec^2\\theta"};
+            window.correctAnswer={ correct: "sec^2theta", alternate: "sec^2θ"};
+            window.expectedFormat="Enter 'sec^2θ'";
             break;
         }
         default:
@@ -301,20 +354,23 @@ export function generateCosecant(): void{
             let value=(1/Math.sin(angle*Math.PI/180)).toFixed(2);
             questionArea.innerHTML=`Evaluate \$\\csc(${angle}^\\circ)\$`;
             window.correctAnswer={ correct: value, alternate: value };
+            window.expectedFormat="Enter a decimal number (e.g., 2.0)";
             break;
         }
         case "relationship":{
             let angle=Math.floor(Math.random()*360);
             questionArea.innerHTML=`Express \$\\csc(${angle}^\\circ)\$ in terms of sine.`;
             window.correctAnswer={
-                correct: `\\frac{1}{\\sin(${angle}^\\circ)}`,
-                alternate: "1/sin("+angle+"deg)"
+                correct: `1/sin(${angle}°)`,
+                alternate: `1/sin(${angle}°)`
             };
+            window.expectedFormat="Enter as '1/sin(θ)'";
             break;
         }
         case "asymptote":{
             questionArea.innerHTML=`Find the vertical asymptotes of \$y=\\csc(x)\$ (in radians).`;
-            window.correctAnswer={ correct: "x=n\\pi", alternate: "nπ"};
+            window.correctAnswer={ correct: "x=nπ", alternate: "x=nπ"};
+            window.expectedFormat="Enter as 'x=nπ'";
             break;
         }
         default:
@@ -333,11 +389,13 @@ export function generateSecant(): void{
             let value=(1/Math.cos(angle*Math.PI/180)).toFixed(2);
             questionArea.innerHTML=`Evaluate \$\\sec(${angle}^\\circ)\$`;
             window.correctAnswer={ correct: value, alternate: value };
+            window.expectedFormat="Enter a decimal number (e.g., 2.0)";
             break;
         }
         case "identity":{
             questionArea.innerHTML=`Complete the identity: \$\\sec^2\\theta-\\tan^2\\theta=?\$`;
-            window.correctAnswer={ correct: "1", alternate: "one"};
+            window.correctAnswer={ correct: "1", alternate: "1"};
+            window.expectedFormat="Enter '1'";
             break;
         }
         default:
@@ -356,14 +414,16 @@ export function generateCotangent(): void{
             let value=(1/Math.tan(angle*Math.PI/180)).toFixed(2);
             questionArea.innerHTML=`Evaluate \$\\cot(${angle}^\\circ)\$`;
             window.correctAnswer={ correct: value, alternate: value };
+            window.expectedFormat="Enter a decimal number (e.g., 1.0)";
             break;
         }
         case "relationship":{
             questionArea.innerHTML=`Express \$\\cot\\theta\$ in terms of tangent.`;
             window.correctAnswer={
-                correct: `\\frac{1}{\\tan\\theta}`,
-                alternate: "1/tantheta"
+                correct: `1/tanθ`,
+                alternate: `1/tanθ`
             };
+            window.expectedFormat="Enter '1/tanθ'";
             break;
         }
         default:
