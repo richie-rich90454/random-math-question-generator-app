@@ -6,6 +6,7 @@ import * as LinearAlgebra from "./modules/linearAlgebra";
 import * as Trigonometry from "./modules/trigonometry";
 import type {Topic} from "./types/global";
 import * as math from "mathjs";
+import {getCurrentWindow, type Window} from "@tauri-apps/api/window";
 
 // DOM Elements
 export let questionArea: HTMLElement | null=document.getElementById("question-area");
@@ -19,8 +20,7 @@ let themeToggle: HTMLButtonElement | null=document.getElementById("theme-toggle"
 let helpButton: HTMLButtonElement | null=document.getElementById("help-button") as HTMLButtonElement | null;
 
 // Initialize global correctAnswer
-window.correctAnswer={ correct: ""};
-
+window.correctAnswer={correct: ""};
 // Application state
 let selectedTopic: string | null=null;
 let topics: Topic[]=[
@@ -49,12 +49,60 @@ let topics: Topic[]=[
 {id: "lim", name: "Limits", icon: "lim", category: "Calculus"},
 {id: "relRates", name: "Related Rates", icon: "dx/dt", category: "Calculus"}
 ];
+// Safely attempt to get the Tauri window (only works inside Tauri)
+let appWindow: Window | null=null;
+try{
+    appWindow=getCurrentWindow();
+}
+catch (e){
+    console.log("Not running in Tauri environment, theme sync disabled.");
+}
+// Function to apply theme based on Tauri theme or manual
+function applyTheme(theme: 'light' | 'dark'): void{
+    let root=document.documentElement;
+    if (theme==='dark'){
+        root.classList.add('dark');
+        root.classList.remove('light');
+    }
+    else{
+        root.classList.add('light');
+        root.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+    updateMathJaxColors();
+    // Also update the Tauri window frame if available
+    if (appWindow){
+        appWindow.setTheme(theme).catch(err=>console.log("Failed to set window theme:", err));
+    }
+}
+// Initialize theme from Tauri, fallback to localStorage/prefers-color-scheme
+async function initializeTheme(): Promise<void>{
+    if (appWindow){
+        try{
+            let tauriTheme=await appWindow.theme();
+            applyTheme(tauriTheme ?? 'light');
+            return;
+        }
+        catch (e){
+            console.log("Failed to get Tauri theme, falling back.");
+        }
+    }
+    // Fallback
+    let savedTheme=localStorage.getItem('theme');
+    let prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme==='dark'||(!savedTheme&&prefersDark)){
+        applyTheme('dark');
+    }
+    else{
+        applyTheme('light');
+    }
+}
 function initApp(): void{
     renderTopicGrid();
     setupEventListeners();
+    initializeTheme();
     updateUIState();
 }
-
 function renderTopicGrid(): void{
     if (!topicGrid) return;
     topicGrid.innerHTML="";
@@ -196,7 +244,7 @@ function generateQuestion(): void{
         if (window.MathJax&&window.MathJax.typesetPromise){
             window.MathJax.typesetPromise([questionArea]).catch((err: any)=>console.log("MathJax typeset error:", err));
         }
-    }, 500);
+}, 500);
 }
 function checkAnswer(): void{
     if (!selectedTopic){
@@ -223,6 +271,7 @@ function checkAnswer(): void{
         }
     };
     let numericEquals=(a: number, b: number, tol=1e-8): boolean=>Math.abs(a - b) < tol;
+
     if (selectedTopic==="ser"){
         let cleanCorrect=window.correctAnswer.correct.replace(/[^a-z]/gi, "").toLowerCase();
         if (cleanCorrect==="converges"||cleanCorrect==="diverges"){
@@ -325,8 +374,8 @@ function showNotification(message: string, type: "info" | "warning"="info"): voi
             if (notification.parentNode){
                 notification.parentNode.removeChild(notification);
             }
-        }, 300);
-    }, 3000);
+    }, 300);
+}, 3000);
 }
 function setupEventListeners(): void{
     if (!generateQuestionButton||!checkAnswerButton||!userAnswer||!themeToggle||!helpButton) return;
@@ -340,38 +389,19 @@ function setupEventListeners(): void{
     themeToggle.addEventListener("click", function (){
         let isDark=document.documentElement.classList.contains("dark");
         if (isDark){
-            document.documentElement.classList.remove("dark");
-            document.documentElement.classList.add("light");
-            localStorage.setItem("theme", "light");
+            applyTheme('light');
         }
         else{
-            document.documentElement.classList.remove("light");
-            document.documentElement.classList.add("dark");
-            localStorage.setItem("theme", "dark");
+            applyTheme('dark');
         }
-        updateMathJaxColors();
     });
     helpButton.addEventListener("click", function (){
         showNotification("Select a topic, generate a question, enter your answer, and check it!", "info");
     });
-    initializeTheme();
-}
-function initializeTheme(): void{
-    let savedTheme=localStorage.getItem("theme");
-    let prefersDark=window.matchMedia("(prefers-color-scheme: dark)").matches;
-    if (savedTheme==="dark"||(!savedTheme&&prefersDark)){
-        document.documentElement.classList.add("dark");
-        document.documentElement.classList.remove("light");
-    }
-    else{
-        document.documentElement.classList.add("light");
-        document.documentElement.classList.remove("dark");
-    }
-    updateMathJaxColors();
 }
 function updateMathJaxColors(): void{
     if (window.MathJax&&window.MathJax.typesetPromise){
-        window.MathJax?.typesetPromise?.().catch((err: any)=>console.log("MathJax re-render error:", err));
+        window.MathJax.typesetPromise().catch((err: any)=>console.log("MathJax re-render error:", err));
     }
 }
 // Add additional styles

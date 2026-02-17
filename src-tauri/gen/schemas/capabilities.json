@@ -1,1 +1,1 @@
-{}
+{"theme-capability":{"identifier":"theme-capability","description":"Allows the app to change the native window theme","local":true,"windows":["main"],"permissions":["core:window:allow-set-theme"]}}

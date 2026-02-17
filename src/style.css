@@ -130,7 +130,7 @@ html{
     font-size: 15px;
 }
 body{
-    font-family: "Segoe UI", "Noto Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: "Noto Sans", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background: var(--app-bg);
     color: var(--text-primary);
     line-height: 1.5;
@@ -147,10 +147,11 @@ body{
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    max-width: 100vw;
+    width: 100%;
     overflow: hidden;
     background: var(--app-bg);
 }
+/* Make the app-bar draggable for Tauri */
 .app-bar{
     height: var(--app-bar-height);
     background: var(--surface);
@@ -160,6 +161,12 @@ body{
     z-index: 100;
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
+    -webkit-app-region: drag; /* Tauri: whole bar draggable */
+}
+/* But exclude interactive elements from drag region */
+.app-bar-content button,
+.app-bar-content .icon-button{
+    -webkit-app-region: no-drag;
 }
 .dark .app-bar{
     background: rgba(30, 41, 59, 0.92);
@@ -213,6 +220,7 @@ body{
     align-items: center;
     justify-content: center;
     transition: all var(--transition-fast);
+    -webkit-app-region: no-drag;
 }
 .icon-button:hover{
     background: var(--primary);
@@ -236,6 +244,11 @@ body{
     display: flex;
     flex-direction: column;
     gap: var(--spacing-lg);
+}
+@media (min-width: 1400px) {
+    .app-content{
+        padding: var(--spacing-xl);
+    }
 }
 .control-toolbar{
     background: var(--surface);
@@ -431,6 +444,8 @@ body{
     padding: var(--spacing-md);
 }
 .question-display{
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
@@ -510,6 +525,8 @@ body{
     font-size: 0.75rem;
 }
 .results-display{
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
@@ -569,7 +586,7 @@ body{
     height: 10px;
 }
 ::-webkit-scrollbar-track{
-    background: transparent;
+    background: var(--surface-alt);
     border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb{
