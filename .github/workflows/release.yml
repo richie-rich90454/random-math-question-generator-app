@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: 24
           cache: 'npm'
-      - run: npm ci
+      - run: npm ci --prefer-offline
       - name: Build frontend
         run: npm run build
       - uses: actions/upload-artifact@v6
@@ -58,7 +58,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.89.0
         with:
           targets: ${{ matrix.target }}
-      - run: npm ci
+      - run: npm ci --prefer-offline
       - uses: actions/download-artifact@v6
         with:
           name: web-dist
@@ -82,20 +82,20 @@ jobs:
         run: choco install nsis -y
 
       - name: Build Tauri
-        run: npx @tauri-apps/cli build --target ${{ matrix.target }} --verbose
+        run: npx @tauri-apps/cli build --target ${{ matrix.target }}
 
       - name: Verify bundles exist
         shell: bash
         run: |
-          SEARCH_DIR="target"
-          echo "Searching for bundle files in $SEARCH_DIR"
           if [ "${{ runner.os }}" == "macOS" ]; then
-            found=$(find "$SEARCH_DIR" \( -type d -name "*.app" -o -type f -name "*.dmg" \) 2>/dev/null)
+            # macOS: find .app directories or .dmg files inside bundle/
+            found=$(find target -path "*/bundle/*" \( -type d -name "*.app" -o -type f -name "*.dmg" \) 2>/dev/null)
           else
-            found=$(find "$SEARCH_DIR" -type f \( -name "*.exe" -o -name "*.msi" \) 2>/dev/null)
+            # Windows: find installer files inside bundle/ (exe or msi)
+            found=$(find target -path "*/bundle/*" -type f \( -name "*.exe" -o -name "*.msi" \) 2>/dev/null)
           fi
           if [ -z "$found" ]; then
-            echo "Error: No bundle files found in $SEARCH_DIR"
+            echo "Error: No bundle files found in target/bundle/"
             exit 1
           fi
           echo "Found bundle files:"
@@ -105,11 +105,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: desktop-${{ matrix.name }}
-          path: |
-            target/**/*.exe
-            target/**/*.msi
-            target/**/*.app
-            target/**/*.dmg
+          path: target/**/bundle/**
           if-no-files-found: error
 
   publish-release:
@@ -137,8 +133,7 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             artifacts/**/*.exe
-            artifacts/**/*.msi
             artifacts/**/*.dmg
-            artifacts/**/*.app
             artifacts/**/*.tar.gz
             artifacts/**/*.zip
+          overwrite_files: true
