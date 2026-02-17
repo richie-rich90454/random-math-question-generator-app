@@ -129,39 +129,40 @@ jobs:
       - name: Build Tauri
         run: npx @tauri-apps/cli build --target ${{ matrix.target }} --verbose
 
-      # ----- Debug release output -----
+      # ----- Debug release output (updated to show bundle) -----
       - name: List release files
         shell: bash
         run: |
           RELEASE_DIR="src-tauri/target/${{ matrix.target }}/release"
-          echo "Listing RELEASE_DIR: $RELEASE_DIR"
+          echo "=== Contents of $RELEASE_DIR ==="
           ls -la "$RELEASE_DIR" || true
+          BUNDLE_DIR="$RELEASE_DIR/bundle"
+          if [ -d "$BUNDLE_DIR" ]; then
+            echo "=== Contents of $BUNDLE_DIR (recursive) ==="
+            find "$BUNDLE_DIR" -type f -print | head -20
+          else
+            echo "No bundle directory found."
+          fi
 
-      # ----- Fail if no bundle produced -----
+      # ----- Fail if no bundle produced (now checks inside bundle/) -----
       - name: Ensure bundles exist
         shell: bash
         run: |
-          RELEASE_DIR="src-tauri/target/${{ matrix.target }}/release"
-          found=$(ls $RELEASE_DIR/*.{exe,msi,AppImage,deb,rpm,dmg} 2>/dev/null || true)
+          BUNDLE_DIR="src-tauri/target/${{ matrix.target }}/release/bundle"
+          found=$(find "$BUNDLE_DIR" -type f \( -name "*.exe" -o -name "*.msi" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.dmg" \) 2>/dev/null)
           if [ -z "$found" ]; then
-            echo "Error: No bundle files found in $RELEASE_DIR"
+            echo "Error: No bundle files found in $BUNDLE_DIR"
             exit 1
           fi
           echo "Found bundle files:"
           echo "$found"
 
-      # ----- Upload artifacts -----
+      # ----- Upload artifacts (entire bundle tree) -----
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v6
         with:
           name: desktop-${{ matrix.name }}
-          path: |
-            src-tauri/target/${{ matrix.target }}/release/*.exe
-            src-tauri/target/${{ matrix.target }}/release/*.msi
-            src-tauri/target/${{ matrix.target }}/release/*.AppImage
-            src-tauri/target/${{ matrix.target }}/release/*.deb
-            src-tauri/target/${{ matrix.target }}/release/*.rpm
-            src-tauri/target/${{ matrix.target }}/release/*.dmg
+          path: src-tauri/target/${{ matrix.target }}/release/bundle/**
           if-no-files-found: error
 
   publish-release:
