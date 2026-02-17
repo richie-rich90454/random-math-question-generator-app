@@ -29,7 +29,8 @@ jobs:
       - name: Build frontend
         run: npm run build:web
 
-      - uses: actions/upload-artifact@v6
+      - name: Upload web-dist
+        uses: actions/upload-artifact@v6
         with:
           name: web-dist
           path: dist/
@@ -75,46 +76,43 @@ jobs:
 
       - run: npm ci
 
-      - uses: actions/download-artifact@v6
+      - name: Download web-dist
+        uses: actions/download-artifact@v6
         with:
           name: web-dist
           path: dist/
 
-      # ----- Sync Tauri version with GitHub Release tag -----
+      # ----- Sync version in tauri.conf.json -----
       - name: Sync tauri.conf.json version
         shell: bash
         run: |
-          TAG="${GITHUB_REF_NAME}"
+          TAG="${GITHUB_REF_NAME:-${GITHUB_REF##*/}}"
           VERSION="${TAG#v}"
-          echo "Updating tauri.conf.json version to $VERSION"
+          echo "Setting Tauri version to $VERSION"
 
-          # Install jq if needed
+          # Install jq if missing
           if ! command -v jq >/dev/null 2>&1; then
             if [[ "$RUNNER_OS" == "Linux" ]]; then
-              sudo apt-get update
-              sudo apt-get install -y jq
+              sudo apt-get update && sudo apt-get install -y jq
             elif [[ "$RUNNER_OS" == "macOS" ]]; then
               brew install jq
             else
-              choco install jq
+              choco install jq -y
             fi
           fi
 
-          # Only update existing keys; avoid adding invalid top-level keys
-          jq --arg v "$VERSION" '
-            if .package then .package.version=$v else . end |
-            if .tauri and .tauri.bundle then .tauri.bundle.version=$v else . end
-          ' src-tauri/tauri.conf.json > tmp.json && mv tmp.json src-tauri/tauri.conf.json
-          echo "tauri.conf.json updated:"
+          jq --arg v "$VERSION" '.version=$v | .bundle.version=$v' src-tauri/tauri.conf.json > tmp.json && mv tmp.json src-tauri/tauri.conf.json
           jq '.' src-tauri/tauri.conf.json
 
-      # ----- Safe frontend verification -----
+      # ----- Verify frontend files exist -----
       - name: Verify frontend files
         shell: bash
         run: |
-          ls -la dist/
-          echo "First few files in dist/ (recursive):"
-          find dist/ -type f -print -quit
+          if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
+            echo "Error: Frontend build folder 'dist/' is empty or missing!"
+            exit 1
+          fi
+          echo "Frontend build verified."
 
       # ----- Platform-specific dependencies -----
       - name: Install Linux dependencies
@@ -133,28 +131,35 @@ jobs:
             librsvg2-dev \
             libxdo-dev \
             patchelf \
-            fakeroot
+            fakeroot \
+            libfuse2
 
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
         run: brew install create-dmg
 
-      - name: Install Windows dependencies (NSIS)
+      - name: Install Windows dependencies
         if: runner.os == 'Windows'
-        run: choco install nsis
+        run: choco install nsis -y
 
-      # ----- Build Tauri with verbose output -----
+      # ----- Build Tauri -----
       - name: Build Tauri
         run: npx @tauri-apps/cli build --target ${{ matrix.target }} --verbose
 
-      # ----- Debug: list release / bundle -----
-      - name: List release / bundle contents
+      # ----- Debug release / bundle -----
+      - name: List release and bundle
         shell: bash
         run: |
-          echo "Contents of target/release/:"
-          ls -la src-tauri/target/${{ matrix.target }}/release/ 2>/dev/null || echo "No release folder"
-          echo -e "\nBundle files (if any):"
-          find src-tauri/target/${{ matrix.target }}/release/bundle/ -type f 2>/dev/null || echo "No bundle folder"
+          RELEASE_DIR="src-tauri/target/${{ matrix.target }}/release"
+          echo "Listing ${RELEASE_DIR}:"
+          ls -la "$RELEASE_DIR" || true
+          BUNDLE_DIR="$RELEASE_DIR/bundle"
+          echo "Listing bundle contents:"
+          if [ ! -d "$BUNDLE_DIR" ] || [ -z "$(ls -A "$BUNDLE_DIR")" ]; then
+            echo "Error: Bundle folder is empty!"
+            exit 1
+          fi
+          ls -la "$BUNDLE_DIR"
 
       # ----- Upload artifacts -----
       - name: Upload desktop artifacts
@@ -172,7 +177,7 @@ jobs:
       contents: write
 
     steps:
-      - name: Download all built artifacts
+      - name: Download all desktop artifacts
         uses: actions/download-artifact@v6
         with:
           path: artifacts/
@@ -181,10 +186,9 @@ jobs:
 
       - name: Show downloaded files
         run: |
-          echo "Downloaded artifacts structure:"
-          find artifacts -type f -print | sort
+          find artifacts -type f | sort
 
-      - name: Publish artifacts to GitHub Release
+      - name: Publish artifacts
         uses: softprops/action-gh-release@v2
         with:
           fail_on_unmatched_files: true
