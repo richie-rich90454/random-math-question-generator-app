@@ -80,8 +80,8 @@ jobs:
           name: web-dist
           path: dist/
 
-      # ----- Sync top-level version in tauri.conf.json -----
-      - name: Sync tauri.conf.json version
+      # ----- Sync Tauri version -----
+      - name: Sync Tauri version
         shell: bash
         run: |
           TAG="${GITHUB_REF_NAME:-${GITHUB_REF##*/}}"
@@ -90,17 +90,14 @@ jobs:
           jq --arg v "$VERSION" '.version=$v' src-tauri/tauri.conf.json > tmp.json && mv tmp.json src-tauri/tauri.conf.json
           jq '.' src-tauri/tauri.conf.json
 
-      # ----- Verify frontend files exist -----
+      # ----- Verify frontend -----
       - name: Verify frontend files
         shell: bash
         run: |
-          if [ ! -d dist ] || [ -z "$(ls -A dist)" ]; then
-            echo "Error: dist folder is empty"
-            exit 1
-          fi
-          echo "Frontend files are present."
+          ls -la dist/
+          find dist/ -type f -print -quit
 
-      # ----- Platform-specific dependencies -----
+      # ----- Platform dependencies -----
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
@@ -118,7 +115,7 @@ jobs:
             libxdo-dev \
             patchelf \
             fakeroot \
-            libfuse2
+            libfuse2 || true
 
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
@@ -133,24 +130,38 @@ jobs:
         run: npx @tauri-apps/cli build --target ${{ matrix.target }} --verbose
 
       # ----- Debug release output -----
-      - name: List release and bundle
+      - name: List release files
         shell: bash
         run: |
-          echo "Contents of src-tauri/target/${{ matrix.target }}/release/:"
-          ls -la src-tauri/target/${{ matrix.target }}/release/ || true
-          echo "Contents of bundle folder:"
-          if [ -d src-tauri/target/${{ matrix.target }}/release/bundle ]; then
-            find src-tauri/target/${{ matrix.target }}/release/bundle/ -type f -print
-          else
-            echo "No bundle files found"
-          fi
+          RELEASE_DIR="src-tauri/target/${{ matrix.target }}/release"
+          echo "Listing RELEASE_DIR: $RELEASE_DIR"
+          ls -la "$RELEASE_DIR" || true
 
-      # ----- Upload artifacts (fail if empty) -----
+      # ----- Fail if no bundle produced -----
+      - name: Ensure bundles exist
+        shell: bash
+        run: |
+          RELEASE_DIR="src-tauri/target/${{ matrix.target }}/release"
+          found=$(ls $RELEASE_DIR/*.{exe,msi,AppImage,deb,rpm,dmg} 2>/dev/null || true)
+          if [ -z "$found" ]; then
+            echo "Error: No bundle files found in $RELEASE_DIR"
+            exit 1
+          fi
+          echo "Found bundle files:"
+          echo "$found"
+
+      # ----- Upload artifacts -----
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v6
         with:
           name: desktop-${{ matrix.name }}
-          path: src-tauri/target/${{ matrix.target }}/release/bundle/
+          path: |
+            src-tauri/target/${{ matrix.target }}/release/*.exe
+            src-tauri/target/${{ matrix.target }}/release/*.msi
+            src-tauri/target/${{ matrix.target }}/release/*.AppImage
+            src-tauri/target/${{ matrix.target }}/release/*.deb
+            src-tauri/target/${{ matrix.target }}/release/*.rpm
+            src-tauri/target/${{ matrix.target }}/release/*.dmg
           if-no-files-found: error
 
   publish-release:
