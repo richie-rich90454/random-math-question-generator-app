@@ -74,6 +74,38 @@ let timeLeft: number=30;
 let maxQuestions: number=5;
 let currentDifficulty: string='medium';
 
+let modeButtons = [modeSingleBtn, modeMentalBtn];
+
+function disableModeButtons(disabled: boolean): void{
+    modeButtons.forEach(btn=>{
+        if (btn){
+            btn.disabled=disabled;
+            if (disabled) btn.classList.add('disabled');
+            else btn.classList.remove('disabled');
+        }
+    });
+}
+function disableDifficulty(disabled: boolean): void{
+    if (difficultySelect) difficultySelect.disabled=disabled;
+}
+function setSessionButton(isActive: boolean): void{
+    if (!startSessionBtn) return;
+    if (isActive){
+        startSessionBtn.textContent='Stop Session';
+        startSessionBtn.classList.add('stop-session');
+        startSessionBtn.removeEventListener('click', startMentalSession);
+        startSessionBtn.addEventListener('click', stopMentalSession);
+    } else {
+        startSessionBtn.textContent='Start Session';
+        startSessionBtn.classList.remove('stop-session');
+        startSessionBtn.removeEventListener('click', stopMentalSession);
+        startSessionBtn.addEventListener('click', startMentalSession);
+    }
+}
+function stopMentalSession(): void{
+    endMentalSession();
+}
+
 function applyTheme(theme: "light" | "dark"): void{
     let root=document.documentElement;
     if (theme==="dark"){
@@ -388,7 +420,7 @@ function setupEventListeners(): void{
     userAnswer.addEventListener("keyup", function (e: KeyboardEvent){
         if (e.shiftKey&&e.key==="Enter"){
             if (currentMode==='single') checkAnswer();
-            else handleMentalAnswer();
+            else if (sessionActive) handleMentalAnswer();
         }
     });
     themeToggle.addEventListener("click", function (){
@@ -406,6 +438,7 @@ function setupEventListeners(): void{
 
     // Mode switching
     modeSingleBtn.addEventListener("click", function(){
+        if (modeSingleBtn!.classList.contains('disabled')) return;
         modeSingleBtn!.classList.add("active");
         modeMentalBtn!.classList.remove("active");
         currentMode='single';
@@ -415,6 +448,7 @@ function setupEventListeners(): void{
         updateUIState();
     });
     modeMentalBtn.addEventListener("click", function(){
+        if (modeMentalBtn!.classList.contains('disabled')) return;
         modeMentalBtn!.classList.add("active");
         modeSingleBtn!.classList.remove("active");
         currentMode='mental';
@@ -445,8 +479,12 @@ function startMentalSession(): void{
     sessionScore={correct: 0, total: 0};
     timeLeft=30;
     updateScoreDisplay();
+    updateTimerDisplay();
     startTimer();
     disableTopicSelection(true);
+    disableModeButtons(true);
+    disableDifficulty(true);
+    setSessionButton(true);
     generateNextMentalQuestion();
 }
 function generateNextMentalQuestion(): void{
@@ -542,8 +580,15 @@ function endMentalSession(): void{
     sessionActive=false;
     if (sessionTimer) clearInterval(sessionTimer);
     disableTopicSelection(false);
+    disableModeButtons(false);
+    disableDifficulty(false);
+    setSessionButton(false);
     if (userAnswer) userAnswer.disabled=true;
     if (checkAnswerButton) checkAnswerButton.disabled=true;
+    if (answerResults){
+        answerResults.innerHTML=`<div class="empty-state">...</div>`;
+        answerResults.className="results-display";
+    }
     showNotification(`Session finished! Score: ${sessionScore.correct}/${sessionScore.total}`, 'info');
     promptSaveScore();
 }
