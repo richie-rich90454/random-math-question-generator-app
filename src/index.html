@@ -11,21 +11,26 @@
         <link rel="stylesheet" href="style.css">
         <script>
             window.MathJax={
-                tex:{
+                tex: {
                     inlineMath: [["$", "$"], ["\\(", "\\)"]],
                     displayMath: [["$$", "$$"], ["\\[", "\\]"]]
                 },
-                svg:{
+                svg: {
                     fontCache: "global"
+                },
+                options: {
+                    ignoreHtmlClass: "tex2jax_ignore",
+                    processHtmlClass: "tex2jax_process"
                 }
             };
         </script>
+        <script id="MathJax-script" async src="/mathjax/tex-chtml.js"></script>
     </head>
     <body>
         <div class="app-container">
             <div class="app-bar" data-tauri-drag-region>
                 <div class="app-bar-content" data-tauri-drag-region>
-                    <h1 class="app-title" data-tauri-drag-region>RandMatQuGeA (Random Math Question Generator App)</h1>
+                    <h1 class="app-title" data-tauri-drag-region>RandMatQuGeA</h1>
                     <div class="app-actions" data-tauri-drag-region>
                         <button class="icon-button" id="theme-toggle" aria-label="Toggle theme">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -42,11 +47,25 @@
             </div>
             <div class="app-content">
                 <div class="control-toolbar">
+                    <div class="mode-selector">
+                        <button id="mode-single" class="mode-button active">Single Question</button>
+                        <button id="mode-mental" class="mode-button">Mental Math Session</button>
+                    </div>
                     <div class="toolbar-section">
                         <h2 class="toolbar-title">Topics</h2>
                         <div class="topic-pills-container" id="topic-grid"></div>
                     </div>
-                    <div class="toolbar-actions">
+                    <div id="mental-controls" style="display: none;">
+                        <select id="difficulty-select" class="difficulty-select">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                        <span id="timer-display">⏱️ 00:30</span>
+                        <span id="score-display">✅ 0 / 0</span>
+                        <button id="start-session" class="primary-button">Start Session</button>
+                    </div>
+                    <div class="toolbar-actions" id="single-controls">
                         <button class="primary-button toolbar-button" id="genQ">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
                                 <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
@@ -115,12 +134,11 @@
             </div>
             <div class="app-footer">
                 <div class="footer-content">
-                    <span class="footer-text">RandMatQuGeA (Random Math Question Generator App) v<%= version %></span>
-                    <span class="footer-text">© 2026 Richard's Blogs</span>
+                    <span class="footer-text">RandMatQuGeA v1.1.0</span>
+                    <span class="footer-text">© 2026 Richard"s Blogs</span>
                 </div>
             </div>
         </div>
         <script type="module" src="script.ts"></script>
-        <script id="MathJax-script" async src="/mathjax/tex-mml-chtml.js"></script>
     </body>
 </html>
