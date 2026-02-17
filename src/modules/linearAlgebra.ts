@@ -1,3 +1,4 @@
+// linearAlgebra.ts
 import {questionArea} from "../script.js";
 
 interface Matrix2x2{
@@ -11,16 +12,23 @@ interface Vector2D{
     y: number;
 }
 
-export function generateMatrix(): void{
+function getRange(difficulty?: string): number{
+    if (difficulty==="easy") return 3;
+    if (difficulty==="hard") return 10;
+    return 5;
+}
+
+export function generateMatrix(difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let types=["add", "subtract", "multiply", "inverse", "system", "transpose", "scalar_mult", "power", "row_echelon"];
     let type=types[Math.floor(Math.random()*types.length)];
+    let range=getRange(difficulty);
     let generate2x2=(): Matrix2x2=>({
-        a: +(Math.random()*10-5).toFixed(2),
-        b: +(Math.random()*10-5).toFixed(2),
-        c: +(Math.random()*10-5).toFixed(2),
-        d: +(Math.random()*10-5).toFixed(2)
+        a: +(Math.random()*range*2-range).toFixed(2),
+        b: +(Math.random()*range*2-range).toFixed(2),
+        c: +(Math.random()*range*2-range).toFixed(2),
+        d: +(Math.random()*range*2-range).toFixed(2)
     });
     let matrixToString=(m: Matrix2x2, style="bmatrix"): string=>
         `\\begin{${style}} ${m.a} & ${m.b} \\\\ ${m.c} & ${m.d} \\end{${style}}`;
@@ -100,8 +108,8 @@ export function generateMatrix(): void{
         }
         case "system":{
             let A=generate2x2();
-            let x=+(Math.random()*5+1).toFixed(2);
-            let y=+(Math.random()*5+1).toFixed(2);
+            let x=+(Math.random()*range+1).toFixed(2);
+            let y=+(Math.random()*range+1).toFixed(2);
             let B={
                 a: +(A.a*x+A.b*y).toFixed(2),
                 b: +(A.c*x+A.d*y).toFixed(2)
@@ -129,7 +137,7 @@ export function generateMatrix(): void{
         }
         case "scalar_mult":{
             let A=generate2x2();
-            let k=+(Math.random()*10-5).toFixed(1);
+            let k=+(Math.random()*range*2-range).toFixed(1);
             let result: Matrix2x2={
                 a: +(k*A.a).toFixed(2),
                 b: +(k*A.b).toFixed(2),
@@ -186,16 +194,17 @@ export function generateMatrix(): void{
     }
 }
 
-export function generateVector(): void{
+export function generateVector(difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let types=["magnitude", "direction", "unit", "dot", "angle", "projection", "parametric", "polar_convert", "cartesian_convert", "polar_graph", "motion", "de_moivre", "add", "subtract", "parametric_to_cartesian"];
     let type=types[Math.floor(Math.random()*types.length)];
+    let range=getRange(difficulty);
     let generateNonZeroVector=(): Vector2D=>{
         let x: number, y: number;
         do{
-            x=Math.random()*10-5;
-            y=Math.random()*10-5;
+            x=Math.random()*range*2-range;
+            y=Math.random()*range*2-range;
         } while (Math.abs(x)<0.1&&Math.abs(y)<0.1);
         return{ x, y };
     };
@@ -285,8 +294,8 @@ export function generateVector(): void{
             break;
         }
         case "parametric":{
-            let pointX=(Math.random()*10-5).toFixed(1);
-            let pointY=(Math.random()*10-5).toFixed(1);
+            let pointX=(Math.random()*range*2-range).toFixed(1);
+            let pointY=(Math.random()*range*2-range).toFixed(1);
             let dir=generateNonZeroVector();
             questionArea.innerHTML=`Write the parametric equations for the line that passes through \\((${pointX}, ${pointY})\\) and has direction vector \\(\\langle ${dir.x.toFixed(1)}, ${dir.y.toFixed(1)} \\rangle\\).`;
             window.correctAnswer={
@@ -297,7 +306,7 @@ export function generateVector(): void{
             break;
         }
         case "polar_convert":{
-            let r=(Math.random()*10).toFixed(1);
+            let r=(Math.random()*range).toFixed(1);
             let theta=(Math.random()*360-180).toFixed(0);
             let x=(parseFloat(r)*Math.cos(parseFloat(theta)*Math.PI/180)).toFixed(2);
             let y=(parseFloat(r)*Math.sin(parseFloat(theta)*Math.PI/180)).toFixed(2);
@@ -322,7 +331,7 @@ export function generateVector(): void{
             break;
         }
         case "polar_graph":{
-            let a=(Math.random()*4+1).toFixed(1);
+            let a=(Math.random()*range+1).toFixed(1);
             let useSin=Math.random()<0.5;
             if (useSin){
                 questionArea.innerHTML=`Describe the graph of the polar equation \\(r=${a}\\sin\\theta\\). Use the format "A circle with center at (x, y) and radius (radius)" Use two decimal places.`;
@@ -345,8 +354,8 @@ export function generateVector(): void{
             break;
         }
         case "motion":{
-            let posX=(Math.random()*10-5).toFixed(1);
-            let posY=(Math.random()*10-5).toFixed(1);
+            let posX=(Math.random()*range*2-range).toFixed(1);
+            let posY=(Math.random()*range*2-range).toFixed(1);
             let v=generateNonZeroVector();
             questionArea.innerHTML=`A particle starts at \\((${posX}, ${posY})\\) and moves with constant velocity \\(\\langle ${v.x.toFixed(1)}, ${v.y.toFixed(1)} \\rangle\\). Write the position vector as a function of time \\(t\\).`;
             window.correctAnswer={
@@ -357,7 +366,7 @@ export function generateVector(): void{
             break;
         }
         case "de_moivre":{
-            let r=(Math.random()*5+1).toFixed(1);
+            let r=(Math.random()*range+1).toFixed(1);
             let theta=Math.floor(Math.random()*360);
             let n=Math.floor(Math.random()*3+2);
             let newR=(Math.pow(parseFloat(r), n)).toFixed(2);
@@ -397,8 +406,8 @@ export function generateVector(): void{
             break;
         }
         case "parametric_to_cartesian":{
-            let x0=(Math.random()*10-5).toFixed(1);
-            let y0=(Math.random()*10-5).toFixed(1);
+            let x0=(Math.random()*range*2-range).toFixed(1);
+            let y0=(Math.random()*range*2-range).toFixed(1);
             let dir=generateNonZeroXVector();
             let slope=(dir.y/dir.x).toFixed(2);
             questionArea.innerHTML=`The line is given by the parametric equations \\(x=${x0}+${dir.x.toFixed(1)}t\\) and \\(y=${y0}+${dir.y.toFixed(1)}t\\). Convert these into a single Cartesian equation.`;

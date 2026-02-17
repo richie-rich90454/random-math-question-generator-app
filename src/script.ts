@@ -7,6 +7,7 @@ import * as Trigonometry from "./modules/trigonometry";
 import type {Topic} from "./types/global";
 import * as math from "mathjs";
 import {getCurrentWindow, type Window} from "@tauri-apps/api/window";
+import {invoke} from "@tauri-apps/api/core";
 
 export let questionArea: HTMLElement | null=document.getElementById("question-area");
 let topicGrid: HTMLElement | null=document.getElementById("topic-grid");
@@ -18,10 +19,18 @@ let checkAnswerButton: HTMLButtonElement | null=document.getElementById("check-a
 let themeToggle: HTMLButtonElement | null=document.getElementById("theme-toggle") as HTMLButtonElement | null;
 let helpButton: HTMLButtonElement | null=document.getElementById("help-button") as HTMLButtonElement | null;
 let expectedFormatDiv: HTMLElement | null=document.getElementById("expected-format");
+let modeSingleBtn: HTMLButtonElement | null=document.getElementById("mode-single") as HTMLButtonElement | null;
+let modeMentalBtn: HTMLButtonElement | null=document.getElementById("mode-mental") as HTMLButtonElement | null;
+let mentalControls: HTMLElement | null=document.getElementById("mental-controls");
+let singleControls: HTMLElement | null=document.getElementById("single-controls");
+let difficultySelect: HTMLSelectElement | null=document.getElementById("difficulty-select") as HTMLSelectElement | null;
+let timerDisplay: HTMLElement | null=document.getElementById("timer-display");
+let scoreDisplay: HTMLElement | null=document.getElementById("score-display");
+let startSessionBtn: HTMLButtonElement | null=document.getElementById("start-session") as HTMLButtonElement | null;
+
 window.correctAnswer={correct: ""};
 window.expectedFormat="";
 let selectedTopic: string | null=null;
-let questionTimeout: ReturnType<typeof setTimeout>;
 let topics: Topic[]=[
 {id: "add", name: "Addition", icon: "+", category: "Arithmetic"},
 {id: "subtrt", name: "Subtraction", icon: "-", category: "Arithmetic"},
@@ -55,6 +64,16 @@ try{
 catch (e){
     console.log("Not running in Tauri environment, theme sync disabled.");
 }
+
+// Mental math state
+let currentMode: 'single' | 'mental'='single';
+let sessionActive: boolean=false;
+let sessionScore={correct: 0, total: 0};
+let sessionTimer: ReturnType<typeof setInterval> | null=null;
+let timeLeft: number=30;
+let maxQuestions: number=5;
+let currentDifficulty: string='medium';
+
 function applyTheme(theme: "light" | "dark"): void{
     let root=document.documentElement;
     if (theme==="dark"){
@@ -136,7 +155,6 @@ function generateQuestion(): void{
         return;
     }
     if (!answerResults||!userAnswer||!questionArea||!checkAnswerButton) return;
-    clearTimeout(questionTimeout);
     answerResults.innerHTML=`
     <div class="empty-state">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
@@ -154,96 +172,95 @@ function generateQuestion(): void{
       <p>Generating question...</p>
     </div>
   `;
-    questionTimeout=setTimeout(()=>{
-        if (!questionArea||!userAnswer||!checkAnswerButton) return;
-        switch (selectedTopic){
-            case "add":
-                Arithmetic.generateAddition();
-                break;
-            case "subtrt":
-                Arithmetic.generateSubtraction();
-                break;
-            case "mult":
-                Arithmetic.generateMultiplication();
-                break;
-            case "divid":
-                Arithmetic.generateDivision();
-                break;
-            case "root":
-                Algebra.generateRoot();
-                break;
-            case "deri":
-                Calculus.generateDerivative();
-                break;
-            case "inte":
-                Calculus.generateIntegral();
-                break;
-            case "mtrx":
-                LinearAlgebra.generateMatrix();
-                break;
-            case "vctr":
-                LinearAlgebra.generateVector();
-                break;
-            case "sin":
-                Trigonometry.generateSin();
-                break;
-            case "cos":
-                Trigonometry.generateCosine();
-                break;
-            case "tan":
-                Trigonometry.generateTangent();
-                break;
-            case "cosec":
-                Trigonometry.generateCosecant();
-                break;
-            case "sec":
-                Trigonometry.generateSecant();
-                break;
-            case "cot":
-                Trigonometry.generateCotangent();
-                break;
-            case "log":
-                Algebra.generateLogarithm();
-                break;
-            case "exp":
-                Algebra.generateExponent();
-                break;
-            case "fact":
-                Algebra.generateFactorial();
-                break;
-            case "perm":
-                DiscreteMathematics.generatePermutation();
-                break;
-            case "comb":
-                DiscreteMathematics.generateCombination();
-                break;
-            case "prob":
-                DiscreteMathematics.generateProbability();
-                break;
-            case "ser":
-                Algebra.generateSeries();
-                break;
-            case "lim":
-                Calculus.generateLimit();
-                break;
-            case "relRates":
-                Calculus.generateRelatedRates();
-                break;
-            default:
-                questionArea.innerHTML=`<div class="empty-state"><p>Please select a topic to generate a question</p></div>`;
-                return;
-        }
-        if (expectedFormatDiv&&window.expectedFormat){
-            expectedFormatDiv.textContent="Expected format: "+window.expectedFormat;
-        }
-        userAnswer.disabled=false;
-        checkAnswerButton.disabled=false;
-        userAnswer.focus();
-        updateUIState();
-        if (window.MathJax&&window.MathJax.typesetPromise){
-            window.MathJax.typesetPromise([questionArea]).catch((err: any)=>console.log("MathJax typeset error:", err));
-        }
-    }, 100);
+    // Generate immediately, no setTimeout
+    if (!questionArea||!userAnswer||!checkAnswerButton) return;
+    switch (selectedTopic){
+        case "add":
+            Arithmetic.generateAddition();
+            break;
+        case "subtrt":
+            Arithmetic.generateSubtraction();
+            break;
+        case "mult":
+            Arithmetic.generateMultiplication();
+            break;
+        case "divid":
+            Arithmetic.generateDivision();
+            break;
+        case "root":
+            Algebra.generateRoot();
+            break;
+        case "deri":
+            Calculus.generateDerivative();
+            break;
+        case "inte":
+            Calculus.generateIntegral();
+            break;
+        case "mtrx":
+            LinearAlgebra.generateMatrix();
+            break;
+        case "vctr":
+            LinearAlgebra.generateVector();
+            break;
+        case "sin":
+            Trigonometry.generateSin();
+            break;
+        case "cos":
+            Trigonometry.generateCosine();
+            break;
+        case "tan":
+            Trigonometry.generateTangent();
+            break;
+        case "cosec":
+            Trigonometry.generateCosecant();
+            break;
+        case "sec":
+            Trigonometry.generateSecant();
+            break;
+        case "cot":
+            Trigonometry.generateCotangent();
+            break;
+        case "log":
+            Algebra.generateLogarithm();
+            break;
+        case "exp":
+            Algebra.generateExponent();
+            break;
+        case "fact":
+            Algebra.generateFactorial();
+            break;
+        case "perm":
+            DiscreteMathematics.generatePermutation();
+            break;
+        case "comb":
+            DiscreteMathematics.generateCombination();
+            break;
+        case "prob":
+            DiscreteMathematics.generateProbability();
+            break;
+        case "ser":
+            Algebra.generateSeries();
+            break;
+        case "lim":
+            Calculus.generateLimit();
+            break;
+        case "relRates":
+            Calculus.generateRelatedRates();
+            break;
+        default:
+            questionArea.innerHTML=`<div class="empty-state"><p>Please select a topic to generate a question</p></div>`;
+            return;
+    }
+    if (expectedFormatDiv&&window.expectedFormat){
+        expectedFormatDiv.textContent="Expected format: "+window.expectedFormat;
+    }
+    userAnswer.disabled=false;
+    checkAnswerButton.disabled=false;
+    userAnswer.focus();
+    updateUIState();
+    if (window.MathJax&&window.MathJax.typesetPromise){
+        window.MathJax.typesetPromise([questionArea]).catch((err: any)=>console.log("MathJax typeset error:", err));
+    }
 }
 function isAnswerCorrect(userInput: string, correct: any, alternate: any): boolean{
     const trimmedInput=userInput.replace(/\s+/g, "");
@@ -365,12 +382,13 @@ function showNotification(message: string, type: "info" | "warning"="info"): voi
 }, 3000);
 }
 function setupEventListeners(): void{
-    if (!generateQuestionButton||!checkAnswerButton||!userAnswer||!themeToggle||!helpButton) return;
+    if (!generateQuestionButton||!checkAnswerButton||!userAnswer||!themeToggle||!helpButton||!modeSingleBtn||!modeMentalBtn||!mentalControls||!singleControls||!difficultySelect||!timerDisplay||!scoreDisplay||!startSessionBtn) return;
     generateQuestionButton.addEventListener("click", generateQuestion);
     checkAnswerButton.addEventListener("click", checkAnswer);
     userAnswer.addEventListener("keyup", function (e: KeyboardEvent){
         if (e.shiftKey&&e.key==="Enter"){
-            checkAnswer();
+            if (currentMode==='single') checkAnswer();
+            else handleMentalAnswer();
         }
     });
     themeToggle.addEventListener("click", function (){
@@ -385,12 +403,214 @@ function setupEventListeners(): void{
     helpButton.addEventListener("click", function (){
         showNotification("Select a topic, generate a question, enter your answer, and check it!", "info");
     });
+
+    // Mode switching
+    modeSingleBtn.addEventListener("click", function(){
+        modeSingleBtn!.classList.add("active");
+        modeMentalBtn!.classList.remove("active");
+        currentMode='single';
+        mentalControls!.style.display='none';
+        singleControls!.style.display='flex';
+        if (sessionActive) endMentalSession();
+        updateUIState();
+    });
+    modeMentalBtn.addEventListener("click", function(){
+        modeMentalBtn!.classList.add("active");
+        modeSingleBtn!.classList.remove("active");
+        currentMode='mental';
+        mentalControls!.style.display='flex';
+        singleControls!.style.display='none';
+        updateUIState();
+    });
+
+    difficultySelect.addEventListener("change", function(e: Event){
+        currentDifficulty=(e.target as HTMLSelectElement).value;
+    });
+
+    startSessionBtn.addEventListener("click", startMentalSession);
 }
 function updateMathJaxColors(): void{
     if (window.MathJax&&window.MathJax.typesetPromise){
-        window.MathJax.typesetPromise().catch((err: any)=>console.log("MathJax re-render error:", err));
+        window.MathJax.typesetPromise().catch((_err: any)=>console.log("MathJax re-render error:", _err));
     }
 }
+
+// Mental math functions
+function startMentalSession(): void{
+    if (!selectedTopic){
+        showNotification("Please select a topic first", "warning");
+        return;
+    }
+    sessionActive=true;
+    sessionScore={correct: 0, total: 0};
+    timeLeft=30;
+    updateScoreDisplay();
+    startTimer();
+    disableTopicSelection(true);
+    generateNextMentalQuestion();
+}
+function generateNextMentalQuestion(): void{
+    if (!selectedTopic) return;
+    if (!questionArea||!userAnswer||!checkAnswerButton) return;
+    if (answerResults){
+        answerResults.innerHTML=`<div class="empty-state">...</div>`;
+    }
+    questionArea.innerHTML=`
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Generating...</p>
+    </div>
+  `;
+    switch (selectedTopic){
+        case "add": Arithmetic.generateAddition(currentDifficulty); break;
+        case "subtrt": Arithmetic.generateSubtraction(currentDifficulty); break;
+        case "mult": Arithmetic.generateMultiplication(currentDifficulty); break;
+        case "divid": Arithmetic.generateDivision(currentDifficulty); break;
+        case "root": Algebra.generateRoot(currentDifficulty); break;
+        case "deri": Calculus.generateDerivative(currentDifficulty); break;
+        case "inte": Calculus.generateIntegral(currentDifficulty); break;
+        case "mtrx": LinearAlgebra.generateMatrix(currentDifficulty); break;
+        case "vctr": LinearAlgebra.generateVector(currentDifficulty); break;
+        case "sin": Trigonometry.generateSin(currentDifficulty); break;
+        case "cos": Trigonometry.generateCosine(currentDifficulty); break;
+        case "tan": Trigonometry.generateTangent(currentDifficulty); break;
+        case "cosec": Trigonometry.generateCosecant(currentDifficulty); break;
+        case "sec": Trigonometry.generateSecant(currentDifficulty); break;
+        case "cot": Trigonometry.generateCotangent(currentDifficulty); break;
+        case "log": Algebra.generateLogarithm(currentDifficulty); break;
+        case "exp": Algebra.generateExponent(currentDifficulty); break;
+        case "fact": Algebra.generateFactorial(currentDifficulty); break;
+        case "perm": DiscreteMathematics.generatePermutation(currentDifficulty); break;
+        case "comb": DiscreteMathematics.generateCombination(currentDifficulty); break;
+        case "prob": DiscreteMathematics.generateProbability(currentDifficulty); break;
+        case "ser": Algebra.generateSeries(currentDifficulty); break;
+        case "lim": Calculus.generateLimit(currentDifficulty); break;
+        case "relRates": Calculus.generateRelatedRates(currentDifficulty); break;
+        default: questionArea.innerHTML=`<div class="empty-state"><p>Unknown topic</p></div>`; return;
+    }
+    if (expectedFormatDiv&&window.expectedFormat){
+        expectedFormatDiv.textContent="Expected format: "+window.expectedFormat;
+    }
+    userAnswer.disabled=false;
+    userAnswer.focus();
+    if (window.MathJax&&window.MathJax.typesetPromise){
+        window.MathJax.typesetPromise([questionArea]).catch((err: any)=>console.log("MathJax typeset error:", err));
+    }
+}
+function handleMentalAnswer(): void{
+    if (!sessionActive) return;
+    if (!userAnswer||!answerResults) return;
+    let userInput=userAnswer.value.trim();
+    if (!userInput){
+        showNotification("Please enter an answer", "warning");
+        return;
+    }
+    let correct=window.correctAnswer.correct;
+    let alternate=window.correctAnswer.alternate;
+    checkAnswerFast(userInput, correct, alternate).then(isCorrect=>{
+        if (isCorrect) sessionScore.correct++;
+        sessionScore.total++;
+        updateScoreDisplay();
+        if (answerResults){
+            answerResults.innerHTML=isCorrect
+                ? `<div class="result-success">✅ Correct!</div>`
+                : `<div class="result-error">❌ Incorrect. The answer was ${correct}</div>`;
+        }
+        if (userAnswer) userAnswer.value="";
+        if (sessionScore.total>=maxQuestions){
+            endMentalSession();
+        }
+        else{
+            timeLeft=30;
+            updateTimerDisplay();
+            generateNextMentalQuestion();
+        }
+    });
+}
+async function checkAnswerFast(userInput: string, correct: string, alternate?: string): Promise<boolean>{
+    if (window.__TAURI__){
+        try{
+            return await invoke('check_math', {userExpr: userInput, correctExpr: correct});
+        }
+        catch (e){
+            console.warn("Rust check failed, falling back to JS", e);
+        }
+    }
+    return isAnswerCorrect(userInput, correct, alternate);
+}
+function endMentalSession(): void{
+    sessionActive=false;
+    if (sessionTimer) clearInterval(sessionTimer);
+    disableTopicSelection(false);
+    if (userAnswer) userAnswer.disabled=true;
+    if (checkAnswerButton) checkAnswerButton.disabled=true;
+    showNotification(`Session finished! Score: ${sessionScore.correct}/${sessionScore.total}`, 'info');
+    promptSaveScore();
+}
+function promptSaveScore(): void{
+    if (!window.__TAURI__){
+        let scores=JSON.parse(localStorage.getItem('leaderboard')||'[]');
+        scores.push({
+            topic: selectedTopic,
+            score: sessionScore.correct,
+            total: sessionScore.total,
+            difficulty: currentDifficulty,
+            date: new Date().toISOString()
+        });
+        localStorage.setItem('leaderboard', JSON.stringify(scores));
+        showNotification('Score saved locally!', 'info');
+    }
+    else{
+        invoke('save_score', {
+            entry: {
+                topic: selectedTopic,
+                score: sessionScore.correct,
+                total: sessionScore.total,
+                difficulty: currentDifficulty,
+                date: new Date().toISOString()
+            }
+        }).then(()=>showNotification('Score saved!', 'info'))
+          .catch(_err=>showNotification('Failed to save score', 'warning'));
+    }
+}
+function startTimer(): void{
+    if (sessionTimer) clearInterval(sessionTimer);
+    sessionTimer=setInterval(()=>{
+        timeLeft--;
+        updateTimerDisplay();
+        if (timeLeft<=0){
+            if (sessionActive){
+                sessionScore.total++;
+                updateScoreDisplay();
+                showNotification('Time is up!', 'warning');
+                if (sessionScore.total>=maxQuestions){
+                    endMentalSession();
+                }
+                else{
+                    timeLeft=30;
+                    updateTimerDisplay();
+                    generateNextMentalQuestion();
+                }
+            }
+        }
+    }, 1000);
+}
+function updateTimerDisplay(): void{
+    if (!timerDisplay) return;
+    let mins=Math.floor(timeLeft/60);
+    let secs=timeLeft%60;
+    timerDisplay.textContent=`⏱️ ${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+}
+function updateScoreDisplay(): void{
+    if (!scoreDisplay) return;
+    scoreDisplay.textContent=`✅ ${sessionScore.correct} / ${sessionScore.total}`;
+}
+function disableTopicSelection(disabled: boolean): void{
+    document.querySelectorAll(".topic-pill").forEach(el=>{
+        (el as HTMLButtonElement).disabled=disabled;
+    });
+}
+
 let additionalStyles=document.createElement("style");
 additionalStyles.textContent=`
   .category-title{
@@ -487,6 +707,71 @@ additionalStyles.textContent=`
     font-size: 0.8rem;
     color: var(--text-tertiary);
     font-style: italic;
+  }
+  .mode-selector{
+    display: flex;
+    background: var(--surface-alt);
+    border-radius: var(--radius-full);
+    padding: 2px;
+    margin-right: var(--spacing-md);
+    align-self: center;
+  }
+  .mode-button{
+    padding: var(--spacing-xs) var(--spacing-md);
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-full);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+  }
+  .mode-button.active{
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+  }
+  #mental-controls{
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-left: auto;
+  }
+  .difficulty-select{
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+  }
+  #timer-display, #score-display{
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--surface-alt);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border);
+  }
+  #start-session{
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: 0.8125rem;
+  }
+  @media (max-width: 768px){
+    .control-toolbar{
+      flex-wrap: wrap;
+    }
+    .mode-selector{
+      width: 100%;
+      margin-bottom: var(--spacing-sm);
+    }
+    #mental-controls{
+      width: 100%;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
   }
 `;
 document.head.appendChild(additionalStyles);

@@ -21,7 +21,13 @@ interface TrigIntegral{
     plain: string;
 }
 
-export function generateDerivative(): void{
+function getMaxCoeff(difficulty?: string): number{
+    if (difficulty==="easy") return 3;
+    if (difficulty==="hard") return 10;
+    return 5;
+}
+
+export function generateDerivative(difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let trigFunctions: TrigFunction[]=[{func: "\\sin(x)", deriv: "\\cos(x)", plainDeriv: "cos(x)"}, {func: "\\cos(x)", deriv: "-\\sin(x)", plainDeriv: "-sin(x)"}, {func: "\\tan(x)", deriv: "\\sec^{2}(x)", plainDeriv: "sec^2(x)"}, {func: "\\csc(x)", deriv: "-\\csc(x)\\cot(x)", plainDeriv: "-csc(x)cot(x)"}, {func: "\\sec(x)", deriv: "\\sec(x)\\tan(x)", plainDeriv: "sec(x)tan(x)"}, {func: "\\cot(x)", deriv: "-\\csc^{2}(x)", plainDeriv: "-csc^2(x)"} ];
@@ -37,6 +43,7 @@ export function generateDerivative(): void{
     let latexToPlain=(str: string): string=>{
         return str.replace(/\\/g, "").replace(/{/g, "").replace(/}/g, "").replace(/cdot/g, "*").replace(/frac\(([^)]+)\)\(([^)]+)\)/g, "($1)/($2)").replace(/frac{([^}]+)}{([^}]+)}/g, "($1)/($2)");
     };
+    let maxCoeff=getMaxCoeff(difficulty);
     switch (questionType){
         case "polynomial":{
             let numTerms=Math.floor(Math.random()*4)+2;
@@ -48,8 +55,8 @@ export function generateDerivative(): void{
             let coefficients: number[]=[];
             for (let exponent of exponentsArray){
                 let coeff=exponent===0?Math.floor(Math.random()*100)+1 :
-                    exponent===1?Math.floor(Math.random()*20)+1 :
-                        Math.floor(Math.random()*30)+1;
+                    exponent===1?Math.floor(Math.random()*maxCoeff)+1 :
+                        Math.floor(Math.random()*maxCoeff*2)+1;
                 coefficients.push(coeff);
             }
             let terms: string[]=[];
@@ -87,7 +94,7 @@ export function generateDerivative(): void{
         }
         case "trigonometric":{
             let trig=trigFunctions[Math.floor(Math.random()*trigFunctions.length)];
-            let coeff=Math.floor(Math.random()*5)+1;
+            let coeff=Math.floor(Math.random()*maxCoeff)+1;
             polynomial=`${coeff} ${trig.func}`;
             correctDerivative=`${coeff} \\cdot ${trig.deriv}`;
             plainCorrectDerivative=`${coeff}*${trig.plainDeriv}`;
@@ -96,7 +103,7 @@ export function generateDerivative(): void{
         }
         case "exponential":{
             let exp=expFunctions[Math.floor(Math.random()*expFunctions.length)];
-            let coeff=Math.floor(Math.random()*5)+1;
+            let coeff=Math.floor(Math.random()*maxCoeff)+1;
             polynomial=`${coeff} ${exp.func}`;
             correctDerivative=`${coeff} \\cdot ${exp.deriv}`;
             plainCorrectDerivative=`${coeff}*${exp.plainDeriv}`;
@@ -112,7 +119,7 @@ export function generateDerivative(): void{
             break;
         }
         case "product":{
-            let a=Math.floor(Math.random()*5)+1;
+            let a=Math.floor(Math.random()*maxCoeff)+1;
             let linear=`${a}x`;
             let trigProd=trigFunctions[Math.floor(Math.random()*trigFunctions.length)];
             polynomial=`(${linear}) \\cdot (${trigProd.func})`;
@@ -122,7 +129,7 @@ export function generateDerivative(): void{
             break;
         }
         case "quotient":{
-            let b=Math.floor(Math.random()*5)+1;
+            let b=Math.floor(Math.random()*maxCoeff)+1;
             let c=Math.floor(Math.random()*6);
             let trigQuot=trigFunctions[Math.floor(Math.random()*trigFunctions.length)];
             let num=`${b}x+${c}`;
@@ -134,7 +141,7 @@ export function generateDerivative(): void{
         }
         case "chain":{
             let chainType=Math.floor(Math.random()*3);
-            let a=Math.floor(Math.random()*3)+1;
+            let a=Math.floor(Math.random()*maxCoeff)+1;
             let b=Math.floor(Math.random()*3);
             let inner=`${a}x+${b}`;
             let plainInner=`${a}x+${b}`;
@@ -159,8 +166,8 @@ export function generateDerivative(): void{
             break;
         }
         case "implicit":{
-            let a=Math.floor(Math.random()*3)+1;
-            let b=Math.floor(Math.random()*3)+1;
+            let a=Math.floor(Math.random()*maxCoeff)+1;
+            let b=Math.floor(Math.random()*maxCoeff)+1;
             polynomial=`${a}x^{2}+${b}y^{2}=1`;
             correctDerivative=`-\\frac{${a}x}{${b}y}`;
             plainCorrectDerivative=`-(${a}x)/(${b}y)`;
@@ -168,7 +175,7 @@ export function generateDerivative(): void{
             break;
         }
         case "higherOrder":{
-            let coeff=Math.floor(Math.random()*10)+1;
+            let coeff=Math.floor(Math.random()*maxCoeff*2)+1;
             let exp=Math.floor(Math.random()*4)+2;
             polynomial=`${coeff}x^{${exp}}`;
             let order=Math.floor(Math.random()*2)+2;
@@ -190,8 +197,8 @@ export function generateDerivative(): void{
             break;
         }
         case "motion":{
-            let a=Math.floor(Math.random()*5)+1;
-            let b=Math.floor(Math.random()*5)+1;
+            let a=Math.floor(Math.random()*maxCoeff)+1;
+            let b=Math.floor(Math.random()*maxCoeff)+1;
             polynomial=`${a}t^{2}+${b}t`;
             correctDerivative=`${2*a}t+${b}`;
             plainCorrectDerivative=`${2*a}t+${b}`;
@@ -213,7 +220,7 @@ export function generateDerivative(): void{
     };
     window.expectedFormat="Enter the derivative as an expression, e.g., 2x+3, cos(x), etc.";
 }
-export function generateIntegral(): void{
+export function generateIntegral(difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let questionTypes=["polynomial", "trigonometric", "exponential", "logarithmic", "substitution", "definite", "initialValue", "area", "motion"];
@@ -227,6 +234,7 @@ export function generateIntegral(): void{
     let latexToPlain=(str: string): string=>{
         return str.replace(/\\/g, "").replace(/{/g, "").replace(/}/g, "").replace(/cdot/g, "*").replace(/frac\(([^)]+)\)\(([^)]+)\)/g, "($1)/($2)").replace(/frac{([^}]+)}{([^}]+)}/g, "($1)/($2)");
     };
+    let maxCoeff=getMaxCoeff(difficulty);
     switch (questionType){
         case "polynomial":{
             let numTerms=Math.floor(Math.random()*4)+2;
@@ -238,8 +246,8 @@ export function generateIntegral(): void{
             let coefficients: number[]=[];
             for (let exponent of exponentsArray){
                 let coeff=exponent===0?Math.floor(Math.random()*100)+1 :
-                    exponent===1?Math.floor(Math.random()*20)+1 :
-                        Math.floor(Math.random()*30)+1;
+                    exponent===1?Math.floor(Math.random()*maxCoeff)+1 :
+                        Math.floor(Math.random()*maxCoeff*2)+1;
                 coefficients.push(coeff);
             }
             let terms: string[]=[];
@@ -277,8 +285,8 @@ export function generateIntegral(): void{
             {func: "\\sec^{2}(ax)", integral: "\\frac{1}{a}\\tan(ax)", plain: "1/a tan(ax)"}
             ];
             let chosen=trigIntegrals[Math.floor(Math.random()*trigIntegrals.length)];
-            let a=Math.floor(Math.random()*3)+1;
-            let coeff=Math.floor(Math.random()*4)+1;
+            let a=Math.floor(Math.random()*maxCoeff)+1;
+            let coeff=Math.floor(Math.random()*maxCoeff)+1;
             polynomial=`${coeff}${chosen.func.replace("a", a.toString())}`;
             correctIntegral=`${coeff}${chosen.integral.replace(/a/g, a.toString())}+C`;
             plainCorrectIntegral=`${(coeff/a).toFixed(2)}${chosen.plain.replace("a", a.toString()).replace("1/a", "1/"+a)}+C`.replace(/(\.00|0+)$/, "");
@@ -287,8 +295,8 @@ export function generateIntegral(): void{
         }
         case "exponential":{
             let base=Math.random()<0.5?"e" : Math.floor(Math.random()*3)+2;
-            let a=Math.floor(Math.random()*3)+1;
-            let coeff=Math.floor(Math.random()*4)+1;
+            let a=Math.floor(Math.random()*maxCoeff)+1;
+            let coeff=Math.floor(Math.random()*maxCoeff)+1;
             if (base==="e"){
                 polynomial=`${coeff}e^{${a}x}`;
                 plainCorrectIntegral=`${(coeff/a).toFixed(2)}e^(${a}x)+C`;
@@ -301,17 +309,17 @@ export function generateIntegral(): void{
             break;
         }
         case "logarithmic":{
-            let coeff=Math.floor(Math.random()*5)+1;
+            let coeff=Math.floor(Math.random()*maxCoeff)+1;
             polynomial=`${coeff}/x`;
             plainCorrectIntegral=`${coeff}ln|x|+C`;
             mathExpression=`\\[ \\int ${polynomial} \\,dx=? \\]`;
             break;
         }
         case "substitution":{
-            let a=Math.floor(Math.random()*3)+1;
+            let a=Math.floor(Math.random()*maxCoeff)+1;
             let b=Math.floor(Math.random()*5);
             let power=Math.floor(Math.random()*3)+2;
-            let coeff=Math.floor(Math.random()*4)+1;
+            let coeff=Math.floor(Math.random()*maxCoeff)+1;
             polynomial=`${coeff}(${a}x+${b})^{${power}}`;
             let newPower=power+1;
             plainCorrectIntegral=`${(coeff/(a*newPower)).toFixed(2)}(${a}x+${b})^${newPower}+C`.replace(/\.00/g, "");
@@ -320,7 +328,7 @@ export function generateIntegral(): void{
         }
         case "definite":{
             let exponents=Array.from({ length: 3 }, ()=>Math.floor(Math.random()*4));
-            let coefficients=exponents.map(()=>Math.floor(Math.random()*5)+1);
+            let coefficients=exponents.map(()=>Math.floor(Math.random()*maxCoeff)+1);
             let [lower, upper]=[1, Math.floor(Math.random()*5)+2];
             polynomial=coefficients.map((c, i)=>`${c}x^${exponents[i]}`).join("+");
             let integral=coefficients.map((c, i)=>c/(exponents[i]+1)).reduce((a, b)=>a+b, 0);
@@ -330,7 +338,7 @@ export function generateIntegral(): void{
             break;
         }
         case "initialValue":{
-            let coeff=Math.floor(Math.random()*5)+1;
+            let coeff=Math.floor(Math.random()*maxCoeff)+1;
             let exponent=Math.floor(Math.random()*3)+1;
             let xVal=Math.floor(Math.random()*3)+1;
             let yVal=Math.floor(Math.random()*20)+5;
@@ -349,7 +357,7 @@ export function generateIntegral(): void{
             break;
         }
         case "motion":{
-            let coeff=Math.floor(Math.random()*4)+1;
+            let coeff=Math.floor(Math.random()*maxCoeff)+1;
             let type=Math.random()<0.5?"velocity" : "acceleration";
             if (type==="velocity"){
                 polynomial=`${coeff}t^2`;
@@ -377,16 +385,17 @@ export function generateIntegral(): void{
     };
     window.expectedFormat="Enter the integral as an expression, e.g., 2x^3/3+5x^2/2+C, 1/3 sin(3x)+C, etc.";
 }
-export function generateLimit(): void{
+export function generateLimit(difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let types=["polynomial", "rational", "infinity", "trig"];
     let type=types[Math.floor(Math.random()*types.length)];
     let mathExpression="";
     let plainCorrectAnswer="";
+    let maxCoeff=getMaxCoeff(difficulty);
     switch (type){
         case "polynomial":{
-            let a=Math.floor(Math.random()*5)+1;
+            let a=Math.floor(Math.random()*maxCoeff)+1;
             let c=Math.floor(Math.random()*10)-5;
             let x0=Math.floor(Math.random()*5);
             let limit=a*x0*x0+c;
@@ -397,8 +406,8 @@ export function generateLimit(): void{
             break;
         }
         case "rational":{
-            let a=Math.floor(Math.random()*5)+1;
-            let b=Math.floor(Math.random()*5)+1;
+            let a=Math.floor(Math.random()*maxCoeff)+1;
+            let b=Math.floor(Math.random()*maxCoeff)+1;
             let x0=Math.floor(Math.random()*5)+1;
             let limit=(a*x0+1)/(b*x0-1);
             mathExpression=`\\[ \\lim_{x \\to ${x0}} \\frac{${a}x+1}{${b}x-1} \\]`;
@@ -411,7 +420,7 @@ export function generateLimit(): void{
             break;
         }
         case "infinity":{
-            let a=Math.floor(Math.random()*3)+1;
+            let a=Math.floor(Math.random()*maxCoeff)+1;
             // @ts-ignore-variable is defined for conceptual clarity
             let limit=a;
             mathExpression=`\\[ \\lim_{x \\to \\infty} \\frac{${a}x^2+x}{x^2-1} \\]`;
@@ -439,7 +448,7 @@ export function generateLimit(): void{
         );
     }
 }
-export function generateRelatedRates(): void{
+export function generateRelatedRates(difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let types=["ladder", "cone"];
@@ -447,14 +456,15 @@ export function generateRelatedRates(): void{
     let mathExpression="";
     let plainCorrectAnswer="";
     let problemText="";
+    let scale=getMaxCoeff(difficulty);
     switch (type){
         case "ladder":{
-            let ladder=10;
-            let x=6;
-            let dx_dt=2;
+            let ladder=10*scale/5;
+            let x=6*scale/5;
+            let dx_dt=2*scale/5;
             let y=Math.sqrt(ladder*ladder-x*x);
             let dy_dt=-(x/y)*dx_dt;
-            problemText=`A ${ladder}-ft ladder leans against a wall. The bottom is ${x} ft from the wall, moving away at ${dx_dt} ft/s. Find the rate at which the top is sliding down.`;
+            problemText=`A ${ladder.toFixed(1)}-ft ladder leans against a wall. The bottom is ${x.toFixed(1)} ft from the wall, moving away at ${dx_dt.toFixed(1)} ft/s. Find the rate at which the top is sliding down.`;
             mathExpression=`\\[ \\frac{dy}{dt}=? \\]`;
             plainCorrectAnswer=dy_dt.toFixed(2);
             window.correctAnswer={ correct: plainCorrectAnswer, alternate: plainCorrectAnswer };
@@ -462,13 +472,13 @@ export function generateRelatedRates(): void{
             break;
         }
         case "cone":{
-            let r=3;
-            let h=9;
-            let dr_dt=0.5;
+            let r=3*scale/5;
+            let h=9*scale/5;
+            let dr_dt=0.5*scale/5;
             // @ts-ignore-variable is defined for conceptual clarity
             let V=(1/3)*Math.PI*r*r*h;
             let dV_dt=Math.PI*r*h*dr_dt;
-            problemText=`A conical tank has radius ${r} ft and height ${h} ft. The radius increases at ${dr_dt} ft/s. Find the rate of change of volume.`;
+            problemText=`A conical tank has radius ${r.toFixed(1)} ft and height ${h.toFixed(1)} ft. The radius increases at ${dr_dt.toFixed(2)} ft/s. Find the rate of change of volume.`;
             mathExpression=`\\[ \\frac{dV}{dt}=? \\]`;
             plainCorrectAnswer=dV_dt.toFixed(2);
             window.correctAnswer={ correct: plainCorrectAnswer, alternate: plainCorrectAnswer };

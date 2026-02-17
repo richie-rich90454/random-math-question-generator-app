@@ -1,9 +1,16 @@
 import {questionArea} from "../script.js";
 
-export function generateAddition(): void{
+function getRangeForDifficulty(difficulty?: string): {min: number, max: number}{
+    if (difficulty==="easy") return {min: 1, max: 50};
+    if (difficulty==="hard") return {min: -1000, max: 3000};
+    return {min: -1000, max: 1500};
+}
+
+export function generateAddition(difficulty?: string): void{
     if (!questionArea) return;
-    let num1: number=parseFloat(((Math.random()*1500)-1000).toFixed(3));
-    let num2: number=parseFloat((Math.random()*1500).toFixed(3));
+    let range=getRangeForDifficulty(difficulty);
+    let num1: number=parseFloat(((Math.random()*(range.max-range.min))+range.min).toFixed(3));
+    let num2: number=parseFloat((Math.random()*range.max).toFixed(3));
     questionArea.innerHTML=`\$${num1}+${num2}=\$`;
     window.correctAnswer={
         correct: (num1+num2).toFixed(3),
@@ -14,10 +21,11 @@ export function generateAddition(): void{
         window.MathJax.typeset();
     }
 }
-export function generateSubtraction(): void{
+export function generateSubtraction(difficulty?: string): void{
     if (!questionArea) return;
-    let num1: number=parseFloat(((Math.random()*1500)-1000).toFixed(3));
-    let num2: number=parseFloat((Math.random()*1500).toFixed(3));
+    let range=getRangeForDifficulty(difficulty);
+    let num1: number=parseFloat(((Math.random()*(range.max-range.min))+range.min).toFixed(3));
+    let num2: number=parseFloat((Math.random()*range.max).toFixed(3));
     questionArea.innerHTML=`\$${num1}-${num2}=\$`;
     window.correctAnswer={
         correct: (num1-num2).toFixed(3),
@@ -28,10 +36,11 @@ export function generateSubtraction(): void{
         window.MathJax.typeset();
     }
 }
-export function generateMultiplication(): void{
+export function generateMultiplication(difficulty?: string): void{
     if (!questionArea) return;
-    let num1: number=parseFloat(((Math.random()*1500)-1000).toFixed(2));
-    let num2: number=parseFloat((Math.random()*1500).toFixed(2));
+    let range=getRangeForDifficulty(difficulty);
+    let num1: number=parseFloat(((Math.random()*(range.max-range.min))+range.min).toFixed(2));
+    let num2: number=parseFloat((Math.random()*range.max).toFixed(2));
     questionArea.innerHTML=`\$${num1} \\times ${num2}=\$<br>Round your answer to two decimal places`;
     let actualAnswer: number=num1*num2;
     window.correctAnswer={
@@ -43,10 +52,11 @@ export function generateMultiplication(): void{
         window.MathJax.typeset();
     }
 }
-export function generateDivision(): void{
+export function generateDivision(difficulty?: string): void{
     if (!questionArea) return;
-    let num1: number=parseFloat(((Math.random()*1500)-1000).toFixed(2));
-    let num2: number=parseFloat((Math.random()*1500).toFixed(2));
+    let range=getRangeForDifficulty(difficulty);
+    let num1: number=parseFloat(((Math.random()*(range.max-range.min))+range.min).toFixed(2));
+    let num2: number=parseFloat((Math.random()*range.max).toFixed(2));
     questionArea.innerHTML=`\$${num1} \\div ${num2}=\$<br>Round your answer to two decimal places`;
     let actualAnswer: number=num1/num2;
     window.correctAnswer={

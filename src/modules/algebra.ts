@@ -5,12 +5,19 @@ interface SeriesType{
     conv: string;
 }
 
-export function generateLogarithm(): void{
+function getMaxForDifficulty(difficulty?: string, baseMax: number=10): number{
+    if (difficulty==="easy") return Math.floor(baseMax*0.5);
+    if (difficulty==="hard") return Math.floor(baseMax*2);
+    return baseMax;
+}
+
+export function generateLogarithm(difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let types=["basic", "change_base", "equation", "properties", "exponential_form"];
     let type=types[Math.floor(Math.random()*types.length)];
-    let base=Math.floor(Math.random()*4)+2;
+    let maxBase=getMaxForDifficulty(difficulty, 4);
+    let base=Math.floor(Math.random()*maxBase)+2;
     let arg=Math.pow(base, Math.floor(Math.random()*4)+1);
     let newBase=Math.floor(Math.random()*3)+2;
     let hint="";
@@ -76,12 +83,13 @@ export function generateLogarithm(): void{
         window.MathJax.typeset();
     }
 }
-export function generateExponent(): void{
+export function generateExponent(difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let types=["basic", "solve", "laws", "growth", "compare"];
     let type=types[Math.floor(Math.random()*types.length)];
-    let base=Math.floor(Math.random()*4)+2;
+    let maxBase=getMaxForDifficulty(difficulty, 4);
+    let base=Math.floor(Math.random()*maxBase)+2;
     let exponent=Math.floor(Math.random()*5)+2;
     let hint="";
     switch (type){
@@ -146,12 +154,13 @@ export function generateExponent(): void{
         window.MathJax.typeset();
     }
 }
-export function generateFactorial(): void{
+export function generateFactorial(difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let types=["basic", "division", "equation", "approximation", "prime"];
     let type=types[Math.floor(Math.random()*types.length)];
-    let n=Math.floor(Math.random()*7)+5;
+    let maxN=getMaxForDifficulty(difficulty, 7);
+    let n=Math.floor(Math.random()*maxN)+5;
     let k=Math.floor(Math.random()*(n-2))+2;
     let factorial=(num: number): number=>{
         return Array.from({ length: num }, (_, i)=> i+1).reduce((a, b)=> a*b, 1);
@@ -219,7 +228,7 @@ export function generateFactorial(): void{
         window.MathJax.typeset();
     }
 }
-export function generateSeries(): void{
+export function generateSeries(difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let types=["arithmetic_sum", "geometric_sum", "convergence", "nth_term"];
@@ -227,11 +236,12 @@ export function generateSeries(): void{
     let mathExpression="";
     let plainCorrectAnswer="";
     let hint="";
+    let maxVal=getMaxForDifficulty(difficulty, 10);
     switch (type){
         case "arithmetic_sum":{
-            let a1=Math.floor(Math.random()*10)+1;
-            let d=Math.floor(Math.random()*5)+1;
-            let n=Math.floor(Math.random()*10)+5;
+            let a1=Math.floor(Math.random()*maxVal)+1;
+            let d=Math.floor(Math.random()*(maxVal/2))+1;
+            let n=Math.floor(Math.random()*maxVal)+5;
             let sum=(n/2)*(2*a1+(n-1)*d);
             mathExpression=`Find the sum of the first ${n} terms of the arithmetic sequence: \\[ S_n=\\frac{n}{2} [2a_1+(n-1)d] \\] where \\( a_1=${a1} \\) and \\( d=${d} \\).`;
             plainCorrectAnswer=sum.toString();
@@ -240,7 +250,7 @@ export function generateSeries(): void{
             break;
         }
         case "geometric_sum":{
-            let a1=Math.floor(Math.random()*5)+1;
+            let a1=Math.floor(Math.random()*maxVal/2)+1;
             let rValue=(Math.random() < 0.5?-1:1)*(Math.random()*0.9+0.1);
             let r=rValue.toFixed(2);
             let n=Math.floor(Math.random()*8)+3;
@@ -267,9 +277,9 @@ export function generateSeries(): void{
             break;
         }
         case "nth_term":{
-            let a1=Math.floor(Math.random()*10)+1;
-            let d=Math.floor(Math.random()*5)+1;
-            let n=Math.floor(Math.random()*10)+5;
+            let a1=Math.floor(Math.random()*maxVal)+1;
+            let d=Math.floor(Math.random()*(maxVal/2))+1;
+            let n=Math.floor(Math.random()*maxVal)+5;
             let an=a1+(n-1)*d;
             mathExpression=`Find the ${n}${getOrdinal(n)} term of the arithmetic sequence: \\[ a_n=a_1+(n-1)d \\] where \\( a_1=${a1} \\) and \\( d=${d} \\).`;
             plainCorrectAnswer=an.toString();
@@ -288,11 +298,13 @@ export function generateSeries(): void{
         );
     }
 }
-export function generateRoot(): void{
+export function generateRoot(difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
-    let root=Math.floor((Math.random()*4))+2;
-    let base=Math.floor((Math.random()*10))+1;
+    let maxRoot=getMaxForDifficulty(difficulty, 4);
+    let maxBase=getMaxForDifficulty(difficulty, 10);
+    let root=Math.floor((Math.random()*maxRoot))+2;
+    let base=Math.floor((Math.random()*maxBase))+1;
     let radicand=Math.pow(base, root);
     let rootExpression="";
     if (root=== 2){

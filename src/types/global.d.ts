@@ -24,6 +24,7 @@ declare global{
         MathJax: MathJaxConfig;
         correctAnswer: CorrectAnswer;
         expectedFormat?: string;
+        __TAURI__?: any;
     }
 }
 export {};

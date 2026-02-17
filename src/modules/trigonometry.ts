@@ -1,10 +1,17 @@
 import {questionArea} from "../script.js";
 
-export function generateSin(): void{
+function getAngleRange(difficulty?: string): number[]{
+    if (difficulty==="easy") return [0, 90];
+    if (difficulty==="hard") return [0, 360];
+    return [0, 180];
+}
+
+export function generateSin(difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let types=["evaluate", "solve", "amplitude", "period", "phase_shift", "law_sines", "unit_circle", "identity"];
     let type=types[Math.floor(Math.random()*types.length)];
+    let angleRange=getAngleRange(difficulty);
     switch (type){
         case "evaluate":{
             let isDegree=Math.random()<0.5;
@@ -54,7 +61,7 @@ export function generateSin(): void{
                 let sol1=principalDeg;
                 let sol2=180-principalDeg;
                 [sol1, sol2].forEach(sol =>{
-                    if (sol>=0&&sol<360) {
+                    if (sol>=angleRange[0]&&sol<angleRange[1]) {
                         solutions.push(`${sol.toFixed(0)}°`);
                         plainNumbers.push(sol.toFixed(0));
                     }
@@ -83,6 +90,8 @@ export function generateSin(): void{
         }
         case "amplitude":{
             let A=(Math.random()*4+1).toFixed(1);
+            if (difficulty==="easy") A=(Math.random()*2+1).toFixed(1);
+            if (difficulty==="hard") A=(Math.random()*6+1).toFixed(1);
             questionArea.innerHTML=`Find the amplitude of \$y=${A}\\sin(3x+\\pi/4)\$`;
             window.correctAnswer={ correct: A, alternate: A };
             window.expectedFormat="Enter a number (e.g., 2.5)";
@@ -114,6 +123,11 @@ export function generateSin(): void{
             let angleA=Math.floor(Math.random()*50+30);
             let angleB=Math.floor(Math.random()*50+30);
             let sideA=Math.floor(Math.random()*10+5);
+            if (difficulty==="easy"){
+                angleA=Math.floor(Math.random()*30+30);
+                angleB=Math.floor(Math.random()*30+30);
+                sideA=Math.floor(Math.random()*5+5);
+            }
             let sideB=(sideA*Math.sin(angleB*Math.PI/180)/Math.sin(angleA*Math.PI/180)).toFixed(1);
             questionArea.innerHTML=`Using the Law of Sines:<br>
                 In triangle ABC, ∠A=${angleA}deg, ∠B=${angleB}deg, and side a=${sideA}.<br>
@@ -143,11 +157,12 @@ export function generateSin(): void{
     }
     window.MathJax?.typeset();
 }
-export function generateCosine(): void{
+export function generateCosine(difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let types=["evaluate", "solve", "amplitude", "period", "phase_shift", "law_cosines", "identity"];
     let type=types[Math.floor(Math.random()*types.length)];
+    let angleRange=getAngleRange(difficulty);
     switch (type){
         case "evaluate":{
             let isDegree=Math.random()<0.5;
@@ -189,7 +204,7 @@ export function generateCosine(): void{
                 let sol1=principalDeg;
                 let sol2=360-principalDeg;
                 [sol1, sol2].forEach(sol =>{
-                    if (sol>=0&&sol<360) {
+                    if (sol>=angleRange[0]&&sol<angleRange[1]) {
                         solutions.push(`${sol.toFixed(0)}°`);
                         plainNumbers.push(sol.toFixed(0));
                     }
@@ -218,6 +233,8 @@ export function generateCosine(): void{
         }
         case "amplitude":{
             let A=(Math.random()*4+1).toFixed(1);
+            if (difficulty==="easy") A=(Math.random()*2+1).toFixed(1);
+            if (difficulty==="hard") A=(Math.random()*6+1).toFixed(1);
             questionArea.innerHTML=`Find the amplitude of \$y=${A}\\cos(2x-\\pi/3)\$`;
             window.correctAnswer={ correct: A, alternate: A };
             window.expectedFormat="Enter a number (e.g., 2.5)";
@@ -249,6 +266,11 @@ export function generateCosine(): void{
             let a=Math.floor(Math.random()*10+5);
             let b=Math.floor(Math.random()*10+5);
             let angleC=Math.floor(Math.random()*50+30);
+            if (difficulty==="easy"){
+                a=Math.floor(Math.random()*5+5);
+                b=Math.floor(Math.random()*5+5);
+                angleC=Math.floor(Math.random()*30+30);
+            }
             let c=Math.sqrt(a*a+b*b-2*a*b*Math.cos(angleC*Math.PI/180)).toFixed(1);
 
             questionArea.innerHTML=`Using the Law of Cosines:<br>
@@ -269,7 +291,7 @@ export function generateCosine(): void{
     }
     window.MathJax?.typeset();
 }
-export function generateTangent(): void{
+export function generateTangent(_difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let types=["evaluate", "solve", "period", "asymptote", "identity"];
@@ -342,7 +364,7 @@ export function generateTangent(): void{
     }
     window.MathJax?.typeset();
 }
-export function generateCosecant(): void{
+export function generateCosecant(_difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let types=["evaluate", "relationship", "asymptote"];
@@ -378,7 +400,7 @@ export function generateCosecant(): void{
     }
     window.MathJax?.typeset();
 }
-export function generateSecant(): void{
+export function generateSecant(_difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let type=Math.random()<0.5?"evaluate":"identity";
@@ -403,7 +425,7 @@ export function generateSecant(): void{
     }
     window.MathJax?.typeset();
 }
-export function generateCotangent(): void{
+export function generateCotangent(_difficulty?: string): void{
     if (!questionArea) return;
     questionArea.innerHTML="";
     let type=Math.random()<0.5?"evaluate":"relationship";

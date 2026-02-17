@@ -1,9 +1,11 @@
-import {defineConfig} from "vite";
-import {createHtmlPlugin} from "vite-plugin-html";
-import {readFileSync} from "fs";
-import {join } from "path";
-const packageJson=JSON.parse(readFileSync(join(__dirname, "package.json"), "utf-8"));
-const version=packageJson.version;
+import { defineConfig } from "vite";
+import { createHtmlPlugin } from "vite-plugin-html";
+import { readFileSync } from "fs";
+import { join } from "path";
+
+let packageJson=JSON.parse(readFileSync(join(__dirname, "package.json"), "utf-8"));
+let version=packageJson.version;
+
 export default defineConfig({
     root: "src",
     publicDir: "../public",
@@ -11,13 +13,12 @@ export default defineConfig({
         outDir: "../dist",
         emptyOutDir: true,
         assetsDir: "assets",
-        minify: "terser",
+        minify: "esbuild",
         cssMinify: true,
-        terserOptions: {
-            compress: {
-                drop_console: true,
-                drop_debugger: true,
-            },
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            }
         },
     },
     plugins: [
@@ -25,19 +26,17 @@ export default defineConfig({
             minify: true,
             inject: {
                 data: {
-                    version: version,
+                    version,
                 },
             },
         }),
     ],
     server: {
         port: 1331,
-        open: false,
-        strictPort: true
+        open: false
     },
     preview: {
         port: 1331,
-        open: false,
-        strictPort: true
+        open: false
     }
 });
