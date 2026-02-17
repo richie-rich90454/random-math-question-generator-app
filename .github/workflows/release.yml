@@ -29,8 +29,7 @@ jobs:
       - name: Build frontend
         run: npm run build:web
 
-      - name: Upload web-dist
-        uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v6
         with:
           name: web-dist
           path: dist/
@@ -76,43 +75,30 @@ jobs:
 
       - run: npm ci
 
-      - name: Download web-dist
-        uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v6
         with:
           name: web-dist
           path: dist/
 
-      # ----- Sync version in tauri.conf.json -----
+      # ----- Sync top-level version in tauri.conf.json -----
       - name: Sync tauri.conf.json version
         shell: bash
         run: |
           TAG="${GITHUB_REF_NAME:-${GITHUB_REF##*/}}"
           VERSION="${TAG#v}"
           echo "Setting Tauri version to $VERSION"
-
-          # Install jq if missing
-          if ! command -v jq >/dev/null 2>&1; then
-            if [[ "$RUNNER_OS" == "Linux" ]]; then
-              sudo apt-get update && sudo apt-get install -y jq
-            elif [[ "$RUNNER_OS" == "macOS" ]]; then
-              brew install jq
-            else
-              choco install jq -y
-            fi
-          fi
-
-          jq --arg v "$VERSION" '.version=$v | .bundle.version=$v' src-tauri/tauri.conf.json > tmp.json && mv tmp.json src-tauri/tauri.conf.json
+          jq --arg v "$VERSION" '.version=$v' src-tauri/tauri.conf.json > tmp.json && mv tmp.json src-tauri/tauri.conf.json
           jq '.' src-tauri/tauri.conf.json
 
       # ----- Verify frontend files exist -----
       - name: Verify frontend files
         shell: bash
         run: |
-          if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
-            echo "Error: Frontend build folder 'dist/' is empty or missing!"
+          if [ ! -d dist ] || [ -z "$(ls -A dist)" ]; then
+            echo "Error: dist folder is empty"
             exit 1
           fi
-          echo "Frontend build verified."
+          echo "Frontend files are present."
 
       # ----- Platform-specific dependencies -----
       - name: Install Linux dependencies
@@ -146,22 +132,20 @@ jobs:
       - name: Build Tauri
         run: npx @tauri-apps/cli build --target ${{ matrix.target }} --verbose
 
-      # ----- Debug release / bundle -----
+      # ----- Debug release output -----
       - name: List release and bundle
         shell: bash
         run: |
-          RELEASE_DIR="src-tauri/target/${{ matrix.target }}/release"
-          echo "Listing ${RELEASE_DIR}:"
-          ls -la "$RELEASE_DIR" || true
-          BUNDLE_DIR="$RELEASE_DIR/bundle"
-          echo "Listing bundle contents:"
-          if [ ! -d "$BUNDLE_DIR" ] || [ -z "$(ls -A "$BUNDLE_DIR")" ]; then
-            echo "Error: Bundle folder is empty!"
-            exit 1
+          echo "Contents of src-tauri/target/${{ matrix.target }}/release/:"
+          ls -la src-tauri/target/${{ matrix.target }}/release/ || true
+          echo "Contents of bundle folder:"
+          if [ -d src-tauri/target/${{ matrix.target }}/release/bundle ]; then
+            find src-tauri/target/${{ matrix.target }}/release/bundle/ -type f -print
+          else
+            echo "No bundle files found"
           fi
-          ls -la "$BUNDLE_DIR"
 
-      # ----- Upload artifacts -----
+      # ----- Upload artifacts (fail if empty) -----
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v6
         with:
@@ -177,7 +161,7 @@ jobs:
       contents: write
 
     steps:
-      - name: Download all desktop artifacts
+      - name: Download all built artifacts
         uses: actions/download-artifact@v6
         with:
           path: artifacts/
@@ -186,7 +170,7 @@ jobs:
 
       - name: Show downloaded files
         run: |
-          find artifacts -type f | sort
+          find artifacts -type f -print | sort
 
       - name: Publish artifacts
         uses: softprops/action-gh-release@v2

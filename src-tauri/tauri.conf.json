@@ -1,6 +1,6 @@
 {
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-    "productName": "Math Question Generator",
+    "productName": "RandMatQuGeA",
     "version": "3.0.0",
     "identifier": "com.richierich.mathgen",
     "build": {
@@ -13,7 +13,7 @@
         "windows": [
             {
                 "label": "main",
-                "title": "Math Question Generator",
+                "title": "RandMatQuGeA",
                 "width": 1000,
                 "height": 800,
                 "resizable": true,
