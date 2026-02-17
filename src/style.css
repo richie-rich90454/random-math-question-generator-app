@@ -431,8 +431,6 @@ body{
     padding: var(--spacing-md);
 }
 .question-display{
-    display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
@@ -512,8 +510,6 @@ body{
     font-size: 0.75rem;
 }
 .results-display{
-    display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
