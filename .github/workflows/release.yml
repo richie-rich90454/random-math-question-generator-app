@@ -20,10 +20,8 @@ jobs:
           node-version: 24
           cache: 'npm'
       - run: npm ci
-      - name: TypeScript check
-        run: npm run build:typescript
       - name: Build frontend
-        run: npm run build:web
+        run: npm run build
       - uses: actions/upload-artifact@v6
         with:
           name: web-dist
@@ -63,51 +61,56 @@ jobs:
         with:
           name: web-dist
           path: dist/
+
       - name: Sync Tauri version
         shell: bash
         run: |
           TAG="${GITHUB_REF_NAME:-${GITHUB_REF##*/}}"
           VERSION="${TAG#v}"
-          echo "Setting Tauri version to $VERSION"
           jq --arg v "$VERSION" '.version=$v' src-tauri/tauri.conf.json > tmp.json && mv tmp.json src-tauri/tauri.conf.json
-          jq '.' src-tauri/tauri.conf.json
-      - name: Verify frontend files
-        shell: bash
-        run: |
-          ls -la dist/
-          find dist/ -type f -print -quit
+
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
-        run: brew install create-dmg
+        run: |
+          brew install create-dmg
+          which create-dmg || { echo "create-dmg not found"; exit 1; }
+
       - name: Install Windows dependencies
         if: runner.os == 'Windows'
         run: choco install nsis -y
+
       - name: Build Tauri
         run: npx @tauri-apps/cli build --target ${{ matrix.target }} --verbose
-      - name: List release files
-        shell: bash
-        run: |
-          RELEASE_DIR="src-tauri/target/${{ matrix.target }}/release"
-          echo "=== Contents of $RELEASE_DIR ==="
-          ls -la "$RELEASE_DIR" || true
-          BUNDLE_DIR="$RELEASE_DIR/bundle"
-          if [ -d "$BUNDLE_DIR" ]; then
-            echo "=== Contents of $BUNDLE_DIR (recursive) ==="
-            find "$BUNDLE_DIR" -type f -print | head -20
-          else
-            echo "No bundle directory found."
-          fi
-      - name: Ensure bundles exist
+
+      - name: Debug bundle directory
         shell: bash
         run: |
           BUNDLE_DIR="src-tauri/target/${{ matrix.target }}/release/bundle"
-          found=$(find "$BUNDLE_DIR" -type f \( -name "*.exe" -o -name "*.msi" -o -name "*.dmg" \) 2>/dev/null)
+          echo "Checking bundle directory: $BUNDLE_DIR"
+          if [ -d "$BUNDLE_DIR" ]; then
+            echo "Contents of bundle directory:"
+            find "$BUNDLE_DIR" -type f -print || true
+          else
+            echo "Bundle directory does not exist."
+            find "src-tauri/target" -type d -name "bundle" || true
+          fi
+
+      - name: Verify bundle existence
+        shell: bash
+        run: |
+          BUNDLE_DIR="src-tauri/target/${{ matrix.target }}/release/bundle"
+          if [ "${{ runner.os }}" == "macOS" ]; then
+            found=$(find "$BUNDLE_DIR" \( -type d -name "*.app" -o -type f -name "*.dmg" \) 2>/dev/null)
+          else
+            found=$(find "$BUNDLE_DIR" -type f \( -name "*.exe" -o -name "*.msi" \) 2>/dev/null)
+          fi
           if [ -z "$found" ]; then
             echo "Error: No bundle files found in $BUNDLE_DIR"
             exit 1
           fi
           echo "Found bundle files:"
           echo "$found"
+
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v6
         with:
@@ -129,9 +132,7 @@ jobs:
           path: artifacts/
           pattern: desktop-*
           merge-multiple: true
-      - name: Show downloaded files
-        run: |
-          find artifacts -type f -print | sort
+
       - name: Publish artifacts
         uses: softprops/action-gh-release@v2
         with:
@@ -140,5 +141,6 @@ jobs:
             artifacts/**/*.exe
             artifacts/**/*.msi
             artifacts/**/*.dmg
+            artifacts/**/*.app
             artifacts/**/*.tar.gz
             artifacts/**/*.zip
