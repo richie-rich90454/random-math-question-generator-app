@@ -431,11 +431,12 @@ body{
     padding: var(--spacing-md);
 }
 .question-display{
-    min-height: 100px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
+    min-height: 100px;
     font-size: 1.125rem;
     line-height: 1.5;
     color: var(--text-primary);
@@ -457,8 +458,8 @@ body{
     color: var(--text-tertiary);
 }
 .empty-state svg{
-    width: 28px;
-    height: 28px;
+    width: 48px;
+    height: 48px;
     opacity: .5;
 }
 .empty-state p{
@@ -511,11 +512,12 @@ body{
     font-size: 0.75rem;
 }
 .results-display{
-    min-height: 70px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
+    min-height: 70px;
     font-size: 0.875rem;
     line-height: 1.5;
     color: var(--text-primary);
@@ -584,6 +586,63 @@ body{
     background: var(--text-tertiary);
     background-clip: content-box;
 }
+.spinner{
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+}
+.notification{
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    color: var(--text-primary);
+}
+:root{
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+*{
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+@keyframes fadeIn{
+    from{
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to{
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+@keyframes pulse{
+    0%, 100%{
+        opacity: 1;
+    }
+    50%{
+        opacity: .7;
+    }
+}
+@keyframes slideIn{
+    from{
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to{
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+.mjx-math, .mjx-mathit, .mjx-mtext{
+    color: var(--text-primary) !important;
+    fill: var(--text-primary) !important;
+}
+.mjx-munderover, .mjx-munder, .mjx-mover{
+    background-color: transparent !important;
+}
+.MathJax{
+    color: var(--text-primary) !important;
+}
+.icon-button svg, .result-success svg, .result-error svg, .empty-state svg{
+    color: inherit;
+}
 @media (max-width: 1024px){
     .answer-section{
         grid-template-columns: 1fr;
@@ -648,70 +707,4 @@ body{
         min-height: 60px;
         font-size: 0.8125rem;
     }
-}
-@keyframes fadeIn{
-    from{
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to{
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-@keyframes pulse{
-    0%, 100%{
-        opacity: 1;
-    }
-    50%{
-        opacity: .7;
-    }
-}
-@keyframes slideIn{
-    from{
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-    to{
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-.mjx-math, .mjx-mathit, .mjx-mtext{
-    color: var(--text-primary) !important;
-    fill: var(--text-primary) !important;
-}
-.mjx-munderover, .mjx-munder, .mjx-mover{
-    background-color: transparent !important;
-}
-.MathJax{
-    color: var(--text-primary) !important;
-}
-.icon-button svg, .result-success svg, .result-error svg, .empty-state svg{
-    color: inherit;
-}
-::-webkit-scrollbar-track{
-    background: var(--surface-alt);
-}
-::-webkit-scrollbar-thumb{
-    background: var(--border);
-}
-::-webkit-scrollbar-thumb:hover{
-    background: var(--border-strong);
-}
-.spinner{
-    border: 3px solid var(--surface-alt);
-    border-top-color: var(--primary);
-}
-.notification{
-    background: var(--surface-elevated);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow-lg);
-    color: var(--text-primary);
-}
-:root{
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-*{
-    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
