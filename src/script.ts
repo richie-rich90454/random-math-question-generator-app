@@ -18,6 +18,7 @@ let answerResults: HTMLElement | null=document.getElementById("answer-results");
 let checkAnswerButton: HTMLButtonElement | null=document.getElementById("check-answer") as HTMLButtonElement | null;
 let themeToggle: HTMLButtonElement | null=document.getElementById("theme-toggle") as HTMLButtonElement | null;
 let helpButton: HTMLButtonElement | null=document.getElementById("help-button") as HTMLButtonElement | null;
+let settingsButton: HTMLButtonElement | null=document.getElementById("settings-button") as HTMLButtonElement | null;
 let expectedFormatDiv: HTMLElement | null=document.getElementById("expected-format");
 let modeSingleBtn: HTMLButtonElement | null=document.getElementById("mode-single") as HTMLButtonElement | null;
 let modeMentalBtn: HTMLButtonElement | null=document.getElementById("mode-mental") as HTMLButtonElement | null;
@@ -33,6 +34,18 @@ let shuffleToggle: HTMLInputElement | null=document.getElementById("shuffle-togg
 let mentalScopeSelect: HTMLSelectElement | null=document.getElementById("mental-scope-select") as HTMLSelectElement | null;
 let mentalShuffleToggle: HTMLInputElement | null=document.getElementById("mental-shuffle-toggle") as HTMLInputElement | null;
 let mentalProgressBar: HTMLElement | null=document.getElementById("mental-progress-bar");
+let settingsModal: HTMLElement | null=document.getElementById("settings-modal");
+let settingsClose: HTMLElement | null=document.getElementById("settings-close");
+let settingsSave: HTMLElement | null=document.getElementById("settings-save");
+let settingsReset: HTMLElement | null=document.getElementById("settings-reset");
+let settingsTheme: HTMLSelectElement | null=document.getElementById("settings-theme") as HTMLSelectElement | null;
+let settingsDefaultMode: HTMLSelectElement | null=document.getElementById("settings-default-mode") as HTMLSelectElement | null;
+let settingsAutoContinue: HTMLInputElement | null=document.getElementById("settings-auto-continue") as HTMLInputElement | null;
+let settingsShuffle: HTMLInputElement | null=document.getElementById("settings-shuffle") as HTMLInputElement | null;
+let settingsScope: HTMLSelectElement | null=document.getElementById("settings-scope") as HTMLSelectElement | null;
+let settingsDifficulty: HTMLSelectElement | null=document.getElementById("settings-difficulty") as HTMLSelectElement | null;
+let settingsTimer: HTMLInputElement | null=document.getElementById("settings-timer") as HTMLInputElement | null;
+let settingsMaxQuestions: HTMLInputElement | null=document.getElementById("settings-max-questions") as HTMLInputElement | null;
 
 window.correctAnswer={correct: ""};
 window.expectedFormat="";
@@ -92,6 +105,99 @@ let mentalScope: string="simple";
 let mentalShuffle: boolean=false;
 let autoTimeout: ReturnType<typeof setTimeout> | null=null;
 let modeButtons=[modeSingleBtn, modeMentalBtn];
+let settings={
+    theme: "system",
+    defaultMode: "single",
+    autoContinue: false,
+    shuffle: false,
+    scope: "simple",
+    difficulty: "medium",
+    timer: 30,
+    maxQuestions: 5
+};
+function loadSettings(): void{
+    const saved=localStorage.getItem("appSettings");
+    if(saved){
+        try{
+            settings=JSON.parse(saved);
+        }catch(e){}
+    }
+    if(settingsTheme) settingsTheme.value=settings.theme;
+    if(settingsDefaultMode) settingsDefaultMode.value=settings.defaultMode;
+    if(settingsAutoContinue) settingsAutoContinue.checked=settings.autoContinue;
+    if(settingsShuffle) settingsShuffle.checked=settings.shuffle;
+    if(settingsScope) settingsScope.value=settings.scope;
+    if(settingsDifficulty) settingsDifficulty.value=settings.difficulty;
+    if(settingsTimer) settingsTimer.value=settings.timer.toString();
+    if(settingsMaxQuestions) settingsMaxQuestions.value=settings.maxQuestions.toString();
+    applySettingsToApp();
+}
+function saveSettings(): void{
+    if(settingsTheme) settings.theme=settingsTheme.value as "system"|"light"|"dark";
+    if(settingsDefaultMode) settings.defaultMode=settingsDefaultMode.value as "single"|"mental";
+    if(settingsAutoContinue) settings.autoContinue=settingsAutoContinue.checked;
+    if(settingsShuffle) settings.shuffle=settingsShuffle.checked;
+    if(settingsScope) settings.scope=settingsScope.value;
+    if(settingsDifficulty) settings.difficulty=settingsDifficulty.value;
+    if(settingsTimer) settings.timer=parseInt(settingsTimer.value)||30;
+    if(settingsMaxQuestions) settings.maxQuestions=parseInt(settingsMaxQuestions.value)||5;
+    localStorage.setItem("appSettings", JSON.stringify(settings));
+    applySettingsToApp();
+}
+function applySettingsToApp(): void{
+    if(settings.theme==="system"){
+        const prefersDark=window.matchMedia("(prefers-color-scheme: dark)").matches;
+        applyTheme(prefersDark?"dark":"light");
+    }
+    else{
+        applyTheme(settings.theme as "light"|"dark");
+    }
+    if(!sessionActive&&settings.defaultMode!==currentMode){
+        if(settings.defaultMode==="single"&&modeSingleBtn){
+            modeSingleBtn.click();
+        }
+        else if(settings.defaultMode==="mental"&&modeMentalBtn){
+            modeMentalBtn.click();
+        }
+    }
+    if(autocontinueToggle) autocontinueToggle.checked=settings.autoContinue;
+    autocontinue=settings.autoContinue;
+    if(shuffleToggle) shuffleToggle.checked=settings.shuffle;
+    shuffle=settings.shuffle;
+    if(mentalShuffleToggle) mentalShuffleToggle.checked=settings.shuffle;
+    mentalShuffle=settings.shuffle;
+    if(scopeSelect) scopeSelect.value=settings.scope;
+    scope=settings.scope;
+    if(mentalScopeSelect) mentalScopeSelect.value=settings.scope;
+    mentalScope=settings.scope;
+    if(difficultySelect) difficultySelect.value=settings.difficulty;
+    currentDifficulty=settings.difficulty;
+    timeLeft=settings.timer;
+    maxQuestions=settings.maxQuestions;
+    updateTimerDisplay();
+    renderTopicGrid();
+    updateUIState();
+}
+function resetSettings(): void{
+    settings={
+        theme: "system",
+        defaultMode: "single",
+        autoContinue: false,
+        shuffle: false,
+        scope: "simple",
+        difficulty: "medium",
+        timer: 30,
+        maxQuestions: 5
+    };
+    saveSettings();
+}
+function openSettings(): void{
+    loadSettings();
+    if(settingsModal) settingsModal.classList.add("show");
+}
+function closeSettings(): void{
+    if(settingsModal) settingsModal.classList.remove("show");
+}
 function disableModeButtons(disabled: boolean): void{
     modeButtons.forEach(btn=>{
         if (btn){
@@ -142,29 +248,25 @@ async function initializeTheme(): Promise<void>{
     if (appWindow){
         try{
             let tauriTheme=await appWindow.theme();
-            applyTheme(tauriTheme??"light");
+            if(settings.theme==="system"){
+                applyTheme(tauriTheme??"light");
+            }
             return;
         }
         catch (e){
             console.log("Failed to get Tauri theme, falling back.");
         }
     }
-    let savedTheme=localStorage.getItem("theme");
-    let prefersDark=window.matchMedia("(prefers-color-scheme: dark)").matches;
-    if (savedTheme==="dark"||(!savedTheme&&prefersDark)){
-        applyTheme("dark");
+    if(settings.theme==="system"){
+        let prefersDark=window.matchMedia("(prefers-color-scheme: dark)").matches;
+        applyTheme(prefersDark?"dark":"light");
     }
     else{
-        applyTheme("light");
+        applyTheme(settings.theme as "light"|"dark");
     }
 }
 function initApp(): void{
-    if (scopeSelect) scope=scopeSelect.value;
-    if (autocontinueToggle) autocontinue=autocontinueToggle.checked;
-    if (shuffleToggle) shuffle=shuffleToggle.checked;
-    if (mentalScopeSelect) mentalScope=mentalScopeSelect.value;
-    if (mentalShuffleToggle) mentalShuffle=mentalShuffleToggle.checked;
-    renderTopicGrid();
+    loadSettings();
     setupEventListeners();
     initializeTheme();
     updateUIState();
@@ -387,7 +489,7 @@ function isAnswerCorrect(userInput: string, correct: string, alternate?: string)
         }
     };
     let userNorm=normalize(userInput);
-    let possible=[correct, alternate].filter(v=>v !== undefined);
+    let possible=[correct, alternate].filter(v=>v!==undefined);
     for (let ans of possible){
         let ansNorm=normalize(ans!);
         if (userNorm===ansNorm) return true;
@@ -450,7 +552,7 @@ function checkAnswer(): void{
 }
 function updateUIState(): void{
     if (!generateQuestionButton||!checkAnswerButton||!questionArea) return;
-    let hasTopic=selectedTopic !== null;
+    let hasTopic=selectedTopic!==null;
     let hasQuestion=questionArea.innerHTML.includes("mjx-container")||!questionArea.innerHTML.includes("empty-state");
     generateQuestionButton.disabled=!hasTopic;
     checkAnswerButton.disabled=!hasTopic||!hasQuestion;
@@ -486,7 +588,7 @@ function showNotification(message: string, type: "info" | "warning"="info"): voi
     }, 3000);
 }
 function setupEventListeners(): void{
-    if (!generateQuestionButton||!checkAnswerButton||!userAnswer||!themeToggle||!helpButton||!modeSingleBtn||!modeMentalBtn||!mentalControls||!singleControls||!difficultySelect||!timerDisplay||!scoreDisplay||!startSessionBtn) return;
+    if (!generateQuestionButton||!checkAnswerButton||!userAnswer||!themeToggle||!helpButton||!settingsButton||!modeSingleBtn||!modeMentalBtn||!mentalControls||!singleControls||!difficultySelect||!timerDisplay||!scoreDisplay||!startSessionBtn) return;
 
     generateQuestionButton.addEventListener("click", generateQuestion);
     checkAnswerButton.addEventListener("click", checkAnswer);
@@ -498,10 +600,25 @@ function setupEventListeners(): void{
     });
     themeToggle.addEventListener("click", function (){
         let isDark=document.documentElement.classList.contains("dark");
-        applyTheme(isDark?"light" : "dark");
+        applyTheme(isDark?"light":"dark");
+        if(settingsTheme){
+            settingsTheme.value=isDark?"light":"dark";
+            settings.theme=settingsTheme.value as "light"|"dark";
+            saveSettings();
+        }
     });
     helpButton.addEventListener("click", function (){
         showNotification("Select a topic, generate a question, enter your answer, and check it!", "info");
+    });
+    settingsButton.addEventListener("click", openSettings);
+    if(settingsClose) settingsClose.addEventListener("click", closeSettings);
+    if(settingsSave) settingsSave.addEventListener("click", ()=>{
+        saveSettings();
+        closeSettings();
+    });
+    if(settingsReset) settingsReset.addEventListener("click", resetSettings);
+    if(settingsModal) settingsModal.addEventListener("click", (e)=>{
+        if(e.target===settingsModal) closeSettings();
     });
     modeSingleBtn.addEventListener("click", function (){
         if (modeSingleBtn!.classList.contains("disabled")) return;
@@ -601,7 +718,8 @@ function startMentalSession(): void{
     }
     sessionActive=true;
     sessionScore={ correct: 0, total: 0 };
-    timeLeft=30;
+    timeLeft=settings.timer;
+    maxQuestions=settings.maxQuestions;
     updateScoreDisplay();
     updateTimerDisplay();
     if (mentalProgressBar) mentalProgressBar.style.width="0%";
@@ -770,7 +888,7 @@ function handleMentalAnswer(): void{
         }
         mentalNextQuestionTimeout=setTimeout(()=>{
             if (sessionActive){
-                timeLeft=30;
+                timeLeft=settings.timer;
                 updateTimerDisplay();
                 generateNextMentalQuestion();
             }
@@ -861,7 +979,7 @@ function startTimer(): void{
                 endMentalSession();
                 return;
             }
-            timeLeft=30;
+            timeLeft=settings.timer;
             updateTimerDisplay();
             if (mentalNextQuestionTimeout){
                 clearTimeout(mentalNextQuestionTimeout);
