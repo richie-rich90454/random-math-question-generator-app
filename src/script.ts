@@ -27,6 +27,9 @@ let difficultySelect: HTMLSelectElement | null=document.getElementById("difficul
 let timerDisplay: HTMLElement | null=document.getElementById("timer-display");
 let scoreDisplay: HTMLElement | null=document.getElementById("score-display");
 let startSessionBtn: HTMLButtonElement | null=document.getElementById("start-session") as HTMLButtonElement | null;
+let autocontinueToggle: HTMLInputElement | null=document.getElementById("autocontinue-toggle") as HTMLInputElement | null;
+let scopeSelect: HTMLSelectElement | null=document.getElementById("scope-select") as HTMLSelectElement | null;
+let shuffleToggle: HTMLInputElement | null=document.getElementById("shuffle-toggle") as HTMLInputElement | null;
 
 window.correctAnswer={correct: ""};
 window.expectedFormat="";
@@ -57,6 +60,13 @@ let topics: Topic[]=[
 {id: "lim", name: "Limits", icon: "lim", category: "Calculus"},
 {id: "relRates", name: "Related Rates", icon: "dx/dt", category: "Calculus"}
 ];
+const scopeTopics={
+    simple: ["add", "subtrt", "mult", "divid"],
+    algebra: ["add", "subtrt", "mult", "divid", "root", "log", "exp", "fact", "ser", "perm", "comb", "prob"],
+    precalc: ["add", "subtrt", "mult", "divid", "root", "log", "exp", "fact", "ser", "perm", "comb", "prob", "sin", "cos", "tan", "cosec", "sec", "cot"],
+    calc: ["add", "subtrt", "mult", "divid", "root", "log", "exp", "fact", "ser", "perm", "comb", "prob", "deri", "inte", "lim", "relRates"],
+    all: topics.map(t=>t.id)
+};
 let appWindow: Window | null=null;
 try{
     appWindow=getCurrentWindow();
@@ -72,6 +82,10 @@ let timeLeft: number=30;
 let maxQuestions: number=5;
 let currentDifficulty: string="medium";
 let mentalNextQuestionTimeout: ReturnType<typeof setTimeout> | null=null;
+let autocontinue: boolean=false;
+let scope: string="simple";
+let shuffle: boolean=false;
+let autoTimeout: ReturnType<typeof setTimeout> | null=null;
 let modeButtons=[modeSingleBtn, modeMentalBtn];
 function disableModeButtons(disabled: boolean): void{
     modeButtons.forEach(btn=>{
@@ -140,6 +154,9 @@ async function initializeTheme(): Promise<void>{
     }
 }
 function initApp(): void{
+    if (scopeSelect) scope=scopeSelect.value;
+    if (autocontinueToggle) autocontinue=autocontinueToggle.checked;
+    if (shuffleToggle) shuffle=shuffleToggle.checked;
     renderTopicGrid();
     setupEventListeners();
     initializeTheme();
@@ -147,8 +164,10 @@ function initApp(): void{
 }
 function renderTopicGrid(): void{
     if (!topicGrid) return;
+    const allowedIds=scopeTopics[scope as keyof typeof scopeTopics]||scopeTopics.simple;
+    const filteredTopics=topics.filter(t=>allowedIds.includes(t.id));
     topicGrid.innerHTML="";
-    topics.forEach(topic=>{
+    filteredTopics.forEach(topic=>{
         let topicElement=document.createElement("button");
         topicElement.className="topic-pill";
         topicElement.dataset.topicId=topic.id;
@@ -159,6 +178,25 @@ function renderTopicGrid(): void{
         topicElement.addEventListener("click", ()=>selectTopic(topic.id));
         topicGrid!.appendChild(topicElement);
     });
+    if (selectedTopic&&!allowedIds.includes(selectedTopic)){
+        if (filteredTopics.length>0){
+            selectTopic(filteredTopics[0].id);
+        }
+        else{
+            selectedTopic=null;
+            if (currentTopicDisplay) currentTopicDisplay.textContent="Select a topic";
+        }
+    }
+    else if (!selectedTopic&&filteredTopics.length>0){
+        selectTopic(filteredTopics[0].id);
+    }
+    else if (selectedTopic){
+        document.querySelectorAll(".topic-pill").forEach(item=>{
+            item.classList.remove("active");
+        });
+        let selectedElement=document.querySelector(`[data-topic-id="${selectedTopic}"]`);
+        if (selectedElement) selectedElement.classList.add("active");
+    }
 }
 function selectTopic(topicId: string): void{
     document.querySelectorAll(".topic-pill").forEach(item=>{
@@ -171,19 +209,40 @@ function selectTopic(topicId: string): void{
     selectedTopic=topicId;
     let topic=topics.find(t=>t.id===topicId);
     if (currentTopicDisplay){
-        currentTopicDisplay.textContent=topic ? topic.name : "Select a topic to begin";
+        currentTopicDisplay.textContent=topic?topic.name : "Select a topic to begin";
     }
     if (generateQuestionButton){
         generateQuestionButton.disabled=false;
     }
     updateUIState();
 }
+function pickRandomTopic(): string | null{
+    const allowedIds=scopeTopics[scope as keyof typeof scopeTopics]||scopeTopics.simple;
+    if (allowedIds.length===0) return null;
+    const randomId=allowedIds[Math.floor(Math.random()*allowedIds.length)];
+    return randomId;
+}
 function generateQuestion(): void{
+    if (shuffle&&currentMode==="single"){
+        const randomTopic=pickRandomTopic();
+        if (randomTopic){
+            selectTopic(randomTopic);
+        }
+        else{
+            showNotification("No topics available in current scope", "warning");
+            return;
+        }
+    }
+
     if (!selectedTopic){
         showNotification("Please select a topic first", "warning");
         return;
     }
     if (!answerResults||!userAnswer||!questionArea||!checkAnswerButton) return;
+    if (autoTimeout){
+        clearTimeout(autoTimeout);
+        autoTimeout=null;
+    }
     answerResults.innerHTML=`
     <div class="empty-state">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
@@ -372,6 +431,13 @@ function checkAnswer(): void{
     }
     userAnswer.value="";
     userAnswer.focus();
+    if (currentMode==="single"&&autocontinue){
+        if (autoTimeout) clearTimeout(autoTimeout);
+        autoTimeout=setTimeout(()=>{
+            generateQuestion();
+            autoTimeout=null;
+        }, 3000);
+    }
 }
 function updateUIState(): void{
     if (!generateQuestionButton||!checkAnswerButton||!questionArea) return;
@@ -423,7 +489,7 @@ function setupEventListeners(): void{
     });
     themeToggle.addEventListener("click", function (){
         let isDark=document.documentElement.classList.contains("dark");
-        applyTheme(isDark ? "light" : "dark");
+        applyTheme(isDark?"light" : "dark");
     });
     helpButton.addEventListener("click", function (){
         showNotification("Select a topic, generate a question, enter your answer, and check it!", "info");
@@ -436,6 +502,10 @@ function setupEventListeners(): void{
         mentalControls!.style.display="none";
         singleControls!.style.display="flex";
         if (sessionActive) endMentalSession();
+        if (autoTimeout){
+            clearTimeout(autoTimeout);
+            autoTimeout=null;
+        }
         updateUIState();
     });
     modeMentalBtn.addEventListener("click", function (){
@@ -445,12 +515,40 @@ function setupEventListeners(): void{
         currentMode="mental";
         mentalControls!.style.display="flex";
         singleControls!.style.display="none";
+        if (autoTimeout){
+            clearTimeout(autoTimeout);
+            autoTimeout=null;
+        }
         updateUIState();
     });
     difficultySelect.addEventListener("change", function (e: Event){
         currentDifficulty=(e.target as HTMLSelectElement).value;
     });
     startSessionBtn.addEventListener("click", startMentalSession);
+    if (autocontinueToggle){
+        autocontinueToggle.addEventListener("change", (e)=>{
+            autocontinue=(e.target as HTMLInputElement).checked;
+            if (!autocontinue&&autoTimeout){
+                clearTimeout(autoTimeout);
+                autoTimeout=null;
+            }
+        });
+    }
+    if (scopeSelect){
+        scopeSelect.addEventListener("change", (e)=>{
+            scope=(e.target as HTMLSelectElement).value;
+            renderTopicGrid();
+            if (autoTimeout){
+                clearTimeout(autoTimeout);
+                autoTimeout=null;
+            }
+        });
+    }
+    if (shuffleToggle){
+        shuffleToggle.addEventListener("change", (e)=>{
+            shuffle=(e.target as HTMLInputElement).checked;
+        });
+    }
 }
 function updateMathJaxColors(): void{
     if (window.MathJax&&window.MathJax.typesetPromise){
@@ -597,9 +695,9 @@ function handleMentalAnswer(): void{
         updateScoreDisplay();
         if (answerResults){
             answerResults.innerHTML=isCorrect
-                ? `<div class="result-success">✅ Correct!</div>`
+            ?`<div class="result-success">✅ Correct!</div>`
                 : `<div class="result-error">❌ Incorrect. The answer was ${correct}</div>`;
-            answerResults.className=isCorrect ? "results-display correct" : "results-display incorrect";
+            answerResults.className=isCorrect?"results-display correct" : "results-display incorrect";
         }
         if (userAnswer) userAnswer.value="";
         if (sessionScore.total >= maxQuestions){
