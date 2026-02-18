@@ -179,16 +179,14 @@ function applySettingsToApp(): void{
     updateUIState();
 }
 function resetSettings(): void{
-    settings={
-        theme: "system",
-        defaultMode: "single",
-        autoContinue: false,
-        shuffle: false,
-        scope: "simple",
-        difficulty: "medium",
-        timer: 30,
-        maxQuestions: 5
-    };
+    if(settingsTheme) settingsTheme.value="system";
+    if(settingsDefaultMode) settingsDefaultMode.value="single";
+    if(settingsAutoContinue) settingsAutoContinue.checked=false;
+    if(settingsShuffle) settingsShuffle.checked=false;
+    if(settingsScope) settingsScope.value="simple";
+    if(settingsDifficulty) settingsDifficulty.value="medium";
+    if(settingsTimer) settingsTimer.value="30";
+    if(settingsMaxQuestions) settingsMaxQuestions.value="5";
     saveSettings();
 }
 function openSettings(): void{
