@@ -64,24 +64,21 @@ try{
 catch (e){
     console.log("Not running in Tauri environment, theme sync disabled.");
 }
-
-// Mental math state
-let currentMode: 'single' | 'mental'='single';
+let currentMode: "single" | "mental"="single";
 let sessionActive: boolean=false;
 let sessionScore={correct: 0, total: 0};
 let sessionTimer: ReturnType<typeof setInterval> | null=null;
 let timeLeft: number=30;
 let maxQuestions: number=5;
-let currentDifficulty: string='medium';
-
-let modeButtons = [modeSingleBtn, modeMentalBtn];
-
+let currentDifficulty: string="medium";
+let mentalNextQuestionTimeout: ReturnType<typeof setTimeout> | null=null;
+let modeButtons=[modeSingleBtn, modeMentalBtn];
 function disableModeButtons(disabled: boolean): void{
     modeButtons.forEach(btn=>{
         if (btn){
             btn.disabled=disabled;
-            if (disabled) btn.classList.add('disabled');
-            else btn.classList.remove('disabled');
+            if (disabled) btn.classList.add("disabled");
+            else btn.classList.remove("disabled");
         }
     });
 }
@@ -91,21 +88,21 @@ function disableDifficulty(disabled: boolean): void{
 function setSessionButton(isActive: boolean): void{
     if (!startSessionBtn) return;
     if (isActive){
-        startSessionBtn.textContent='Stop Session';
-        startSessionBtn.classList.add('stop-session');
-        startSessionBtn.removeEventListener('click', startMentalSession);
-        startSessionBtn.addEventListener('click', stopMentalSession);
-    } else {
-        startSessionBtn.textContent='Start Session';
-        startSessionBtn.classList.remove('stop-session');
-        startSessionBtn.removeEventListener('click', stopMentalSession);
-        startSessionBtn.addEventListener('click', startMentalSession);
+        startSessionBtn.textContent="Stop Session";
+        startSessionBtn.classList.add("stop-session");
+        startSessionBtn.removeEventListener("click", startMentalSession);
+        startSessionBtn.addEventListener("click", stopMentalSession);
+    }
+    else{
+        startSessionBtn.textContent="Start Session";
+        startSessionBtn.classList.remove("stop-session");
+        startSessionBtn.removeEventListener("click", stopMentalSession);
+        startSessionBtn.addEventListener("click", startMentalSession);
     }
 }
 function stopMentalSession(): void{
     endMentalSession();
 }
-
 function applyTheme(theme: "light" | "dark"): void{
     let root=document.documentElement;
     if (theme==="dark"){
@@ -126,7 +123,7 @@ async function initializeTheme(): Promise<void>{
     if (appWindow){
         try{
             let tauriTheme=await appWindow.theme();
-            applyTheme(tauriTheme ?? "light");
+            applyTheme(tauriTheme??"light");
             return;
         }
         catch (e){
@@ -160,7 +157,7 @@ function renderTopicGrid(): void{
       <span class="topic-pill-name">${topic.name}</span>
     `;
         topicElement.addEventListener("click", ()=>selectTopic(topic.id));
-        topicGrid.appendChild(topicElement);
+        topicGrid!.appendChild(topicElement);
     });
 }
 function selectTopic(topicId: string): void{
@@ -174,7 +171,7 @@ function selectTopic(topicId: string): void{
     selectedTopic=topicId;
     let topic=topics.find(t=>t.id===topicId);
     if (currentTopicDisplay){
-        currentTopicDisplay.textContent=topic?topic.name:"Select a topic to begin";
+        currentTopicDisplay.textContent=topic ? topic.name : "Select a topic to begin";
     }
     if (generateQuestionButton){
         generateQuestionButton.disabled=false;
@@ -204,8 +201,6 @@ function generateQuestion(): void{
       <p>Generating question...</p>
     </div>
   `;
-    // Generate immediately, no setTimeout
-    if (!questionArea||!userAnswer||!checkAnswerButton) return;
     switch (selectedTopic){
         case "add":
             Arithmetic.generateAddition();
@@ -294,7 +289,7 @@ function generateQuestion(): void{
         window.MathJax.typesetPromise([questionArea]).catch((err: any)=>console.log("MathJax typeset error:", err));
     }
 }
-function isAnswerCorrect(userInput: string, correct: any, alternate: any): boolean{
+function isAnswerCorrect(userInput: string, correct: string, alternate?: string): boolean{
     const trimmedInput=userInput.replace(/\s+/g, "");
     const isValidNumber=(s: string): boolean=>{
         return /^-?\d*\.?\d+(?:[eE][-+]?\d+)?$/.test(s);
@@ -304,15 +299,17 @@ function isAnswerCorrect(userInput: string, correct: any, alternate: any): boole
         if (!isNaN(userNum)){
             let correctNum=parseFloat(correct);
             if (!isNaN(correctNum)&&Math.abs(userNum - correctNum) < 1e-8) return true;
-            let altNum=parseFloat(alternate);
-            if (!isNaN(altNum)&&Math.abs(userNum - altNum) < 1e-8) return true;
+            if (alternate){
+                let altNum=parseFloat(alternate);
+                if (!isNaN(altNum)&&Math.abs(userNum - altNum) < 1e-8) return true;
+            }
         }
     }
     const normalize=(input: string): string | number=>{
         let cleaned=input.replace(/°/g, "");
         try{
             let simplified=math.simplify(cleaned);
-            if ((simplified as any).isConstantNode&&(simplified as any).value!=null){
+            if ((simplified as any).isConstantNode&&(simplified as any).value != null){
                 return parseFloat((simplified as any).value);
             }
             return simplified.toString();
@@ -322,9 +319,9 @@ function isAnswerCorrect(userInput: string, correct: any, alternate: any): boole
         }
     };
     let userNorm=normalize(userInput);
-    let possible=[correct, alternate].filter(v=>v!==undefined);
+    let possible=[correct, alternate].filter(v=>v !== undefined);
     for (let ans of possible){
-        let ansNorm=normalize(ans);
+        let ansNorm=normalize(ans!);
         if (userNorm===ansNorm) return true;
         if (typeof userNorm==="number"&&typeof ansNorm==="number"&&Math.abs(userNorm - ansNorm) < 1e-8) return true;
         if (typeof ans==="string"&&userInput.replace(/\s+/g, "").toLowerCase()===ans.replace(/\s+/g, "").toLowerCase()) return true;
@@ -378,7 +375,7 @@ function checkAnswer(): void{
 }
 function updateUIState(): void{
     if (!generateQuestionButton||!checkAnswerButton||!questionArea) return;
-    let hasTopic=selectedTopic!==null;
+    let hasTopic=selectedTopic !== null;
     let hasQuestion=questionArea.innerHTML.includes("mjx-container")||!questionArea.innerHTML.includes("empty-state");
     generateQuestionButton.disabled=!hasTopic;
     checkAnswerButton.disabled=!hasTopic||!hasQuestion;
@@ -410,57 +407,49 @@ function showNotification(message: string, type: "info" | "warning"="info"): voi
             if (notification.parentNode){
                 notification.parentNode.removeChild(notification);
             }
-    }, 300);
-}, 3000);
+        }, 300);
+    }, 3000);
 }
 function setupEventListeners(): void{
     if (!generateQuestionButton||!checkAnswerButton||!userAnswer||!themeToggle||!helpButton||!modeSingleBtn||!modeMentalBtn||!mentalControls||!singleControls||!difficultySelect||!timerDisplay||!scoreDisplay||!startSessionBtn) return;
+
     generateQuestionButton.addEventListener("click", generateQuestion);
     checkAnswerButton.addEventListener("click", checkAnswer);
     userAnswer.addEventListener("keyup", function (e: KeyboardEvent){
         if (e.shiftKey&&e.key==="Enter"){
-            if (currentMode==='single') checkAnswer();
+            if (currentMode==="single") checkAnswer();
             else if (sessionActive) handleMentalAnswer();
         }
     });
     themeToggle.addEventListener("click", function (){
         let isDark=document.documentElement.classList.contains("dark");
-        if (isDark){
-            applyTheme("light");
-        }
-        else{
-            applyTheme("dark");
-        }
+        applyTheme(isDark ? "light" : "dark");
     });
     helpButton.addEventListener("click", function (){
         showNotification("Select a topic, generate a question, enter your answer, and check it!", "info");
     });
-
-    // Mode switching
-    modeSingleBtn.addEventListener("click", function(){
-        if (modeSingleBtn!.classList.contains('disabled')) return;
+    modeSingleBtn.addEventListener("click", function (){
+        if (modeSingleBtn!.classList.contains("disabled")) return;
         modeSingleBtn!.classList.add("active");
         modeMentalBtn!.classList.remove("active");
-        currentMode='single';
-        mentalControls!.style.display='none';
-        singleControls!.style.display='flex';
+        currentMode="single";
+        mentalControls!.style.display="none";
+        singleControls!.style.display="flex";
         if (sessionActive) endMentalSession();
         updateUIState();
     });
-    modeMentalBtn.addEventListener("click", function(){
-        if (modeMentalBtn!.classList.contains('disabled')) return;
+    modeMentalBtn.addEventListener("click", function (){
+        if (modeMentalBtn!.classList.contains("disabled")) return;
         modeMentalBtn!.classList.add("active");
         modeSingleBtn!.classList.remove("active");
-        currentMode='mental';
-        mentalControls!.style.display='flex';
-        singleControls!.style.display='none';
+        currentMode="mental";
+        mentalControls!.style.display="flex";
+        singleControls!.style.display="none";
         updateUIState();
     });
-
-    difficultySelect.addEventListener("change", function(e: Event){
+    difficultySelect.addEventListener("change", function (e: Event){
         currentDifficulty=(e.target as HTMLSelectElement).value;
     });
-
     startSessionBtn.addEventListener("click", startMentalSession);
 }
 function updateMathJaxColors(): void{
@@ -468,15 +457,17 @@ function updateMathJaxColors(): void{
         window.MathJax.typesetPromise().catch((_err: any)=>console.log("MathJax re-render error:", _err));
     }
 }
-
-// Mental math functions
 function startMentalSession(): void{
     if (!selectedTopic){
         showNotification("Please select a topic first", "warning");
         return;
     }
+    if (mentalNextQuestionTimeout){
+        clearTimeout(mentalNextQuestionTimeout);
+        mentalNextQuestionTimeout=null;
+    }
     sessionActive=true;
-    sessionScore={correct: 0, total: 0};
+    sessionScore={ correct: 0, total: 0 };
     timeLeft=30;
     updateScoreDisplay();
     updateTimerDisplay();
@@ -488,7 +479,7 @@ function startMentalSession(): void{
     generateNextMentalQuestion();
 }
 function generateNextMentalQuestion(): void{
-    if (!selectedTopic) return;
+    if (!selectedTopic||!sessionActive) return;
     if (!questionArea||!userAnswer||!checkAnswerButton) return;
     if (answerResults){
         answerResults.innerHTML=`<div class="empty-state">...</div>`;
@@ -500,31 +491,81 @@ function generateNextMentalQuestion(): void{
     </div>
   `;
     switch (selectedTopic){
-        case "add": Arithmetic.generateAddition(currentDifficulty); break;
-        case "subtrt": Arithmetic.generateSubtraction(currentDifficulty); break;
-        case "mult": Arithmetic.generateMultiplication(currentDifficulty); break;
-        case "divid": Arithmetic.generateDivision(currentDifficulty); break;
-        case "root": Algebra.generateRoot(currentDifficulty); break;
-        case "deri": Calculus.generateDerivative(currentDifficulty); break;
-        case "inte": Calculus.generateIntegral(currentDifficulty); break;
-        case "mtrx": LinearAlgebra.generateMatrix(currentDifficulty); break;
-        case "vctr": LinearAlgebra.generateVector(currentDifficulty); break;
-        case "sin": Trigonometry.generateSin(currentDifficulty); break;
-        case "cos": Trigonometry.generateCosine(currentDifficulty); break;
-        case "tan": Trigonometry.generateTangent(currentDifficulty); break;
-        case "cosec": Trigonometry.generateCosecant(currentDifficulty); break;
-        case "sec": Trigonometry.generateSecant(currentDifficulty); break;
-        case "cot": Trigonometry.generateCotangent(currentDifficulty); break;
-        case "log": Algebra.generateLogarithm(currentDifficulty); break;
-        case "exp": Algebra.generateExponent(currentDifficulty); break;
-        case "fact": Algebra.generateFactorial(currentDifficulty); break;
-        case "perm": DiscreteMathematics.generatePermutation(currentDifficulty); break;
-        case "comb": DiscreteMathematics.generateCombination(currentDifficulty); break;
-        case "prob": DiscreteMathematics.generateProbability(currentDifficulty); break;
-        case "ser": Algebra.generateSeries(currentDifficulty); break;
-        case "lim": Calculus.generateLimit(currentDifficulty); break;
-        case "relRates": Calculus.generateRelatedRates(currentDifficulty); break;
-        default: questionArea.innerHTML=`<div class="empty-state"><p>Unknown topic</p></div>`; return;
+        case "add":
+            Arithmetic.generateAddition(currentDifficulty);
+            break;
+        case "subtrt":
+            Arithmetic.generateSubtraction(currentDifficulty);
+            break;
+        case "mult":
+            Arithmetic.generateMultiplication(currentDifficulty);
+            break;
+        case "divid":
+            Arithmetic.generateDivision(currentDifficulty);
+            break;
+        case "root":
+            Algebra.generateRoot(currentDifficulty);
+            break;
+        case "deri":
+            Calculus.generateDerivative(currentDifficulty);
+            break;
+        case "inte":
+            Calculus.generateIntegral(currentDifficulty);
+            break;
+        case "mtrx":
+            LinearAlgebra.generateMatrix(currentDifficulty);
+            break;
+        case "vctr":
+            LinearAlgebra.generateVector(currentDifficulty);
+            break;
+        case "sin":
+            Trigonometry.generateSin(currentDifficulty);
+            break;
+        case "cos":
+            Trigonometry.generateCosine(currentDifficulty);
+            break;
+        case "tan":
+            Trigonometry.generateTangent(currentDifficulty);
+            break;
+        case "cosec":
+            Trigonometry.generateCosecant(currentDifficulty);
+            break;
+        case "sec":
+            Trigonometry.generateSecant(currentDifficulty);
+            break;
+        case "cot":
+            Trigonometry.generateCotangent(currentDifficulty);
+            break;
+        case "log":
+            Algebra.generateLogarithm(currentDifficulty);
+            break;
+        case "exp":
+            Algebra.generateExponent(currentDifficulty);
+            break;
+        case "fact":
+            Algebra.generateFactorial(currentDifficulty);
+            break;
+        case "perm":
+            DiscreteMathematics.generatePermutation(currentDifficulty);
+            break;
+        case "comb":
+            DiscreteMathematics.generateCombination(currentDifficulty);
+            break;
+        case "prob":
+            DiscreteMathematics.generateProbability(currentDifficulty);
+            break;
+        case "ser":
+            Algebra.generateSeries(currentDifficulty);
+            break;
+        case "lim":
+            Calculus.generateLimit(currentDifficulty);
+            break;
+        case "relRates":
+            Calculus.generateRelatedRates(currentDifficulty);
+            break;
+        default:
+            questionArea.innerHTML=`<div class="empty-state"><p>Unknown topic</p></div>`;
+            return;
     }
     if (expectedFormatDiv&&window.expectedFormat){
         expectedFormatDiv.textContent="Expected format: "+window.expectedFormat;
@@ -538,6 +579,10 @@ function generateNextMentalQuestion(): void{
 function handleMentalAnswer(): void{
     if (!sessionActive) return;
     if (!userAnswer||!answerResults) return;
+    if (mentalNextQuestionTimeout){
+        clearTimeout(mentalNextQuestionTimeout);
+        mentalNextQuestionTimeout=null;
+    }
     let userInput=userAnswer.value.trim();
     if (!userInput){
         showNotification("Please enter an answer", "warning");
@@ -546,6 +591,7 @@ function handleMentalAnswer(): void{
     let correct=window.correctAnswer.correct;
     let alternate=window.correctAnswer.alternate;
     checkAnswerFast(userInput, correct, alternate).then(isCorrect=>{
+        if (!sessionActive) return;
         if (isCorrect) sessionScore.correct++;
         sessionScore.total++;
         updateScoreDisplay();
@@ -553,22 +599,27 @@ function handleMentalAnswer(): void{
             answerResults.innerHTML=isCorrect
                 ? `<div class="result-success">✅ Correct!</div>`
                 : `<div class="result-error">❌ Incorrect. The answer was ${correct}</div>`;
+            answerResults.className=isCorrect ? "results-display correct" : "results-display incorrect";
         }
         if (userAnswer) userAnswer.value="";
-        if (sessionScore.total>=maxQuestions){
+        if (sessionScore.total >= maxQuestions){
             endMentalSession();
+            return;
         }
-        else{
-            timeLeft=30;
-            updateTimerDisplay();
-            generateNextMentalQuestion();
-        }
+        mentalNextQuestionTimeout=setTimeout(()=>{
+            if (sessionActive){
+                timeLeft=30;
+                updateTimerDisplay();
+                generateNextMentalQuestion();
+            }
+            mentalNextQuestionTimeout=null;
+        }, 800);
     });
 }
 async function checkAnswerFast(userInput: string, correct: string, alternate?: string): Promise<boolean>{
     if (window.__TAURI__){
         try{
-            return await invoke('check_math', {userExpr: userInput, correctExpr: correct});
+            return await invoke("check_math",{ userExpr: userInput, correctExpr: correct });
         }
         catch (e){
             console.warn("Rust check failed, falling back to JS", e);
@@ -578,23 +629,34 @@ async function checkAnswerFast(userInput: string, correct: string, alternate?: s
 }
 function endMentalSession(): void{
     sessionActive=false;
-    if (sessionTimer) clearInterval(sessionTimer);
+    if (sessionTimer){
+        clearInterval(sessionTimer);
+        sessionTimer=null;
+    }
+    if (mentalNextQuestionTimeout){
+        clearTimeout(mentalNextQuestionTimeout);
+        mentalNextQuestionTimeout=null;
+    }
     disableTopicSelection(false);
     disableModeButtons(false);
     disableDifficulty(false);
     setSessionButton(false);
-    if (userAnswer) userAnswer.disabled=true;
+    if (userAnswer){
+        userAnswer.disabled=true;
+        userAnswer.value="";
+    }
     if (checkAnswerButton) checkAnswerButton.disabled=true;
     if (answerResults){
         answerResults.innerHTML=`<div class="empty-state">...</div>`;
         answerResults.className="results-display";
     }
-    showNotification(`Session finished! Score: ${sessionScore.correct}/${sessionScore.total}`, 'info');
+    if (expectedFormatDiv) expectedFormatDiv.textContent="";
+    showNotification(`Session finished! Score: ${sessionScore.correct}/${sessionScore.total}`, "info");
     promptSaveScore();
 }
 function promptSaveScore(): void{
     if (!window.__TAURI__){
-        let scores=JSON.parse(localStorage.getItem('leaderboard')||'[]');
+        let scores=JSON.parse(localStorage.getItem("leaderboard")||"[]");
         scores.push({
             topic: selectedTopic,
             score: sessionScore.correct,
@@ -602,49 +664,56 @@ function promptSaveScore(): void{
             difficulty: currentDifficulty,
             date: new Date().toISOString()
         });
-        localStorage.setItem('leaderboard', JSON.stringify(scores));
-        showNotification('Score saved locally!', 'info');
+        localStorage.setItem("leaderboard", JSON.stringify(scores));
+        showNotification("Score saved locally!", "info");
     }
     else{
-        invoke('save_score', {
-            entry: {
+        invoke("save_score",{
+            entry:{
                 topic: selectedTopic,
                 score: sessionScore.correct,
                 total: sessionScore.total,
                 difficulty: currentDifficulty,
                 date: new Date().toISOString()
             }
-        }).then(()=>showNotification('Score saved!', 'info'))
-          .catch(_err=>showNotification('Failed to save score', 'warning'));
+        }).then(()=>showNotification("Score saved!", "info"))
+          .catch(_err=>showNotification("Failed to save score", "warning"));
     }
 }
 function startTimer(): void{
     if (sessionTimer) clearInterval(sessionTimer);
     sessionTimer=setInterval(()=>{
+        if (!sessionActive) return;
         timeLeft--;
         updateTimerDisplay();
-        if (timeLeft<=0){
-            if (sessionActive){
-                sessionScore.total++;
-                updateScoreDisplay();
-                showNotification('Time is up!', 'warning');
-                if (sessionScore.total>=maxQuestions){
-                    endMentalSession();
-                }
-                else{
-                    timeLeft=30;
-                    updateTimerDisplay();
+        if (timeLeft <= 0){
+            sessionScore.total++;
+            updateScoreDisplay();
+            showNotification("Time is up!", "warning");
+            if (sessionScore.total >= maxQuestions){
+                endMentalSession();
+                return;
+            }
+            timeLeft=30;
+            updateTimerDisplay();
+            if (mentalNextQuestionTimeout){
+                clearTimeout(mentalNextQuestionTimeout);
+                mentalNextQuestionTimeout=null;
+            }
+            mentalNextQuestionTimeout=setTimeout(()=>{
+                if (sessionActive){
                     generateNextMentalQuestion();
                 }
-            }
+                mentalNextQuestionTimeout=null;
+            }, 800);
         }
     }, 1000);
 }
 function updateTimerDisplay(): void{
     if (!timerDisplay) return;
-    let mins=Math.floor(timeLeft/60);
-    let secs=timeLeft%60;
-    timerDisplay.textContent=`⏱️ ${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+    let mins=Math.floor(Math.max(0, timeLeft) / 60);
+    let secs=Math.max(0, timeLeft) % 60;
+    timerDisplay.textContent=`⏱️ ${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 function updateScoreDisplay(): void{
     if (!scoreDisplay) return;
