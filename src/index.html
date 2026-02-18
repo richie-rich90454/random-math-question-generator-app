@@ -47,54 +47,74 @@
             </div>
             <div class="app-content">
                 <div class="control-toolbar">
-                    <div class="mode-selector">
-                        <button id="mode-single" class="mode-button active">Single</button>
-                        <button id="mode-mental" class="mode-button">Mental</button>
-                    </div>
-                    <div class="toolbar-section">
-                        <h2 class="toolbar-title">Topics</h2>
-                        <div class="topic-pills-container" id="topic-grid"></div>
-                    </div>
-                    <div id="mental-controls" style="display: none;">
-                        <select id="difficulty-select" class="difficulty-select">
-                            <option value="easy">Easy</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="hard">Hard</option>
-                        </select>
-                        <span id="timer-display">⏱️ 00:30</span>
-                        <span id="score-display">✅ 0 / 0</span>
-                        <button id="start-session" class="primary-button">Start Session</button>
-                        <div class="mental-progress">
-                            <div class="progress-bar" id="mental-progress-bar" style="width: 0%;"></div>
+                    <div class="toolbar-row-top">
+                        <div class="mode-selector">
+                            <button id="mode-single" class="mode-button active">Single</button>
+                            <button id="mode-mental" class="mode-button">Mental</button>
+                        </div>
+                        <div class="toolbar-section">
+                            <h2 class="toolbar-title">Topics</h2>
+                            <div class="topic-pills-container" id="topic-grid"></div>
                         </div>
                     </div>
-                    <div class="toolbar-actions" id="single-controls">
-                        <button class="primary-button toolbar-button" id="genQ">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
-                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                            </svg>
-                            Generate
-                        </button>
-                        <button class="secondary-button toolbar-button" id="check-answer" disabled>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                            </svg>
-                            Check
-                        </button>
-                        <div class="auto-controls">
-                            <label class="auto-toggle">
-                                <input type="checkbox" id="autocontinue-toggle"> Auto (3s)
-                            </label>
-                            <select id="scope-select" class="scope-select">
-                                <option value="simple">Simple Math</option>
-                                <option value="algebra">Algebra</option>
-                                <option value="precalc">Precalculus</option>
-                                <option value="calc">Calculus</option>
-                                <option value="all">All</option>
-                            </select>
-                            <label class="shuffle-toggle">
-                                <input type="checkbox" id="shuffle-toggle"> Shuffle
-                            </label>
+                    <div class="toolbar-row-bottom">
+                        <div class="toolbar-actions" id="single-controls">
+                            <div class="single-actions">
+                                <button class="primary-button toolbar-button" id="genQ">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
+                                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                    </svg>
+                                    Generate
+                                </button>
+                                <button class="secondary-button toolbar-button" id="check-answer" disabled>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                    </svg>
+                                    Check
+                                </button>
+                            </div>
+                            <div class="auto-controls">
+                                <label class="auto-toggle">
+                                    <input type="checkbox" id="autocontinue-toggle"> Auto (3s)
+                                </label>
+                                <select id="scope-select" class="scope-select">
+                                    <option value="simple">Simple Math</option>
+                                    <option value="algebra">Algebra</option>
+                                    <option value="precalc">Precalculus</option>
+                                    <option value="calc">Calculus</option>
+                                    <option value="all">All</option>
+                                </select>
+                                <label class="shuffle-toggle">
+                                    <input type="checkbox" id="shuffle-toggle"> Shuffle
+                                </label>
+                            </div>
+                        </div>
+                        <div id="mental-controls" style="display: none;">
+                            <div class="mental-stats">
+                                <select id="difficulty-select" class="difficulty-select">
+                                    <option value="easy">Easy</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="hard">Hard</option>
+                                </select>
+                                <span id="timer-display">⏱️ 00:30</span>
+                                <span id="score-display">✅ 0 / 0</span>
+                            </div>
+                            <div class="mental-extra-controls">
+                                <select id="mental-scope-select" class="scope-select">
+                                    <option value="simple">Simple Math</option>
+                                    <option value="algebra">Algebra</option>
+                                    <option value="precalc">Precalculus</option>
+                                    <option value="calc">Calculus</option>
+                                    <option value="all">All</option>
+                                </select>
+                                <label class="shuffle-toggle">
+                                    <input type="checkbox" id="mental-shuffle-toggle"> Shuffle
+                                </label>
+                                <button id="start-session" class="primary-button">Start Session</button>
+                            </div>
+                            <div class="mental-progress">
+                                <div class="progress-bar" id="mental-progress-bar" style="width: 0%;"></div>
+                            </div>
                         </div>
                     </div>
                 </div>

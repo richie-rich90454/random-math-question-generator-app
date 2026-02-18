@@ -31,11 +31,11 @@
     --radius-xl: 16px;
     --radius-full: 9999px;
     --spacing-xs: 8px;
-    --spacing-sm: 12px;
-    --spacing-md: 16px;
-    --spacing-lg: 20px;
-    --spacing-xl: 24px;
-    --spacing-2xl: 32px;
+    --spacing-sm: 10px;
+    --spacing-md: 14px;
+    --spacing-lg: 18px;
+    --spacing-xl: 22px;
+    --spacing-2xl: 26px;
     --transition-fast: 150ms cubic-bezier(0.2, 0, 0, 1);
     --transition-normal: 250ms cubic-bezier(0.2, 0, 0, 1);
     --transition-slow: 400ms cubic-bezier(0.2, 0, 0, 1);
@@ -134,7 +134,7 @@ body{
     font-family: "Inter", "Noto Sans", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background: var(--app-bg);
     color: var(--text-primary);
-    line-height: 1.6;
+    line-height: 1.5;
     min-height: 100vh;
     overflow-x: hidden;
 }
@@ -261,16 +261,16 @@ body{
     flex: 1;
     max-width: 1600px;
     margin: 0 auto;
-    padding: var(--spacing-xl);
+    padding: var(--spacing-lg);
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-lg);
     animation: fadeInUp 0.7s ease-out;
 }
 @media (min-width: 1400px){
     .app-content{
-        padding: var(--spacing-xl);
+        padding: var(--spacing-lg);
     }
 }
 .control-toolbar{
@@ -279,11 +279,11 @@ body{
     -webkit-backdrop-filter: blur(var(--blur-amount));
     border-radius: var(--radius-md);
     border: 1px solid var(--border);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
     transition: all var(--transition-normal);
     animation: scaleIn 0.4s ease-out;
 }
@@ -295,7 +295,7 @@ body{
 .toolbar-row-top{
     display: flex;
     align-items: center;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
     width: 100%;
 }
 .toolbar-row-bottom{
@@ -303,20 +303,20 @@ body{
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
     width: 100%;
 }
 .toolbar-section{
     flex: 1;
 }
 .toolbar-title{
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    margin-bottom: var(--spacing-xs);
-    padding: var(--spacing-xs) var(--spacing-sm);
+    margin-bottom: 4px;
+    padding: 2px var(--spacing-sm);
     background: var(--surface-alt);
     backdrop-filter: blur(calc(var(--blur-amount) / 2));
     -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
@@ -331,11 +331,11 @@ body{
 .topic-pills-container{
     display: flex;
     flex-wrap: wrap;
-    gap: var(--spacing-sm);
+    gap: 6px;
     padding-right: var(--spacing-xs);
 }
 .topic-pill{
-    padding: var(--spacing-xs) var(--spacing-lg);
+    padding: 4px var(--spacing-md);
     background: var(--surface);
     backdrop-filter: blur(calc(var(--blur-amount) / 2));
     -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
@@ -343,11 +343,11 @@ body{
     border-radius: var(--radius-full);
     cursor: pointer;
     transition: all var(--transition-fast);
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     color: var(--text-primary);
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: 4px;
     white-space: nowrap;
     animation: fadeIn 0.5s ease-out;
     animation-fill-mode: both;
@@ -373,7 +373,7 @@ body{
 }
 .topic-pill-icon{
     font-weight: 600;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     transition: transform var(--transition-fast);
 }
 .topic-pill:hover .topic-pill-icon{
@@ -385,20 +385,20 @@ body{
 #single-controls{
     display: flex;
     align-items: center;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
     width: 100%;
 }
 .single-actions{
     display: flex;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
     flex-shrink: 0;
 }
 .auto-controls{
     display: flex;
     align-items: center;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
     margin-left: auto;
-    padding-left: var(--spacing-lg);
+    padding-left: var(--spacing-md);
     border-left: 1px solid var(--border);
     transition: all var(--transition-fast);
 }
@@ -407,24 +407,28 @@ body{
 }
 #mental-controls{
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--spacing-md);
+    flex-direction: column;
+    gap: var(--spacing-sm);
     width: 100%;
 }
 .mental-stats{
     display: flex;
     align-items: center;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
+}
+.mental-extra-controls{
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
 }
 .mental-progress{
-    width: 200px;
+    width: 100%;
     height: 4px;
     background: var(--border);
     border-radius: var(--radius-full);
     overflow: hidden;
-    margin-top: 0;
+    margin-top: 2px;
 }
 .progress-bar{
     height: 100%;
@@ -433,11 +437,11 @@ body{
     animation: shimmer 2s infinite;
 }
 .primary-button, .secondary-button{
-    padding: var(--spacing-sm) var(--spacing-xl);
+    padding: var(--spacing-sm) var(--spacing-md);
     border-radius: var(--radius-sm);
     border: none;
     font-family: inherit;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-fast);
@@ -517,20 +521,20 @@ body{
 .topic-pill:focus-visible,
 .mode-button:focus-visible,
 select:focus-visible,
-input[type="checkbox"]:focus-visible {
+input[type="checkbox"]:focus-visible{
     outline: none;
     box-shadow: 0 0 0 3px var(--primary-light), var(--shadow-glow);
 }
 .difficulty-select,
 .scope-select{
-    padding: var(--spacing-sm) var(--spacing-2xl) var(--spacing-sm) var(--spacing-lg);
+    padding: var(--spacing-xs) var(--spacing-xl) var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--radius-full);
     border: 2px solid var(--border);
     background: var(--surface);
     backdrop-filter: blur(calc(var(--blur-amount) / 2));
     -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     color: var(--text-primary);
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     cursor: pointer;
     transition: all var(--transition-fast);
     appearance: none;
@@ -538,8 +542,8 @@ input[type="checkbox"]:focus-visible {
     -moz-appearance: none;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
     background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 14px;
+    background-position: right 8px center;
+    background-size: 12px;
     box-shadow: var(--shadow-sm);
 }
 .difficulty-select:hover,
@@ -565,13 +569,13 @@ input[type="checkbox"]:focus-visible {
 .shuffle-toggle{
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.8125rem;
+    gap: 6px;
+    font-size: 0.75rem;
     color: var(--text-secondary);
     cursor: pointer;
     transition: all var(--transition-fast);
     position: relative;
-    padding: 4px 0;
+    padding: 2px 0;
 }
 .auto-toggle:hover,
 .shuffle-toggle:hover{
@@ -583,8 +587,8 @@ input[type="checkbox"]:focus-visible {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     border-radius: var(--radius-sm);
     border: 2px solid var(--border-strong);
     background: var(--surface);
@@ -598,7 +602,7 @@ input[type="checkbox"]:focus-visible {
 .auto-toggle input[type="checkbox"]:hover,
 .shuffle-toggle input[type="checkbox"]:hover{
     border-color: var(--primary-light);
-    transform: scale(1.15);
+    transform: scale(1.1);
     box-shadow: var(--shadow-glass);
 }
 .auto-toggle input[type="checkbox"]:checked,
@@ -611,8 +615,8 @@ input[type="checkbox"]:focus-visible {
 .shuffle-toggle input[type="checkbox"]:checked::after{
     content: '';
     position: absolute;
-    top: 3px;
-    left: 6px;
+    top: 0px;
+    left: 4px;
     width: 4px;
     height: 8px;
     border: solid white;
@@ -637,7 +641,7 @@ input[type="checkbox"]:focus-visible {
     -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     border-radius: var(--radius-full);
     padding: 2px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     flex-shrink: 0;
     transition: all var(--transition-fast);
 }
@@ -646,11 +650,11 @@ input[type="checkbox"]:focus-visible {
     transform: scale(1.02);
 }
 .mode-button{
-    padding: 6px var(--spacing-md);
+    padding: 4px var(--spacing-md);
     border: none;
     background: transparent;
     border-radius: var(--radius-full);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 500;
     cursor: pointer;
     color: var(--text-secondary);
@@ -674,7 +678,7 @@ input[type="checkbox"]:focus-visible {
     pointer-events: none;
 }
 #timer-display, #score-display{
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--text-primary);
     background: var(--surface-alt);
@@ -693,7 +697,7 @@ input[type="checkbox"]:focus-visible {
 }
 #start-session{
     padding: var(--spacing-xs) var(--spacing-md);
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     transition: all var(--transition-fast);
 }
 #start-session.stop-session{
@@ -773,7 +777,7 @@ input[type="checkbox"]:focus-visible {
     opacity: 1;
 }
 .card-title{
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-primary);
     display: flex;
@@ -799,7 +803,7 @@ input[type="checkbox"]:focus-visible {
     box-shadow: var(--shadow-glow);
 }
 .card-subtitle{
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-secondary);
     font-weight: 500;
     background: var(--surface);
@@ -823,9 +827,9 @@ input[type="checkbox"]:focus-visible {
     align-items: center;
     justify-content: center;
     text-align: center;
-    min-height: 100px;
-    font-size: 1.125rem;
-    line-height: 1.6;
+    min-height: 80px;
+    font-size: 1rem;
+    line-height: 1.5;
     color: var(--text-primary);
     overflow-x: auto;
     padding: var(--spacing-md);
@@ -855,8 +859,8 @@ input[type="checkbox"]:focus-visible {
     transform: scale(1.02);
 }
 .empty-state svg{
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     opacity: .5;
     transition: all var(--transition-fast);
 }
@@ -865,8 +869,8 @@ input[type="checkbox"]:focus-visible {
     transform: translateY(-3px);
 }
 .empty-state p{
-    font-size: 0.875rem;
-    max-width: 240px;
+    font-size: 0.8rem;
+    max-width: 200px;
     text-align: center;
 }
 .loading-state{
@@ -878,11 +882,11 @@ input[type="checkbox"]:focus-visible {
 }
 .answer-input{
     width: 100%;
-    min-height: 80px;
+    min-height: 70px;
     padding: var(--spacing-sm) var(--spacing-md);
     font-family: inherit;
-    font-size: 0.9375rem;
-    line-height: 1.6;
+    font-size: 0.875rem;
+    line-height: 1.5;
     color: var(--text-primary);
     background: var(--surface);
     backdrop-filter: blur(calc(var(--blur-amount) / 2));
@@ -908,7 +912,7 @@ input[type="checkbox"]:focus-visible {
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-secondary);
     transition: all var(--transition-fast);
 }
@@ -927,7 +931,7 @@ input[type="checkbox"]:focus-visible {
     padding: 1px 4px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     transition: all var(--transition-fast);
 }
 .symbols-list:hover{
@@ -937,7 +941,7 @@ input[type="checkbox"]:focus-visible {
 }
 .expected-format{
     margin-top: var(--spacing-sm);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-secondary);
     font-style: italic;
     padding: var(--spacing-xs) var(--spacing-sm);
@@ -957,9 +961,9 @@ input[type="checkbox"]:focus-visible {
     align-items: center;
     justify-content: center;
     text-align: center;
-    min-height: 70px;
-    font-size: 0.875rem;
-    line-height: 1.6;
+    min-height: 60px;
+    font-size: 0.8rem;
+    line-height: 1.5;
     color: var(--text-primary);
     padding: var(--spacing-sm);
     background: var(--app-bg);
@@ -991,17 +995,17 @@ input[type="checkbox"]:focus-visible {
     width: 100%;
 }
 .result-success svg, .result-error svg{
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     flex-shrink: 0;
     animation: bounce 0.5s;
 }
 .result-success h3, .result-error h3{
-    font-size: 1rem;
+    font-size: 0.9rem;
     margin-bottom: 2px;
 }
 .result-success p, .result-error p{
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
 }
 .app-footer{
@@ -1023,7 +1027,7 @@ input[type="checkbox"]:focus-visible {
 .footer-content{
     display: flex;
     gap: var(--spacing-xl);
-    font-size: .875rem;
+    font-size: .8rem;
     color: var(--text-secondary);
     transition: all var(--transition-fast);
 }
@@ -1050,8 +1054,8 @@ input[type="checkbox"]:focus-visible {
     overflow-y: hidden;
 }
 ::-webkit-scrollbar{
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
 }
 ::-webkit-scrollbar-track{
     background: var(--surface-alt);
@@ -1060,7 +1064,7 @@ input[type="checkbox"]:focus-visible {
 ::-webkit-scrollbar-thumb{
     background: var(--border-strong);
     border-radius: var(--radius-full);
-    border: 3px solid transparent;
+    border: 2px solid transparent;
     background-clip: content-box;
     transition: background var(--transition-fast);
 }
@@ -1071,14 +1075,14 @@ input[type="checkbox"]:focus-visible {
 .spinner{
     border: 3px solid var(--border);
     border-top-color: var(--primary);
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
 @keyframes spin{
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0%{ transform: rotate(0deg); }
+    100%{ transform: rotate(360deg); }
 }
 .notification{
     position: fixed;
@@ -1092,7 +1096,7 @@ input[type="checkbox"]:focus-visible {
     border-left: 4px solid var(--primary);
     box-shadow: var(--shadow-lg);
     color: var(--text-primary);
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     z-index: 1000;
     animation: slideIn 0.2s ease, pulse 2s infinite;
 }
@@ -1238,8 +1242,8 @@ input[type="checkbox"]:focus-visible {
 .icon-button svg, .result-success svg, .result-error svg, .empty-state svg{
     color: inherit;
 }
-@media (prefers-reduced-motion: reduce) {
-    * {
+@media (prefers-reduced-motion: reduce){
+    *{
         animation-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
     }
@@ -1265,16 +1269,13 @@ input[type="checkbox"]:focus-visible {
     .mental-stats{
         flex-wrap: wrap;
     }
-    .mental-progress{
-        width: 100%;
-    }
 }
 @media (max-width: 768px){
     .app-content{
         padding: var(--spacing-md);
     }
     .control-toolbar{
-        padding: var(--spacing-md);
+        padding: var(--spacing-sm);
     }
     .toolbar-row-top{
         flex-direction: column;
@@ -1297,15 +1298,15 @@ input[type="checkbox"]:focus-visible {
         flex-direction: column;
         gap: var(--spacing-xs);
         text-align: center;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
     }
-    .topic-pills-container {
+    .topic-pills-container{
         flex-wrap: nowrap;
         overflow-x: auto;
         padding-bottom: var(--spacing-xs);
         -webkit-overflow-scrolling: touch;
     }
-    .topic-pills-container::after {
+    .topic-pills-container::after{
         content: '';
         flex: 0 0 var(--spacing-sm);
     }
@@ -1321,24 +1322,44 @@ input[type="checkbox"]:focus-visible {
         font-size: 0.875rem;
     }
     .topic-pill{
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         padding: 2px 6px;
     }
     .primary-button, .secondary-button{
         padding: var(--spacing-xs) var(--spacing-sm);
-        font-size: 0.8125rem;
+        font-size: 0.75rem;
     }
     .question-display{
-        min-height: 80px;
+        min-height: 70px;
         padding: var(--spacing-sm);
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
     .answer-input{
-        min-height: 60px;
-        font-size: 0.875rem;
+        min-height: 50px;
+        font-size: 0.8rem;
     }
     .results-display{
-        min-height: 60px;
-        font-size: 0.8125rem;
+        min-height: 50px;
+        font-size: 0.75rem;
     }
+}
+.difficulty-select option,
+.scope-select option{
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    backdrop-filter: blur(calc(var(--blur-amount) / 2));
+    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: none;
+    font-size: 0.75rem;
+}
+.difficulty-select option:hover,
+.scope-select option:hover{
+    background: var(--primary);
+    color: var(--text-on-primary);
+}
+.difficulty-select:focus,
+.scope-select:focus{
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light), var(--shadow-glow);
 }

@@ -30,6 +30,8 @@ let startSessionBtn: HTMLButtonElement | null=document.getElementById("start-ses
 let autocontinueToggle: HTMLInputElement | null=document.getElementById("autocontinue-toggle") as HTMLInputElement | null;
 let scopeSelect: HTMLSelectElement | null=document.getElementById("scope-select") as HTMLSelectElement | null;
 let shuffleToggle: HTMLInputElement | null=document.getElementById("shuffle-toggle") as HTMLInputElement | null;
+let mentalScopeSelect: HTMLSelectElement | null=document.getElementById("mental-scope-select") as HTMLSelectElement | null;
+let mentalShuffleToggle: HTMLInputElement | null=document.getElementById("mental-shuffle-toggle") as HTMLInputElement | null;
 let mentalProgressBar: HTMLElement | null=document.getElementById("mental-progress-bar");
 
 window.correctAnswer={correct: ""};
@@ -86,6 +88,8 @@ let mentalNextQuestionTimeout: ReturnType<typeof setTimeout> | null=null;
 let autocontinue: boolean=false;
 let scope: string="simple";
 let shuffle: boolean=false;
+let mentalScope: string="simple";
+let mentalShuffle: boolean=false;
 let autoTimeout: ReturnType<typeof setTimeout> | null=null;
 let modeButtons=[modeSingleBtn, modeMentalBtn];
 function disableModeButtons(disabled: boolean): void{
@@ -158,6 +162,8 @@ function initApp(): void{
     if (scopeSelect) scope=scopeSelect.value;
     if (autocontinueToggle) autocontinue=autocontinueToggle.checked;
     if (shuffleToggle) shuffle=shuffleToggle.checked;
+    if (mentalScopeSelect) mentalScope=mentalScopeSelect.value;
+    if (mentalShuffleToggle) mentalShuffle=mentalShuffleToggle.checked;
     renderTopicGrid();
     setupEventListeners();
     initializeTheme();
@@ -165,7 +171,8 @@ function initApp(): void{
 }
 function renderTopicGrid(): void{
     if (!topicGrid) return;
-    const allowedIds=scopeTopics[scope as keyof typeof scopeTopics]||scopeTopics.simple;
+    const currentScope= currentMode==="single" ? scope : mentalScope;
+    const allowedIds=scopeTopics[currentScope as keyof typeof scopeTopics]||scopeTopics.simple;
     const filteredTopics=topics.filter(t=>allowedIds.includes(t.id));
     topicGrid.innerHTML="";
     filteredTopics.forEach(topic=>{
@@ -218,7 +225,8 @@ function selectTopic(topicId: string): void{
     updateUIState();
 }
 function pickRandomTopic(): string | null{
-    const allowedIds=scopeTopics[scope as keyof typeof scopeTopics]||scopeTopics.simple;
+    const currentScope= currentMode==="single" ? scope : mentalScope;
+    const allowedIds=scopeTopics[currentScope as keyof typeof scopeTopics]||scopeTopics.simple;
     if (allowedIds.length===0) return null;
     const randomId=allowedIds[Math.floor(Math.random()*allowedIds.length)];
     return randomId;
@@ -507,6 +515,11 @@ function setupEventListeners(): void{
             clearTimeout(autoTimeout);
             autoTimeout=null;
         }
+        if (mentalScopeSelect) scope=mentalScopeSelect.value;
+        if (scopeSelect) scopeSelect.value=scope;
+        if (mentalShuffleToggle) shuffle=mentalShuffleToggle.checked;
+        if (shuffleToggle) shuffleToggle.checked=shuffle;
+        renderTopicGrid();
         updateUIState();
     });
     modeMentalBtn.addEventListener("click", function (){
@@ -516,10 +529,16 @@ function setupEventListeners(): void{
         currentMode="mental";
         mentalControls!.style.display="flex";
         singleControls!.style.display="none";
+        if (sessionActive) endMentalSession();
         if (autoTimeout){
             clearTimeout(autoTimeout);
             autoTimeout=null;
         }
+        if (scopeSelect) mentalScope=scopeSelect.value;
+        if (mentalScopeSelect) mentalScopeSelect.value=mentalScope;
+        if (shuffleToggle) mentalShuffle=shuffleToggle.checked;
+        if (mentalShuffleToggle) mentalShuffleToggle.checked=mentalShuffle;
+        renderTopicGrid();
         updateUIState();
     });
     difficultySelect.addEventListener("change", function (e: Event){
@@ -550,6 +569,17 @@ function setupEventListeners(): void{
             shuffle=(e.target as HTMLInputElement).checked;
         });
     }
+    if (mentalScopeSelect){
+        mentalScopeSelect.addEventListener("change", (e)=>{
+            mentalScope=(e.target as HTMLSelectElement).value;
+            renderTopicGrid();
+        });
+    }
+    if (mentalShuffleToggle){
+        mentalShuffleToggle.addEventListener("change", (e)=>{
+            mentalShuffle=(e.target as HTMLInputElement).checked;
+        });
+    }
 }
 function updateMathJaxColors(): void{
     if (window.MathJax&&window.MathJax.typesetPromise){
@@ -557,8 +587,12 @@ function updateMathJaxColors(): void{
     }
 }
 function startMentalSession(): void{
-    if (!selectedTopic){
-        showNotification("Please select a topic first", "warning");
+    if (!selectedTopic&&!mentalShuffle){
+        showNotification("Please select a topic or enable shuffle", "warning");
+        return;
+    }
+    if (mentalShuffle&&!pickRandomTopic()){
+        showNotification("No topics available in current scope", "warning");
         return;
     }
     if (mentalNextQuestionTimeout){
@@ -579,7 +613,31 @@ function startMentalSession(): void{
     generateNextMentalQuestion();
 }
 function generateNextMentalQuestion(): void{
-    if (!selectedTopic||!sessionActive) return;
+    if (!sessionActive) return;
+    if (mentalShuffle){
+        const randomTopic=pickRandomTopic();
+        if (randomTopic){
+            selectedTopic=randomTopic;
+            document.querySelectorAll(".topic-pill").forEach(item=>{
+                item.classList.remove("active");
+            });
+            let selectedElement=document.querySelector(`[data-topic-id="${selectedTopic}"]`);
+            if (selectedElement) selectedElement.classList.add("active");
+            let topic=topics.find(t=>t.id===selectedTopic);
+            if (currentTopicDisplay){
+                currentTopicDisplay.textContent=topic?topic.name : "Topic";
+            }
+        }
+        else{
+            endMentalSession();
+            showNotification("No topics available", "warning");
+            return;
+        }
+    }
+    if (!selectedTopic){
+        endMentalSession();
+        return;
+    }
     if (!questionArea||!userAnswer||!checkAnswerButton) return;
     if (answerResults){
         answerResults.innerHTML=`<div class="empty-state">...</div>`;
@@ -695,7 +753,7 @@ function handleMentalAnswer(): void{
         if (isCorrect) sessionScore.correct++;
         sessionScore.total++;
         updateScoreDisplay();
-        if (mentalProgressBar) {
+        if (mentalProgressBar){
             let percent=(sessionScore.total / maxQuestions) * 100;
             mentalProgressBar.style.width=percent+"%";
         }
@@ -795,7 +853,7 @@ function startTimer(): void{
             sessionScore.total++;
             updateScoreDisplay();
             showNotification("Time is up!", "warning");
-            if (mentalProgressBar) {
+            if (mentalProgressBar){
                 let percent=(sessionScore.total / maxQuestions) * 100;
                 mentalProgressBar.style.width=percent+"%";
             }
