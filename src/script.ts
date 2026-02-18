@@ -30,6 +30,7 @@ let startSessionBtn: HTMLButtonElement | null=document.getElementById("start-ses
 let autocontinueToggle: HTMLInputElement | null=document.getElementById("autocontinue-toggle") as HTMLInputElement | null;
 let scopeSelect: HTMLSelectElement | null=document.getElementById("scope-select") as HTMLSelectElement | null;
 let shuffleToggle: HTMLInputElement | null=document.getElementById("shuffle-toggle") as HTMLInputElement | null;
+let mentalProgressBar: HTMLElement | null=document.getElementById("mental-progress-bar");
 
 window.correctAnswer={correct: ""};
 window.expectedFormat="";
@@ -569,6 +570,7 @@ function startMentalSession(): void{
     timeLeft=30;
     updateScoreDisplay();
     updateTimerDisplay();
+    if (mentalProgressBar) mentalProgressBar.style.width="0%";
     startTimer();
     disableTopicSelection(true);
     disableModeButtons(true);
@@ -693,6 +695,10 @@ function handleMentalAnswer(): void{
         if (isCorrect) sessionScore.correct++;
         sessionScore.total++;
         updateScoreDisplay();
+        if (mentalProgressBar) {
+            let percent=(sessionScore.total / maxQuestions) * 100;
+            mentalProgressBar.style.width=percent+"%";
+        }
         if (answerResults){
             answerResults.innerHTML=isCorrect
             ?`<div class="result-success">✅ Correct!</div>`
@@ -735,6 +741,7 @@ function endMentalSession(): void{
         clearTimeout(mentalNextQuestionTimeout);
         mentalNextQuestionTimeout=null;
     }
+    if (mentalProgressBar) mentalProgressBar.style.width="0%";
     disableTopicSelection(false);
     disableModeButtons(false);
     disableDifficulty(false);
@@ -788,6 +795,10 @@ function startTimer(): void{
             sessionScore.total++;
             updateScoreDisplay();
             showNotification("Time is up!", "warning");
+            if (mentalProgressBar) {
+                let percent=(sessionScore.total / maxQuestions) * 100;
+                mentalProgressBar.style.width=percent+"%";
+            }
             if (sessionScore.total >= maxQuestions){
                 endMentalSession();
                 return;

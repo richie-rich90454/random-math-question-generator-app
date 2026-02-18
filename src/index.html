@@ -64,6 +64,9 @@
                         <span id="timer-display">⏱️ 00:30</span>
                         <span id="score-display">✅ 0 / 0</span>
                         <button id="start-session" class="primary-button">Start Session</button>
+                        <div class="mental-progress">
+                            <div class="progress-bar" id="mental-progress-bar" style="width: 0%;"></div>
+                        </div>
                     </div>
                     <div class="toolbar-actions" id="single-controls">
                         <button class="primary-button toolbar-button" id="genQ">
@@ -78,8 +81,6 @@
                             </svg>
                             Check
                         </button>
-
-                        <!-- New controls for autocontinue, scope, and shuffle -->
                         <div class="auto-controls">
                             <label class="auto-toggle">
                                 <input type="checkbox" id="autocontinue-toggle"> Auto (3s)
@@ -111,7 +112,7 @@
                                             <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
                                             <path d="M11 7h2v2h-2zm0 4h2v6h-2z"/>
                                         </svg>
-                                        <p>Select a topic and click Generate</p>
+                                        <p>Pick a topic and click <strong>Generate</strong> to start</p>
                                     </div>
                                 </div>
                             </div>
@@ -140,7 +141,7 @@
                                             <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
                                                 <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/>
                                             </svg>
-                                            <p>Results will appear here</p>
+                                            <p>Your results will appear here after checking</p>
                                         </div>
                                     </div>
                                 </div>
