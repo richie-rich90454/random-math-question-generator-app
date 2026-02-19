@@ -46,6 +46,8 @@ let settingsScope: HTMLSelectElement | null=document.getElementById("settings-sc
 let settingsDifficulty: HTMLSelectElement | null=document.getElementById("settings-difficulty") as HTMLSelectElement | null;
 let settingsTimer: HTMLInputElement | null=document.getElementById("settings-timer") as HTMLInputElement | null;
 let settingsMaxQuestions: HTMLInputElement | null=document.getElementById("settings-max-questions") as HTMLInputElement | null;
+let pauseSessionBtn: HTMLButtonElement | null=document.getElementById("pause-session") as HTMLButtonElement | null;
+let skipQuestionBtn: HTMLButtonElement | null=document.getElementById("skip-question") as HTMLButtonElement | null;
 
 window.correctAnswer={correct: ""};
 window.expectedFormat="";
@@ -92,6 +94,7 @@ catch (e){
 }
 let currentMode: "single" | "mental"="single";
 let sessionActive: boolean=false;
+let sessionPaused: boolean=false;               // new
 let sessionScore={correct: 0, total: 0};
 let sessionTimer: ReturnType<typeof setInterval> | null=null;
 let timeLeft: number=30;
@@ -104,6 +107,7 @@ let shuffle: boolean=false;
 let mentalScope: string="simple";
 let mentalShuffle: boolean=false;
 let autoTimeout: ReturnType<typeof setTimeout> | null=null;
+let generateDebounceTimeout: ReturnType<typeof setTimeout> | null=null;   // new
 let modeButtons=[modeSingleBtn, modeMentalBtn];
 let settings={
     theme: "system",
@@ -143,6 +147,54 @@ function saveSettings(): void{
     if(settingsMaxQuestions) settings.maxQuestions=parseInt(settingsMaxQuestions.value)||5;
     localStorage.setItem("appSettings", JSON.stringify(settings));
     applySettingsToApp();
+}
+// New function for live preview
+function previewSetting(field: string, value: any): void{
+    switch(field){
+        case "theme":
+            if(value==="system"){
+                let prefersDark=window.matchMedia("(prefers-color-scheme: dark)").matches;
+                applyTheme(prefersDark?"dark":"light");
+            }
+            else{
+                applyTheme(value);
+            }
+            break;
+        case "defaultMode":
+            if(!sessionActive){
+                if(value==="single"&&modeSingleBtn) modeSingleBtn.click();
+                else if(value==="mental"&&modeMentalBtn) modeMentalBtn.click();
+            }
+            break;
+        case "autoContinue":
+            if(autocontinueToggle) autocontinueToggle.checked=value;
+            autocontinue=value;
+            break;
+        case "shuffle":
+            if(shuffleToggle) shuffleToggle.checked=value;
+            shuffle=value;
+            if(mentalShuffleToggle) mentalShuffleToggle.checked=value;
+            mentalShuffle=value;
+            break;
+        case "scope":
+            if(scopeSelect) scopeSelect.value=value;
+            scope=value;
+            if(mentalScopeSelect) mentalScopeSelect.value=value;
+            mentalScope=value;
+            renderTopicGrid();
+            break;
+        case "difficulty":
+            if(difficultySelect) difficultySelect.value=value;
+            currentDifficulty=value;
+            break;
+        case "timer":
+            timeLeft=parseInt(value)||30;
+            updateTimerDisplay();
+            break;
+        case "maxQuestions":
+            maxQuestions=parseInt(value)||5;
+            break;
+    }
 }
 function applySettingsToApp(): void{
     if(settings.theme==="system"){
@@ -215,12 +267,16 @@ function setSessionButton(isActive: boolean): void{
         startSessionBtn.classList.add("stop-session");
         startSessionBtn.removeEventListener("click", startMentalSession);
         startSessionBtn.addEventListener("click", stopMentalSession);
+        if(pauseSessionBtn) pauseSessionBtn.style.display="inline-flex";
+        if(skipQuestionBtn) skipQuestionBtn.style.display="inline-flex";
     }
     else{
         startSessionBtn.textContent="Start Session";
         startSessionBtn.classList.remove("stop-session");
         startSessionBtn.removeEventListener("click", stopMentalSession);
         startSessionBtn.addEventListener("click", startMentalSession);
+        if(pauseSessionBtn) pauseSessionBtn.style.display="none";
+        if(skipQuestionBtn) skipQuestionBtn.style.display="none";
     }
 }
 function stopMentalSession(): void{
@@ -330,6 +386,13 @@ function pickRandomTopic(): string | null{
     if (allowedIds.length===0) return null;
     const randomId=allowedIds[Math.floor(Math.random()*allowedIds.length)];
     return randomId;
+}
+function debounceGenerate(): void{
+    if(generateDebounceTimeout) clearTimeout(generateDebounceTimeout);
+    generateDebounceTimeout=setTimeout(()=>{
+        generateQuestion();
+        generateDebounceTimeout=null;
+    }, 150);
 }
 function generateQuestion(): void{
     if (shuffle&&currentMode==="single"){
@@ -588,12 +651,46 @@ function showNotification(message: string, type: "info" | "warning"="info"): voi
 function setupEventListeners(): void{
     if (!generateQuestionButton||!checkAnswerButton||!userAnswer||!themeToggle||!helpButton||!settingsButton||!modeSingleBtn||!modeMentalBtn||!mentalControls||!singleControls||!difficultySelect||!timerDisplay||!scoreDisplay||!startSessionBtn) return;
 
-    generateQuestionButton.addEventListener("click", generateQuestion);
+    generateQuestionButton.addEventListener("click", debounceGenerate); // debounced
     checkAnswerButton.addEventListener("click", checkAnswer);
     userAnswer.addEventListener("keyup", function (e: KeyboardEvent){
         if (e.shiftKey&&e.key==="Enter"){
             if (currentMode==="single") checkAnswer();
             else if (sessionActive) handleMentalAnswer();
+        }
+    });
+    document.addEventListener("keydown", (e: KeyboardEvent)=>{
+        if(e.ctrlKey||e.metaKey){
+            switch(e.key){
+                case "g": case "G":
+                    e.preventDefault();
+                    if(currentMode==="single") debounceGenerate();
+                    break;
+                case "Enter":
+                    if(e.shiftKey) break; // already handled
+                    e.preventDefault();
+                    if(currentMode==="single") checkAnswer();
+                    else if(sessionActive) handleMentalAnswer();
+                    break;
+                case "1":
+                    e.preventDefault();
+                    if(!modeSingleBtn?.classList.contains("disabled")) modeSingleBtn?.click();
+                    break;
+                case "2":
+                    e.preventDefault();
+                    if(!modeMentalBtn?.classList.contains("disabled")) modeMentalBtn?.click();
+                    break;
+                case ",":
+                    e.preventDefault();
+                    openSettings();
+                    break;
+                case "t": case "T":
+                    if(e.shiftKey){
+                        e.preventDefault();
+                        themeToggle?.click();
+                    }
+                    break;
+            }
         }
     });
     themeToggle.addEventListener("click", function (){
@@ -618,6 +715,32 @@ function setupEventListeners(): void{
     if(settingsModal) settingsModal.addEventListener("click", (e)=>{
         if(e.target===settingsModal) closeSettings();
     });
+    // Live preview listeners
+    if(settingsTheme){
+        settingsTheme.addEventListener("change", (e)=>previewSetting("theme", (e.target as HTMLSelectElement).value));
+    }
+    if(settingsDefaultMode){
+        settingsDefaultMode.addEventListener("change", (e)=>previewSetting("defaultMode", (e.target as HTMLSelectElement).value));
+    }
+    if(settingsAutoContinue){
+        settingsAutoContinue.addEventListener("change", (e)=>previewSetting("autoContinue", (e.target as HTMLInputElement).checked));
+    }
+    if(settingsShuffle){
+        settingsShuffle.addEventListener("change", (e)=>previewSetting("shuffle", (e.target as HTMLInputElement).checked));
+    }
+    if(settingsScope){
+        settingsScope.addEventListener("change", (e)=>previewSetting("scope", (e.target as HTMLSelectElement).value));
+    }
+    if(settingsDifficulty){
+        settingsDifficulty.addEventListener("change", (e)=>previewSetting("difficulty", (e.target as HTMLSelectElement).value));
+    }
+    if(settingsTimer){
+        settingsTimer.addEventListener("input", (e)=>previewSetting("timer", (e.target as HTMLInputElement).value));
+    }
+    if(settingsMaxQuestions){
+        settingsMaxQuestions.addEventListener("input", (e)=>previewSetting("maxQuestions", (e.target as HTMLInputElement).value));
+    }
+
     modeSingleBtn.addEventListener("click", function (){
         if (modeSingleBtn!.classList.contains("disabled")) return;
         modeSingleBtn!.classList.add("active");
@@ -660,6 +783,12 @@ function setupEventListeners(): void{
         currentDifficulty=(e.target as HTMLSelectElement).value;
     });
     startSessionBtn.addEventListener("click", startMentalSession);
+    if (pauseSessionBtn){
+        pauseSessionBtn.addEventListener("click", pauseMentalSession);
+    }
+    if (skipQuestionBtn){
+        skipQuestionBtn.addEventListener("click", skipMentalQuestion);
+    }
     if (autocontinueToggle){
         autocontinueToggle.addEventListener("change", (e)=>{
             autocontinue=(e.target as HTMLInputElement).checked;
@@ -701,6 +830,46 @@ function updateMathJaxColors(): void{
         window.MathJax.typesetPromise().catch((_err: any)=>console.log("MathJax re-render error:", _err));
     }
 }
+function pauseMentalSession(): void{
+    if(!sessionActive) return;
+    sessionPaused=!sessionPaused;
+    if(pauseSessionBtn){
+        pauseSessionBtn.innerHTML=sessionPaused
+            ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'
+            : '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+        pauseSessionBtn.setAttribute("aria-label", sessionPaused?"Resume":"Pause");
+    }
+    if(userAnswer) userAnswer.disabled=sessionPaused;
+}
+function skipMentalQuestion(): void{
+    if(!sessionActive||sessionPaused) return;
+    if(mentalNextQuestionTimeout){
+        clearTimeout(mentalNextQuestionTimeout);
+        mentalNextQuestionTimeout=null;
+    }
+    if(answerResults){
+        answerResults.innerHTML=`<div class="result-info">⏩ Skipped</div>`;
+        answerResults.className="results-display";
+    }
+    sessionScore.total++;
+    updateScoreDisplay();
+    if(mentalProgressBar){
+        let percent=(sessionScore.total/maxQuestions)*100;
+        mentalProgressBar.style.width=percent+"%";
+    }
+    if(sessionScore.total>=maxQuestions){
+        endMentalSession();
+        return;
+    }
+    timeLeft=settings.timer;
+    updateTimerDisplay();
+    mentalNextQuestionTimeout=setTimeout(()=>{
+        if(sessionActive&&!sessionPaused){
+            generateNextMentalQuestion();
+        }
+        mentalNextQuestionTimeout=null;
+    },500);
+}
 function startMentalSession(): void{
     if (!selectedTopic&&!mentalShuffle){
         showNotification("Please select a topic or enable shuffle", "warning");
@@ -715,6 +884,7 @@ function startMentalSession(): void{
         mentalNextQuestionTimeout=null;
     }
     sessionActive=true;
+    sessionPaused=false;
     sessionScore={ correct: 0, total: 0 };
     timeLeft=settings.timer;
     maxQuestions=settings.maxQuestions;
@@ -729,7 +899,7 @@ function startMentalSession(): void{
     generateNextMentalQuestion();
 }
 function generateNextMentalQuestion(): void{
-    if (!sessionActive) return;
+    if (!sessionActive||sessionPaused) return;
     if (mentalShuffle){
         const randomTopic=pickRandomTopic();
         if (randomTopic){
@@ -851,7 +1021,7 @@ function generateNextMentalQuestion(): void{
     }
 }
 function handleMentalAnswer(): void{
-    if (!sessionActive) return;
+    if (!sessionActive||sessionPaused) return;
     if (!userAnswer||!answerResults) return;
     if (mentalNextQuestionTimeout){
         clearTimeout(mentalNextQuestionTimeout);
@@ -885,7 +1055,7 @@ function handleMentalAnswer(): void{
             return;
         }
         mentalNextQuestionTimeout=setTimeout(()=>{
-            if (sessionActive){
+            if (sessionActive&&!sessionPaused){
                 timeLeft=settings.timer;
                 updateTimerDisplay();
                 generateNextMentalQuestion();
@@ -907,6 +1077,7 @@ async function checkAnswerFast(userInput: string, correct: string, alternate?: s
 }
 function endMentalSession(): void{
     sessionActive=false;
+    sessionPaused=false;
     if (sessionTimer){
         clearInterval(sessionTimer);
         sessionTimer=null;
@@ -962,7 +1133,7 @@ function promptSaveScore(): void{
 function startTimer(): void{
     if (sessionTimer) clearInterval(sessionTimer);
     sessionTimer=setInterval(()=>{
-        if (!sessionActive) return;
+        if (!sessionActive||sessionPaused) return;  // paused check
         timeLeft--;
         updateTimerDisplay();
         if (timeLeft <= 0){
@@ -984,7 +1155,7 @@ function startTimer(): void{
                 mentalNextQuestionTimeout=null;
             }
             mentalNextQuestionTimeout=setTimeout(()=>{
-                if (sessionActive){
+                if (sessionActive&&!sessionPaused){
                     generateNextMentalQuestion();
                 }
                 mentalNextQuestionTimeout=null;
