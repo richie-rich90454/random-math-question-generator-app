@@ -46,10 +46,19 @@ let settingsScope: HTMLSelectElement | null=document.getElementById("settings-sc
 let settingsDifficulty: HTMLSelectElement | null=document.getElementById("settings-difficulty") as HTMLSelectElement | null;
 let settingsTimer: HTMLInputElement | null=document.getElementById("settings-timer") as HTMLInputElement | null;
 let settingsMaxQuestions: HTMLInputElement | null=document.getElementById("settings-max-questions") as HTMLInputElement | null;
+let settingsFont: HTMLSelectElement | null=document.getElementById("settings-font") as HTMLSelectElement | null;
+let settingsPerfMaster: HTMLInputElement | null=document.getElementById("settings-perf-master") as HTMLInputElement | null;
+let settingsPerfWave: HTMLInputElement | null=document.getElementById("settings-perf-wave") as HTMLInputElement | null;
+let settingsPerfBlur: HTMLInputElement | null=document.getElementById("settings-perf-blur") as HTMLInputElement | null;
+let settingsPerfPreview: HTMLInputElement | null=document.getElementById("settings-perf-preview") as HTMLInputElement | null;
+let settingsPerfAnimations: HTMLInputElement | null=document.getElementById("settings-perf-animations") as HTMLInputElement | null;
+let settingsFpsCap: HTMLSelectElement | null=document.getElementById("settings-fps-cap") as HTMLSelectElement | null;
 let pauseSessionBtn: HTMLButtonElement | null=document.getElementById("pause-session") as HTMLButtonElement | null;
 let skipQuestionBtn: HTMLButtonElement | null=document.getElementById("skip-question") as HTMLButtonElement | null;
 let customContextMenu: HTMLElement | null=document.getElementById("custom-context-menu");
-
+let previewDiv: HTMLElement | null=document.getElementById("preview");
+let mathToolbar: HTMLElement | null=document.getElementById("math-toolbar");
+let copyAnswerBtn: HTMLButtonElement | null=document.getElementById("copy-answer") as HTMLButtonElement | null;
 window.correctAnswer={correct: ""};
 window.expectedFormat="";
 let selectedTopic: string | null=null;
@@ -109,6 +118,7 @@ let mentalScope: string="simple";
 let mentalShuffle: boolean=false;
 let autoTimeout: ReturnType<typeof setTimeout> | null=null;
 let generateDebounceTimeout: ReturnType<typeof setTimeout> | null=null;
+let previewTimeout: ReturnType<typeof setTimeout> | null=null;
 let modeButtons=[modeSingleBtn, modeMentalBtn];
 let settings={
     theme: "system",
@@ -118,19 +128,176 @@ let settings={
     scope: "simple",
     difficulty: "medium",
     timer: 30,
-    maxQuestions: 5
+    maxQuestions: 5,
+    font: "default",
+    perfMaster: false,
+    perfWave: true,
+    perfBlur: true,
+    perfPreview: true,
+    perfAnimations: true,
+    fpsCap: 0
 };
-function updateAriaPressed(){
+function updateAriaPressed(): void{
     if (modeSingleBtn) modeSingleBtn.setAttribute("aria-pressed", String(currentMode==="single"));
     if (modeMentalBtn) modeMentalBtn.setAttribute("aria-pressed", String(currentMode==="mental"));
 }
-function updateCheckboxAria(checkbox: HTMLInputElement | null){
+function updateCheckboxAria(checkbox: HTMLInputElement | null): void{
     if (checkbox) checkbox.setAttribute("aria-checked", String(checkbox.checked));
 }
-function updateProgressBar(){
+function updateProgressBar(): void{
     if (mentalProgressBar){
         const now=sessionScore.total / maxQuestions * 100;
         mentalProgressBar.setAttribute("aria-valuenow", String(now));
+    }
+}
+function applyFont(font: string): void{
+    document.body.classList.remove("font-opendyslexic");
+    if (font==="opendyslexic"){
+        document.body.classList.add("font-opendyslexic");
+    }
+}
+function insertSymbol(symbol: string): void{
+    if (!userAnswer) return;
+    const start=userAnswer.selectionStart;
+    const end=userAnswer.selectionEnd;
+    const text=userAnswer.value;
+    const newText=text.substring(0, start)+symbol+text.substring(end);
+    userAnswer.value=newText;
+    userAnswer.selectionStart=userAnswer.selectionEnd=start+symbol.length;
+    userAnswer.focus();
+    updatePreviewDebounced();
+}
+function updatePreview(): void{
+    if (!previewDiv||!userAnswer) return;
+    const input=userAnswer.value.trim();
+    if (!input){
+        previewDiv.innerHTML="";
+        previewDiv.classList.remove("has-content");
+        return;
+    }
+    try{
+        window.katex.render(input, previewDiv,{
+            throwOnError: false,
+            displayMode: false
+        });
+        previewDiv.classList.add("has-content");
+    }
+    catch(e){
+        const errorMessage=e instanceof Error ? e.message : String(e);
+        previewDiv.innerHTML=`<span style="color: var(--error);">${errorMessage}</span>`;
+        previewDiv.classList.add("has-content");
+    }
+}
+function updatePreviewDebounced(): void{
+    if (previewTimeout) clearTimeout(previewTimeout);
+    previewTimeout=setTimeout(()=>{
+        updatePreview();
+        previewTimeout=null;
+    }, 200);
+}
+function copyCorrectAnswer(): void{
+    if (!window.correctAnswer.correct) return;
+    navigator.clipboard.writeText(window.correctAnswer.correct).then(()=>{
+        showNotification("Answer copied to clipboard", "info");
+    }).catch(()=>{
+        showNotification("Failed to copy", "warning");
+    });
+}
+function applyWaveBackground(enabled: boolean): void{
+    const wave=document.getElementById("wave-container");
+    if (wave) wave.style.display=enabled ? "block" : "none";
+}
+function applyBlurEffects(enabled: boolean): void{
+    const root=document.documentElement;
+    if (enabled) root.classList.remove("no-blur");
+    else root.classList.add("no-blur");
+}
+function applyLivePreview(enabled: boolean): void{
+    if (previewDiv) previewDiv.style.display=enabled ? "block" : "none";
+}
+function applyAnimations(enabled: boolean): void{
+    const root=document.documentElement;
+    if (enabled) root.classList.remove("reduce-motion");
+    else root.classList.add("reduce-motion");
+}
+function applyFPSCap(value: number): void{
+    const wave=document.querySelector(".liquid-bg") as HTMLElement;
+    if (wave){
+        if (value > 0){
+            const baseFlow=18;
+            const baseDrift=[22,19,26];
+            const scale=60 / value;
+            wave.style.animationDuration=
+                (baseFlow * scale) + "s, " + 
+                (baseDrift[0] * scale) + "s, " + 
+                (baseDrift[1] * scale) + "s";
+        }
+        else{
+            wave.style.animationDuration="";
+        }
+    }
+}
+function applyPerformanceMaster(enabled: boolean): void{
+    if (enabled){
+        applyWaveBackground(false);
+        applyBlurEffects(false);
+        applyLivePreview(false);
+        applyAnimations(false);
+    }
+    else{
+        applyWaveBackground(settings.perfWave);
+        applyBlurEffects(settings.perfBlur);
+        applyLivePreview(settings.perfPreview);
+        applyAnimations(settings.perfAnimations);
+    }
+}
+const SESSION_STORAGE_KEY="mentalSessionSnapshot";
+function saveSessionSnapshot(): void{
+    if (!sessionActive) return;
+    const snapshot={
+        sessionScore,
+        timeLeft,
+        maxQuestions,
+        currentDifficulty,
+        mentalShuffle,
+        mentalScope,
+        selectedTopic,
+        timestamp: Date.now()
+    };
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(snapshot));
+}
+function restoreSessionSnapshot(): void{
+    const saved=localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!saved) return;
+    try{
+        const snap=JSON.parse(saved);
+        if (Date.now()-snap.timestamp > 60*60*1000){
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+            return;
+        }
+        sessionActive=true;
+        sessionPaused=false;
+        sessionScore=snap.sessionScore;
+        timeLeft=snap.timeLeft;
+        maxQuestions=snap.maxQuestions;
+        currentDifficulty=snap.currentDifficulty;
+        mentalShuffle=snap.mentalShuffle;
+        mentalScope=snap.mentalScope;
+        selectedTopic=snap.selectedTopic;
+        if (modeMentalBtn) modeMentalBtn.click();
+        if (selectedTopic) selectTopic(selectedTopic);
+        updateScoreDisplay();
+        updateTimerDisplay();
+        updateProgressBar();
+        startTimer();
+        disableTopicSelection(true);
+        disableModeButtons(true);
+        disableDifficulty(true);
+        setSessionButton(true);
+        generateNextMentalQuestion();
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+    }catch(e){
+        console.warn("Failed to restore session", e);
     }
 }
 window.addEventListener("error", (event)=>{
@@ -154,6 +321,13 @@ function loadSettings(): void{
     if(settingsDifficulty) settingsDifficulty.value=settings.difficulty;
     if(settingsTimer) settingsTimer.value=settings.timer.toString();
     if(settingsMaxQuestions) settingsMaxQuestions.value=settings.maxQuestions.toString();
+    if(settingsFont) settingsFont.value=settings.font;
+    if(settingsPerfMaster) settingsPerfMaster.checked=settings.perfMaster;
+    if(settingsPerfWave) settingsPerfWave.checked=settings.perfWave;
+    if(settingsPerfBlur) settingsPerfBlur.checked=settings.perfBlur;
+    if(settingsPerfPreview) settingsPerfPreview.checked=settings.perfPreview;
+    if(settingsPerfAnimations) settingsPerfAnimations.checked=settings.perfAnimations;
+    if(settingsFpsCap) settingsFpsCap.value=settings.fpsCap.toString();
     applySettingsToApp();
 }
 function saveSettings(): void{
@@ -165,6 +339,13 @@ function saveSettings(): void{
     if(settingsDifficulty) settings.difficulty=settingsDifficulty.value;
     if(settingsTimer) settings.timer=parseInt(settingsTimer.value)||30;
     if(settingsMaxQuestions) settings.maxQuestions=parseInt(settingsMaxQuestions.value)||5;
+    if(settingsFont) settings.font=settingsFont.value;
+    if(settingsPerfMaster) settings.perfMaster=settingsPerfMaster.checked;
+    if(settingsPerfWave) settings.perfWave=settingsPerfWave.checked;
+    if(settingsPerfBlur) settings.perfBlur=settingsPerfBlur.checked;
+    if(settingsPerfPreview) settings.perfPreview=settingsPerfPreview.checked;
+    if(settingsPerfAnimations) settings.perfAnimations=settingsPerfAnimations.checked;
+    if(settingsFpsCap) settings.fpsCap=parseInt(settingsFpsCap.value)||0;
     localStorage.setItem("appSettings", JSON.stringify(settings));
     applySettingsToApp();
 }
@@ -216,6 +397,33 @@ function previewSetting(field: string, value: any): void{
         case "maxQuestions":
             maxQuestions=parseInt(value)||5;
             break;
+        case "font":
+            applyFont(value);
+            break;
+        case "perfMaster":
+            settings.perfMaster=value;
+            applyPerformanceMaster(value);
+            break;
+        case "perfWave":
+            settings.perfWave=value;
+            if(!settings.perfMaster) applyWaveBackground(value);
+            break;
+        case "perfBlur":
+            settings.perfBlur=value;
+            if(!settings.perfMaster) applyBlurEffects(value);
+            break;
+        case "perfPreview":
+            settings.perfPreview=value;
+            if(!settings.perfMaster) applyLivePreview(value);
+            break;
+        case "perfAnimations":
+            settings.perfAnimations=value;
+            if(!settings.perfMaster) applyAnimations(value);
+            break;
+        case "fpsCap":
+            settings.fpsCap=parseInt(value)||0;
+            applyFPSCap(settings.fpsCap);
+            break;
     }
 }
 function applySettingsToApp(): void{
@@ -226,6 +434,7 @@ function applySettingsToApp(): void{
     else{
         applyTheme(settings.theme as "light"|"dark");
     }
+    applyFont(settings.font);
     if(!sessionActive&&settings.defaultMode!==currentMode){
         if(settings.defaultMode==="single"&&modeSingleBtn){
             modeSingleBtn.click();
@@ -248,6 +457,16 @@ function applySettingsToApp(): void{
     currentDifficulty=settings.difficulty;
     timeLeft=settings.timer;
     maxQuestions=settings.maxQuestions;
+    if(settings.perfMaster){
+        applyPerformanceMaster(true);
+    }
+    else{
+        applyWaveBackground(settings.perfWave);
+        applyBlurEffects(settings.perfBlur);
+        applyLivePreview(settings.perfPreview);
+        applyAnimations(settings.perfAnimations);
+    }
+    applyFPSCap(settings.fpsCap);
     updateTimerDisplay();
     renderTopicGrid();
     updateUIState();
@@ -264,6 +483,13 @@ function resetSettings(): void{
     if(settingsDifficulty) settingsDifficulty.value="medium";
     if(settingsTimer) settingsTimer.value="30";
     if(settingsMaxQuestions) settingsMaxQuestions.value="5";
+    if(settingsFont) settingsFont.value="default";
+    if(settingsPerfMaster) settingsPerfMaster.checked=false;
+    if(settingsPerfWave) settingsPerfWave.checked=true;
+    if(settingsPerfBlur) settingsPerfBlur.checked=true;
+    if(settingsPerfPreview) settingsPerfPreview.checked=true;
+    if(settingsPerfAnimations) settingsPerfAnimations.checked=true;
+    if(settingsFpsCap) settingsFpsCap.value="0";
     saveSettings();
 }
 function openSettings(): void{
@@ -343,6 +569,11 @@ async function initializeTheme(): Promise<void>{
     if(settings.theme==="system"){
         let prefersDark=window.matchMedia("(prefers-color-scheme: dark)").matches;
         applyTheme(prefersDark?"dark":"light");
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e)=>{
+            if(settings.theme==="system"){
+                applyTheme(e.matches?"dark":"light");
+            }
+        });
     }
     else{
         applyTheme(settings.theme as "light"|"dark");
@@ -353,6 +584,7 @@ function initApp(): void{
     setupEventListeners();
     initializeTheme();
     updateUIState();
+    restoreSessionSnapshot();
 }
 function renderTopicGrid(): void{
     if (!topicGrid) return;
@@ -547,6 +779,7 @@ function generateQuestion(): void{
     checkAnswerButton.disabled=false;
     checkAnswerButton.setAttribute("aria-disabled", "false");
     userAnswer.focus();
+    updatePreview();
     updateUIState();
     if (window.MathJax&&window.MathJax.typesetPromise){
         window.MathJax.typesetPromise([questionArea]).catch((err: any)=>console.log("MathJax typeset error:", err));
@@ -618,6 +851,7 @@ function checkAnswer(): void{
       </div>
     `;
         answerResults.className="results-display correct";
+        if (copyAnswerBtn) copyAnswerBtn.style.display="inline-flex";
     }
     else{
         answerResults.innerHTML=`
@@ -632,8 +866,10 @@ function checkAnswer(): void{
       </div>
     `;
         answerResults.className="results-display incorrect";
+        if (copyAnswerBtn) copyAnswerBtn.style.display="inline-flex";
     }
     userAnswer.value="";
+    updatePreview();
     userAnswer.focus();
     if (currentMode==="single"&&autocontinue){
         if (autoTimeout) clearTimeout(autoTimeout);
@@ -687,6 +923,7 @@ function showNotification(message: string, type: "info" | "warning"="info"): voi
 }
 function setupEventListeners(): void{
     if (!generateQuestionButton||!checkAnswerButton||!userAnswer||!themeToggle||!helpButton||!settingsButton||!modeSingleBtn||!modeMentalBtn||!mentalControls||!singleControls||!difficultySelect||!timerDisplay||!scoreDisplay||!startSessionBtn) return;
+
     generateQuestionButton.addEventListener("click", debounceGenerate);
     checkAnswerButton.addEventListener("click", checkAnswer);
     userAnswer.addEventListener("keyup", function (e: KeyboardEvent){
@@ -774,6 +1011,27 @@ function setupEventListeners(): void{
     }
     if(settingsMaxQuestions){
         settingsMaxQuestions.addEventListener("input", (e)=>previewSetting("maxQuestions", (e.target as HTMLInputElement).value));
+    }
+    if(settingsFont){
+        settingsFont.addEventListener("change", (e)=>previewSetting("font", (e.target as HTMLSelectElement).value));
+    }
+    if(settingsPerfMaster){
+        settingsPerfMaster.addEventListener("change", (e)=>previewSetting("perfMaster", (e.target as HTMLInputElement).checked));
+    }
+    if(settingsPerfWave){
+        settingsPerfWave.addEventListener("change", (e)=>previewSetting("perfWave", (e.target as HTMLInputElement).checked));
+    }
+    if(settingsPerfBlur){
+        settingsPerfBlur.addEventListener("change", (e)=>previewSetting("perfBlur", (e.target as HTMLInputElement).checked));
+    }
+    if(settingsPerfPreview){
+        settingsPerfPreview.addEventListener("change", (e)=>previewSetting("perfPreview", (e.target as HTMLInputElement).checked));
+    }
+    if(settingsPerfAnimations){
+        settingsPerfAnimations.addEventListener("change", (e)=>previewSetting("perfAnimations", (e.target as HTMLInputElement).checked));
+    }
+    if(settingsFpsCap){
+        settingsFpsCap.addEventListener("change", (e)=>previewSetting("fpsCap", (e.target as HTMLSelectElement).value));
     }
 
     modeSingleBtn.addEventListener("click", function (){
@@ -864,6 +1122,20 @@ function setupEventListeners(): void{
             updateCheckboxAria(mentalShuffleToggle);
         });
     }
+    if (mathToolbar){
+        mathToolbar.querySelectorAll(".math-toolbar-btn").forEach(btn=>{
+            btn.addEventListener("click", (e)=>{
+                const symbol=(e.target as HTMLElement).dataset.symbol||"";
+                insertSymbol(symbol);
+            });
+        });
+    }
+    if (userAnswer){
+        userAnswer.addEventListener("input", updatePreviewDebounced);
+    }
+    if (copyAnswerBtn){
+        copyAnswerBtn.addEventListener("click", copyCorrectAnswer);
+    }
     if (userAnswer&&customContextMenu){
         userAnswer.addEventListener("contextmenu", (e)=>{
             e.preventDefault();
@@ -882,10 +1154,12 @@ function setupEventListeners(): void{
                 if (action==="paste"){
                     navigator.clipboard.readText().then(text=>{
                         if (userAnswer) userAnswer.value=text;
+                        updatePreviewDebounced();
                     });
                 }
                 else if (action==="clear"){
                     if (userAnswer) userAnswer.value="";
+                    updatePreviewDebounced();
                 }
                 customContextMenu.style.display="none";
             });
@@ -929,6 +1203,7 @@ function skipMentalQuestion(): void{
     }
     timeLeft=settings.timer;
     updateTimerDisplay();
+    saveSessionSnapshot();
     mentalNextQuestionTimeout=setTimeout(()=>{
         if(sessionActive&&!sessionPaused){
             generateNextMentalQuestion();
@@ -995,6 +1270,7 @@ function generateNextMentalQuestion(): void{
     if (answerResults){
         answerResults.innerHTML=`<div class="empty-state">...</div>`;
     }
+    if (copyAnswerBtn) copyAnswerBtn.style.display="none";
     questionArea.innerHTML=`
     <div class="loading-state">
       <div class="spinner"></div>
@@ -1084,6 +1360,7 @@ function generateNextMentalQuestion(): void{
     userAnswer.disabled=false;
     userAnswer.removeAttribute("aria-disabled");
     userAnswer.focus();
+    updatePreview();
     if (window.MathJax&&window.MathJax.typesetPromise){
         window.MathJax.typesetPromise([questionArea]).catch((err: any)=>console.log("MathJax typeset error:", err));
     }
@@ -1118,7 +1395,10 @@ function handleMentalAnswer(): void{
                 : `<div class="result-error">❌ Incorrect. The answer was ${correct}</div>`;
             answerResults.className=isCorrect?"results-display correct" : "results-display incorrect";
         }
+        if (copyAnswerBtn) copyAnswerBtn.style.display="inline-flex";
         if (userAnswer) userAnswer.value="";
+        updatePreview();
+        saveSessionSnapshot();
         if (sessionScore.total >= maxQuestions){
             endMentalSession();
             return;
@@ -1147,6 +1427,7 @@ async function checkAnswerFast(userInput: string, correct: string, alternate?: s
 function endMentalSession(): void{
     sessionActive=false;
     sessionPaused=false;
+    localStorage.removeItem(SESSION_STORAGE_KEY);
     if (sessionTimer){
         clearInterval(sessionTimer);
         sessionTimer=null;
@@ -1174,6 +1455,7 @@ function endMentalSession(): void{
         answerResults.innerHTML=`<div class="empty-state">...</div>`;
         answerResults.className="results-display";
     }
+    if (copyAnswerBtn) copyAnswerBtn.style.display="none";
     if (expectedFormatDiv) expectedFormatDiv.textContent="";
     showNotification(`Session finished! Score: ${sessionScore.correct}/${sessionScore.total}`, "info");
     promptSaveScore();
@@ -1210,6 +1492,7 @@ function startTimer(): void{
         if (!sessionActive||sessionPaused) return;
         timeLeft--;
         updateTimerDisplay();
+        saveSessionSnapshot();
         if (timeLeft <= 0){
             sessionScore.total++;
             updateScoreDisplay();
@@ -1225,6 +1508,7 @@ function startTimer(): void{
             }
             timeLeft=settings.timer;
             updateTimerDisplay();
+            saveSessionSnapshot();
             if (mentalNextQuestionTimeout){
                 clearTimeout(mentalNextQuestionTimeout);
                 mentalNextQuestionTimeout=null;

@@ -139,7 +139,7 @@ html{
     min-height: 100%;
 }
 body{
-    font-family: "Noto Sans", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: transparent;
     color: var(--text-primary);
     line-height: 1.5;
@@ -389,7 +389,7 @@ body{
     width: 14px;
     height: 14px;
 }
-kbd.shortcut-hint {
+kbd.shortcut-hint{
     background: var(--surface-alt);
     border-radius: var(--radius-sm);
     padding: 2px 6px;
@@ -400,7 +400,7 @@ kbd.shortcut-hint {
     box-shadow: var(--shadow-sm);
     font-family: monospace;
 }
-.stat-with-icon {
+.stat-with-icon{
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -416,7 +416,7 @@ kbd.shortcut-hint {
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color 0.3s ease;
     box-shadow: var(--shadow-sm);
 }
-.stat-with-icon svg {
+.stat-with-icon svg{
     width: 14px;
     height: 14px;
 }
@@ -489,7 +489,7 @@ kbd.shortcut-hint {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%2364748B\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"6 9 12 15 18 9\"/></svg>");
     background-repeat: no-repeat;
     background-position: right 8px center;
     background-size: 12px;
@@ -556,7 +556,7 @@ kbd.shortcut-hint {
 }
 .auto-toggle input[type="checkbox"]:checked::after,
 .shuffle-toggle input[type="checkbox"]:checked::after{
-    content: '';
+    content: "";
     position: absolute;
     top: 2px;
     left: 5px;
@@ -643,9 +643,11 @@ kbd.shortcut-hint {
     border-color: var(--primary);
     box-shadow: var(--shadow-glass), 0 12px 40px rgba(0,0,0,0.25);
 }
-@keyframes cardFadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+@keyframes cardFadeIn{
+    from{ opacity: 0; transform: translateY(10px);
+    }
+    to{ opacity: 1; transform: translateY(0);
+    }
 }
 .card-header{
     padding: var(--spacing-sm) var(--spacing-md);
@@ -671,7 +673,7 @@ kbd.shortcut-hint {
     transition: color 0.3s ease;
 }
 .card-title::before{
-    content: '';
+    content: "";
     width: 5px;
     height: 5px;
     background: var(--primary);
@@ -1026,7 +1028,7 @@ kbd.shortcut-hint {
         -webkit-overflow-scrolling: touch;
     }
     .topic-pills-container::after{
-        content: '';
+        content: "";
         flex: 0 0 var(--spacing-sm);
     }
 }
@@ -1092,9 +1094,11 @@ kbd.shortcut-hint {
     overflow-y: auto;
     animation: scaleIn 0.2s ease;
 }
-@keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
+@keyframes scaleIn{
+    from{ opacity: 0; transform: scale(0.9);
+    }
+    to{ opacity: 1; transform: scale(1);
+    }
 }
 .modal-header{
     display: flex;
@@ -1198,7 +1202,7 @@ kbd.shortcut-hint {
 .liquid-bg::before,
 .liquid-bg::after,
 .liquid-bg .layer{
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     background: radial-gradient(circle at 30% 50%, var(--wave-color) 0%, transparent 50%);
@@ -1281,4 +1285,143 @@ kbd.shortcut-hint {
     100%{
         transform: translate(0, 0) rotate(0deg) scale(1);
     }
+}
+.math-toolbar{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 6px;
+    padding: 4px;
+    background: var(--surface-alt);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+.math-toolbar-btn{
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.math-toolbar-btn:hover{
+    background: var(--surface-alt);
+    border-color: var(--primary-light);
+    transform: translateY(-1px);
+}
+.math-toolbar-btn:active{
+    transform: translateY(0);
+}
+.math-preview{
+    margin-top: 8px;
+    min-height: 30px;
+    padding: 6px 10px;
+    background: var(--surface-alt);
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--border);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    transition: border-color var(--transition-fast);
+}
+.math-preview.has-content{
+    border-style: solid;
+    border-color: var(--primary-light);
+}
+.math-preview .katex{
+    font-size: 1.1em;
+}
+@keyframes shake{
+    0%, 100%{
+        transform: translateX(0);
+    }
+    20%{
+        transform: translateX(-5px);
+    }
+    40%{
+        transform: translateX(5px);
+    }
+    60%{
+        transform: translateX(-3px);
+    }
+    80%{
+        transform: translateX(3px);
+    }
+}
+.results-display.incorrect{
+    animation: shake 0.3s ease-in-out;
+}
+@keyframes pulse{
+    0%{
+        transform: scale(1);
+    }
+    50%{
+        transform: scale(1.02);
+    }
+    100%{
+        transform: scale(1);
+    }
+}
+.results-display.correct{
+    animation: pulse 0.3s ease-in-out;
+}
+#copy-answer{
+    width: 24px;
+    height: 24px;
+}
+#copy-answer svg{
+    width: 14px;
+    height: 14px;
+}
+@font-face{
+    font-family: "OpenDyslexic";
+    src: url("/OpenDyslexic-Regular.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+body.font-opendyslexic,
+body.font-opendyslexic *:not(.katex):not(.mjx-chtml){
+    font-family: "OpenDyslexic", "Noto Sans", sans-serif !important;
+}
+.mental-controls-wrapper{
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    transform-origin: top;
+}
+.mental-controls-wrapper[style*="display: none"]{
+    opacity: 0;
+    transform: scaleY(0);
+}
+.no-blur .control-toolbar,
+.no-blur .card,
+.no-blur .modal-content,
+.no-blur .main-content,
+.no-blur .question-display,
+.no-blur .answer-input,
+.no-blur .stat-with-icon,
+.no-blur .difficulty-select,
+.no-blur .scope-select,
+.no-blur .icon-button,
+.no-blur .primary-button,
+.no-blur .secondary-button,
+.no-blur .topic-pill{
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+.reduce-motion *,
+.reduce-motion .liquid-bg,
+.reduce-motion .card,
+.reduce-motion .modal-content,
+.reduce-motion .notification{
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+}
+.liquid-bg{
+    animation: flowLiquid 18s infinite linear;
 }

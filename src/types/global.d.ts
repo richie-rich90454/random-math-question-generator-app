@@ -25,6 +25,7 @@ declare global{
         correctAnswer: CorrectAnswer;
         expectedFormat: string;
         __TAURI__?: any;
+        katex: any;
     }
 }
 export {};
