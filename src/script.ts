@@ -48,6 +48,7 @@ let settingsTimer: HTMLInputElement | null=document.getElementById("settings-tim
 let settingsMaxQuestions: HTMLInputElement | null=document.getElementById("settings-max-questions") as HTMLInputElement | null;
 let pauseSessionBtn: HTMLButtonElement | null=document.getElementById("pause-session") as HTMLButtonElement | null;
 let skipQuestionBtn: HTMLButtonElement | null=document.getElementById("skip-question") as HTMLButtonElement | null;
+let customContextMenu: HTMLElement | null=document.getElementById("custom-context-menu");
 
 window.correctAnswer={correct: ""};
 window.expectedFormat="";
@@ -94,7 +95,7 @@ catch (e){
 }
 let currentMode: "single" | "mental"="single";
 let sessionActive: boolean=false;
-let sessionPaused: boolean=false;               // new
+let sessionPaused: boolean=false;
 let sessionScore={correct: 0, total: 0};
 let sessionTimer: ReturnType<typeof setInterval> | null=null;
 let timeLeft: number=30;
@@ -107,7 +108,7 @@ let shuffle: boolean=false;
 let mentalScope: string="simple";
 let mentalShuffle: boolean=false;
 let autoTimeout: ReturnType<typeof setTimeout> | null=null;
-let generateDebounceTimeout: ReturnType<typeof setTimeout> | null=null;   // new
+let generateDebounceTimeout: ReturnType<typeof setTimeout> | null=null;
 let modeButtons=[modeSingleBtn, modeMentalBtn];
 let settings={
     theme: "system",
@@ -119,6 +120,25 @@ let settings={
     timer: 30,
     maxQuestions: 5
 };
+function updateAriaPressed(){
+    if (modeSingleBtn) modeSingleBtn.setAttribute("aria-pressed", String(currentMode==="single"));
+    if (modeMentalBtn) modeMentalBtn.setAttribute("aria-pressed", String(currentMode==="mental"));
+}
+function updateCheckboxAria(checkbox: HTMLInputElement | null){
+    if (checkbox) checkbox.setAttribute("aria-checked", String(checkbox.checked));
+}
+function updateProgressBar(){
+    if (mentalProgressBar){
+        const now=sessionScore.total / maxQuestions * 100;
+        mentalProgressBar.setAttribute("aria-valuenow", String(now));
+    }
+}
+window.addEventListener("error", (event)=>{
+    showNotification(`Error: ${event.message}`, "warning");
+});
+window.addEventListener("unhandledrejection", (event)=>{
+    showNotification(`Async error: ${event.reason}`, "warning");
+});
 function loadSettings(): void{
     const saved=localStorage.getItem("appSettings");
     if(saved){
@@ -148,7 +168,6 @@ function saveSettings(): void{
     localStorage.setItem("appSettings", JSON.stringify(settings));
     applySettingsToApp();
 }
-// New function for live preview
 function previewSetting(field: string, value: any): void{
     switch(field){
         case "theme":
@@ -169,12 +188,15 @@ function previewSetting(field: string, value: any): void{
         case "autoContinue":
             if(autocontinueToggle) autocontinueToggle.checked=value;
             autocontinue=value;
+            updateCheckboxAria(autocontinueToggle);
             break;
         case "shuffle":
             if(shuffleToggle) shuffleToggle.checked=value;
             shuffle=value;
             if(mentalShuffleToggle) mentalShuffleToggle.checked=value;
             mentalShuffle=value;
+            updateCheckboxAria(shuffleToggle);
+            updateCheckboxAria(mentalShuffleToggle);
             break;
         case "scope":
             if(scopeSelect) scopeSelect.value=value;
@@ -229,6 +251,9 @@ function applySettingsToApp(): void{
     updateTimerDisplay();
     renderTopicGrid();
     updateUIState();
+    updateCheckboxAria(autocontinueToggle);
+    updateCheckboxAria(shuffleToggle);
+    updateCheckboxAria(mentalShuffleToggle);
 }
 function resetSettings(): void{
     if(settingsTheme) settingsTheme.value="system";
@@ -254,11 +279,15 @@ function disableModeButtons(disabled: boolean): void{
             btn.disabled=disabled;
             if (disabled) btn.classList.add("disabled");
             else btn.classList.remove("disabled");
+            btn.setAttribute("aria-disabled", String(disabled));
         }
     });
 }
 function disableDifficulty(disabled: boolean): void{
-    if (difficultySelect) difficultySelect.disabled=disabled;
+    if (difficultySelect){
+        difficultySelect.disabled=disabled;
+        difficultySelect.setAttribute("aria-disabled", String(disabled));
+    }
 }
 function setSessionButton(isActive: boolean): void{
     if (!startSessionBtn) return;
@@ -377,6 +406,7 @@ function selectTopic(topicId: string): void{
     }
     if (generateQuestionButton){
         generateQuestionButton.disabled=false;
+        generateQuestionButton.setAttribute("aria-disabled", "false");
     }
     updateUIState();
 }
@@ -513,7 +543,9 @@ function generateQuestion(): void{
         expectedFormatDiv.textContent="Expected format: "+window.expectedFormat;
     }
     userAnswer.disabled=false;
+    userAnswer.removeAttribute("aria-disabled");
     checkAnswerButton.disabled=false;
+    checkAnswerButton.setAttribute("aria-disabled", "false");
     userAnswer.focus();
     updateUIState();
     if (window.MathJax&&window.MathJax.typesetPromise){
@@ -616,13 +648,16 @@ function updateUIState(): void{
     let hasTopic=selectedTopic!==null;
     let hasQuestion=questionArea.innerHTML.includes("mjx-container")||!questionArea.innerHTML.includes("empty-state");
     generateQuestionButton.disabled=!hasTopic;
+    generateQuestionButton.setAttribute("aria-disabled", String(!hasTopic));
     checkAnswerButton.disabled=!hasTopic||!hasQuestion;
+    checkAnswerButton.setAttribute("aria-disabled", String(!hasTopic||!hasQuestion));
     if (hasTopic&&hasQuestion){
         generateQuestionButton.innerHTML=`
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
       </svg>
       New Question
+      <kbd class="shortcut-hint">Ctrl+G</kbd>
     `;
     }
     else{
@@ -631,6 +666,7 @@ function updateUIState(): void{
         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
       </svg>
       Generate Question
+      <kbd class="shortcut-hint">Ctrl+G</kbd>
     `;
     }
 }
@@ -638,6 +674,7 @@ function showNotification(message: string, type: "info" | "warning"="info"): voi
     let notification=document.createElement("div");
     notification.className=`notification notification-${type}`;
     notification.textContent=message;
+    notification.setAttribute("role", "alert");
     document.body.appendChild(notification);
     setTimeout(()=>{
         notification.classList.add("fade-out");
@@ -650,8 +687,7 @@ function showNotification(message: string, type: "info" | "warning"="info"): voi
 }
 function setupEventListeners(): void{
     if (!generateQuestionButton||!checkAnswerButton||!userAnswer||!themeToggle||!helpButton||!settingsButton||!modeSingleBtn||!modeMentalBtn||!mentalControls||!singleControls||!difficultySelect||!timerDisplay||!scoreDisplay||!startSessionBtn) return;
-
-    generateQuestionButton.addEventListener("click", debounceGenerate); // debounced
+    generateQuestionButton.addEventListener("click", debounceGenerate);
     checkAnswerButton.addEventListener("click", checkAnswer);
     userAnswer.addEventListener("keyup", function (e: KeyboardEvent){
         if (e.shiftKey&&e.key==="Enter"){
@@ -667,7 +703,7 @@ function setupEventListeners(): void{
                     if(currentMode==="single") debounceGenerate();
                     break;
                 case "Enter":
-                    if(e.shiftKey) break; // already handled
+                    if(e.shiftKey) break;
                     e.preventDefault();
                     if(currentMode==="single") checkAnswer();
                     else if(sessionActive) handleMentalAnswer();
@@ -715,7 +751,6 @@ function setupEventListeners(): void{
     if(settingsModal) settingsModal.addEventListener("click", (e)=>{
         if(e.target===settingsModal) closeSettings();
     });
-    // Live preview listeners
     if(settingsTheme){
         settingsTheme.addEventListener("change", (e)=>previewSetting("theme", (e.target as HTMLSelectElement).value));
     }
@@ -757,6 +792,7 @@ function setupEventListeners(): void{
         if (scopeSelect) scopeSelect.value=scope;
         if (mentalShuffleToggle) shuffle=mentalShuffleToggle.checked;
         if (shuffleToggle) shuffleToggle.checked=shuffle;
+        updateAriaPressed();
         renderTopicGrid();
         updateUIState();
     });
@@ -776,6 +812,7 @@ function setupEventListeners(): void{
         if (mentalScopeSelect) mentalScopeSelect.value=mentalScope;
         if (shuffleToggle) mentalShuffle=shuffleToggle.checked;
         if (mentalShuffleToggle) mentalShuffleToggle.checked=mentalShuffle;
+        updateAriaPressed();
         renderTopicGrid();
         updateUIState();
     });
@@ -792,6 +829,7 @@ function setupEventListeners(): void{
     if (autocontinueToggle){
         autocontinueToggle.addEventListener("change", (e)=>{
             autocontinue=(e.target as HTMLInputElement).checked;
+            updateCheckboxAria(autocontinueToggle);
             if (!autocontinue&&autoTimeout){
                 clearTimeout(autoTimeout);
                 autoTimeout=null;
@@ -811,6 +849,7 @@ function setupEventListeners(): void{
     if (shuffleToggle){
         shuffleToggle.addEventListener("change", (e)=>{
             shuffle=(e.target as HTMLInputElement).checked;
+            updateCheckboxAria(shuffleToggle);
         });
     }
     if (mentalScopeSelect){
@@ -822,6 +861,34 @@ function setupEventListeners(): void{
     if (mentalShuffleToggle){
         mentalShuffleToggle.addEventListener("change", (e)=>{
             mentalShuffle=(e.target as HTMLInputElement).checked;
+            updateCheckboxAria(mentalShuffleToggle);
+        });
+    }
+    if (userAnswer&&customContextMenu){
+        userAnswer.addEventListener("contextmenu", (e)=>{
+            e.preventDefault();
+            const x=e.clientX;
+            const y=e.clientY;
+            customContextMenu.style.display="block";
+            customContextMenu.style.left=x + "px";
+            customContextMenu.style.top=y + "px";
+        });
+        document.addEventListener("click", ()=>{
+            customContextMenu.style.display="none";
+        });
+        customContextMenu.querySelectorAll(".context-menu-item").forEach(item=>{
+            item.addEventListener("click", (e)=>{
+                const action=(e.target as HTMLElement).dataset.action;
+                if (action==="paste"){
+                    navigator.clipboard.readText().then(text=>{
+                        if (userAnswer) userAnswer.value=text;
+                    });
+                }
+                else if (action==="clear"){
+                    if (userAnswer) userAnswer.value="";
+                }
+                customContextMenu.style.display="none";
+            });
         });
     }
 }
@@ -834,9 +901,7 @@ function pauseMentalSession(): void{
     if(!sessionActive) return;
     sessionPaused=!sessionPaused;
     if(pauseSessionBtn){
-        pauseSessionBtn.innerHTML=sessionPaused
-            ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'
-            : '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+        pauseSessionBtn.innerHTML=sessionPaused?"<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M8 5v14l11-7z\"/></svg>":"<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M6 19h4V5H6v14zm8-14v14h4V5h-4z\"/></svg>";
         pauseSessionBtn.setAttribute("aria-label", sessionPaused?"Resume":"Pause");
     }
     if(userAnswer) userAnswer.disabled=sessionPaused;
@@ -853,6 +918,7 @@ function skipMentalQuestion(): void{
     }
     sessionScore.total++;
     updateScoreDisplay();
+    updateProgressBar();
     if(mentalProgressBar){
         let percent=(sessionScore.total/maxQuestions)*100;
         mentalProgressBar.style.width=percent+"%";
@@ -891,6 +957,7 @@ function startMentalSession(): void{
     updateScoreDisplay();
     updateTimerDisplay();
     if (mentalProgressBar) mentalProgressBar.style.width="0%";
+    updateProgressBar();
     startTimer();
     disableTopicSelection(true);
     disableModeButtons(true);
@@ -1015,6 +1082,7 @@ function generateNextMentalQuestion(): void{
         expectedFormatDiv.textContent="Expected format: "+window.expectedFormat;
     }
     userAnswer.disabled=false;
+    userAnswer.removeAttribute("aria-disabled");
     userAnswer.focus();
     if (window.MathJax&&window.MathJax.typesetPromise){
         window.MathJax.typesetPromise([questionArea]).catch((err: any)=>console.log("MathJax typeset error:", err));
@@ -1039,6 +1107,7 @@ function handleMentalAnswer(): void{
         if (isCorrect) sessionScore.correct++;
         sessionScore.total++;
         updateScoreDisplay();
+        updateProgressBar();
         if (mentalProgressBar){
             let percent=(sessionScore.total / maxQuestions) * 100;
             mentalProgressBar.style.width=percent+"%";
@@ -1087,6 +1156,7 @@ function endMentalSession(): void{
         mentalNextQuestionTimeout=null;
     }
     if (mentalProgressBar) mentalProgressBar.style.width="0%";
+    updateProgressBar();
     disableTopicSelection(false);
     disableModeButtons(false);
     disableDifficulty(false);
@@ -1094,8 +1164,12 @@ function endMentalSession(): void{
     if (userAnswer){
         userAnswer.disabled=true;
         userAnswer.value="";
+        userAnswer.setAttribute("aria-disabled", "true");
     }
-    if (checkAnswerButton) checkAnswerButton.disabled=true;
+    if (checkAnswerButton){
+        checkAnswerButton.disabled=true;
+        checkAnswerButton.setAttribute("aria-disabled", "true");
+    }
     if (answerResults){
         answerResults.innerHTML=`<div class="empty-state">...</div>`;
         answerResults.className="results-display";
@@ -1133,12 +1207,13 @@ function promptSaveScore(): void{
 function startTimer(): void{
     if (sessionTimer) clearInterval(sessionTimer);
     sessionTimer=setInterval(()=>{
-        if (!sessionActive||sessionPaused) return;  // paused check
+        if (!sessionActive||sessionPaused) return;
         timeLeft--;
         updateTimerDisplay();
         if (timeLeft <= 0){
             sessionScore.total++;
             updateScoreDisplay();
+            updateProgressBar();
             showNotification("Time is up!", "warning");
             if (mentalProgressBar){
                 let percent=(sessionScore.total / maxQuestions) * 100;
@@ -1167,15 +1242,16 @@ function updateTimerDisplay(): void{
     if (!timerDisplay) return;
     let mins=Math.floor(Math.max(0, timeLeft) / 60);
     let secs=Math.max(0, timeLeft) % 60;
-    timerDisplay.textContent=`⏱️ ${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    timerDisplay.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg> ${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 function updateScoreDisplay(): void{
     if (!scoreDisplay) return;
-    scoreDisplay.textContent=`✅ ${sessionScore.correct} / ${sessionScore.total}`;
+    scoreDisplay.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> ${sessionScore.correct} / ${sessionScore.total}`;
 }
 function disableTopicSelection(disabled: boolean): void{
     document.querySelectorAll(".topic-pill").forEach(el=>{
         (el as HTMLButtonElement).disabled=disabled;
+        (el as HTMLButtonElement).setAttribute("aria-disabled", String(disabled));
     });
 }
 if (document.readyState==="loading"){

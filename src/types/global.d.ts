@@ -23,7 +23,7 @@ declare global{
     interface Window{
         MathJax: MathJaxConfig;
         correctAnswer: CorrectAnswer;
-        expectedFormat?: string;
+        expectedFormat: string;
         __TAURI__?: any;
     }
 }

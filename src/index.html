@@ -36,13 +36,13 @@
             <div class="app-content">
                 <div class="control-toolbar">
                     <div class="toolbar-row-top">
-                        <div class="mode-selector">
-                            <button id="mode-single" class="mode-button active">Single</button>
-                            <button id="mode-mental" class="mode-button">Mental</button>
+                        <div class="mode-selector" role="group" aria-label="Mode selection">
+                            <button id="mode-single" class="mode-button active" aria-pressed="true">Single</button>
+                            <button id="mode-mental" class="mode-button" aria-pressed="false">Mental</button>
                         </div>
                         <div class="toolbar-section">
-                            <h2 class="toolbar-title">Topics</h2>
-                            <div class="topic-pills-container" id="topic-grid"></div>
+                            <h2 class="toolbar-title" id="topics-heading">Topics</h2>
+                            <div class="topic-pills-container" id="topic-grid" role="group" aria-labelledby="topics-heading"></div>
                         </div>
                         <div class="utility-buttons">
                             <button class="icon-button" id="theme-toggle" aria-label="Toggle theme">
@@ -70,39 +70,51 @@
                                         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
                                     </svg>
                                     Generate
+                                    <kbd class="shortcut-hint">Ctrl+G</kbd>
                                 </button>
-                                <button class="secondary-button toolbar-button" id="check-answer" disabled>
+                                <button class="secondary-button toolbar-button" id="check-answer" disabled aria-disabled="true">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
                                         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                                     </svg>
                                     Check
+                                    <kbd class="shortcut-hint">Shift+Enter</kbd>
                                 </button>
                             </div>
                             <div class="auto-controls">
-                                <label class="auto-toggle">
-                                    <input type="checkbox" id="autocontinue-toggle"> Auto (3s)
+                                <label class="auto-toggle" id="auto-label">
+                                    <input type="checkbox" id="autocontinue-toggle" aria-checked="false"> Auto (3s)
                                 </label>
-                                <select id="scope-select" class="scope-select">
+                                <select id="scope-select" class="scope-select" aria-label="Scope">
                                     <option value="simple">Simple Math</option>
                                     <option value="algebra">Algebra</option>
                                     <option value="precalc">Precalculus</option>
                                     <option value="calc">Calculus</option>
                                     <option value="all">All</option>
                                 </select>
-                                <label class="shuffle-toggle">
-                                    <input type="checkbox" id="shuffle-toggle"> Shuffle
+                                <label class="shuffle-toggle" id="shuffle-label">
+                                    <input type="checkbox" id="shuffle-toggle" aria-checked="false"> Shuffle
                                 </label>
                             </div>
                         </div>
                         <div id="mental-controls" style="display: none;">
                             <div class="mental-stats">
-                                <select id="difficulty-select" class="difficulty-select">
+                                <select id="difficulty-select" class="difficulty-select" aria-label="Difficulty">
                                     <option value="easy">Easy</option>
                                     <option value="medium" selected>Medium</option>
                                     <option value="hard">Hard</option>
                                 </select>
-                                <span id="timer-display">⏱️ 00:30</span>
-                                <span id="score-display">✅ 0 / 0</span>
+                                <span id="timer-display" class="stat-with-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                                    </svg>
+                                    00:30
+                                </span>
+                                <span id="score-display" class="stat-with-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                    </svg>
+                                    0 / 0
+                                </span>
                                 <button class="icon-button" id="pause-session" aria-label="Pause" style="display: none;">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
@@ -115,20 +127,20 @@
                                 </button>
                             </div>
                             <div class="mental-extra-controls">
-                                <select id="mental-scope-select" class="scope-select">
+                                <select id="mental-scope-select" class="scope-select" aria-label="Mental scope">
                                     <option value="simple">Simple Math</option>
                                     <option value="algebra">Algebra</option>
                                     <option value="precalc">Precalculus</option>
                                     <option value="calc">Calculus</option>
                                     <option value="all">All</option>
                                 </select>
-                                <label class="shuffle-toggle">
-                                    <input type="checkbox" id="mental-shuffle-toggle"> Shuffle
+                                <label class="shuffle-toggle" id="mental-shuffle-label">
+                                    <input type="checkbox" id="mental-shuffle-toggle" aria-checked="false"> Shuffle
                                 </label>
                                 <button id="start-session" class="primary-button">Start Session</button>
                             </div>
                             <div class="mental-progress">
-                                <div class="progress-bar" id="mental-progress-bar" style="width: 0%;"></div>
+                                <div class="progress-bar" id="mental-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="width: 0%;"></div>
                             </div>
                         </div>
                     </div>
@@ -141,7 +153,7 @@
                                 <div class="card-subtitle" id="current-topic">Select a topic</div>
                             </div>
                             <div class="card-content">
-                                <div id="question-area" class="question-display">
+                                <div id="question-area" class="question-display" aria-live="polite" role="region" aria-label="Question display">
                                     <div class="empty-state">
                                         <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
                                             <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
@@ -158,8 +170,8 @@
                                     <h2 class="card-title">Your Answer</h2>
                                 </div>
                                 <div class="card-content">
-                                    <textarea id="answer-box" class="answer-input" placeholder="Enter your answer here. Use Shift + Enter to submit." disabled></textarea>
-                                    <div class="symbols-hint">
+                                    <textarea id="answer-box" class="answer-input" placeholder="Enter your answer here. Use Shift + Enter to submit." disabled aria-describedby="expected-format symbols-hint"></textarea>
+                                    <div class="symbols-hint" id="symbols-hint">
                                         <span class="hint-label">Symbols:</span>
                                         <span class="symbols-list">∫ ∑ √ π ∞ ± ≈ ≠ ≤ ≥</span>
                                     </div>
@@ -171,7 +183,7 @@
                                     <h2 class="card-title">Results</h2>
                                 </div>
                                 <div class="card-content">
-                                    <div id="answer-results" class="results-display">
+                                    <div id="answer-results" class="results-display" role="status" aria-live="polite">
                                         <div class="empty-state">
                                             <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
                                                 <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/>
@@ -192,11 +204,11 @@
                 </div>
             </div>
         </div>
-        <div id="settings-modal" class="modal">
+        <div id="settings-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Settings</h2>
-                    <button class="icon-button modal-close" id="settings-close">✕</button>
+                    <h2 id="settings-title">Settings</h2>
+                    <button class="icon-button modal-close" id="settings-close" aria-label="Close settings">✕</button>
                 </div>
                 <div class="modal-body">
                     <div class="settings-section">
@@ -268,6 +280,10 @@
                     <button class="primary-button" id="settings-save">Save & Close</button>
                 </div>
             </div>
+        </div>
+        <div id="custom-context-menu" style="display: none; position: fixed; background: var(--surface-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--spacing-xs); box-shadow: var(--shadow-lg); z-index: 10000;">
+            <button class="context-menu-item" data-action="paste">Paste</button>
+            <button class="context-menu-item" data-action="clear">Clear</button>
         </div>
         <script type="module" src="script.ts"></script>
     </body>

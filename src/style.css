@@ -145,6 +145,7 @@ body{
     line-height: 1.5;
     min-height: 100vh;
     overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 @font-face{
     font-family: "Noto Sans";
@@ -183,7 +184,7 @@ body{
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color 0.3s ease;
 }
 .control-toolbar:hover{
     border-color: var(--primary-light);
@@ -220,7 +221,7 @@ body{
     -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     border-radius: var(--radius-sm);
     display: inline-block;
-    transition: color var(--transition-fast);
+    transition: color var(--transition-fast), background-color 0.3s ease;
     border: 1px solid var(--border);
 }
 .toolbar-title:hover{
@@ -246,7 +247,7 @@ body{
     border: 1px solid var(--border);
     border-radius: var(--radius-full);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all var(--transition-fast), background-color 0.3s ease, border-color 0.3s ease;
     font-size: 0.7rem;
     color: var(--text-primary);
     display: flex;
@@ -295,7 +296,7 @@ body{
     font-weight: 500;
     cursor: pointer;
     color: var(--text-secondary);
-    transition: color var(--transition-fast), background var(--transition-fast);
+    transition: color var(--transition-fast), background var(--transition-fast), background-color 0.3s ease;
 }
 .mode-button:hover{
     color: var(--primary);
@@ -318,7 +319,7 @@ body{
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all var(--transition-fast), background-color 0.3s ease, border-color 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -368,7 +369,7 @@ body{
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--transition-fast);
+    transition: all var(--transition-fast), background-color 0.3s ease, border-color 0.3s ease;
     backdrop-filter: blur(calc(var(--blur-amount) / 2));
     -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     border: 1px solid var(--border);
@@ -385,6 +386,37 @@ body{
     transform: translateY(0);
 }
 .icon-button svg{
+    width: 14px;
+    height: 14px;
+}
+kbd.shortcut-hint {
+    background: var(--surface-alt);
+    border-radius: var(--radius-sm);
+    padding: 2px 6px;
+    font-size: 0.65rem;
+    margin-left: 8px;
+    opacity: 0.8;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    font-family: monospace;
+}
+.stat-with-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--surface-alt);
+    backdrop-filter: blur(calc(var(--blur-amount) / 2));
+    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+.stat-with-icon svg {
     width: 14px;
     height: 14px;
 }
@@ -440,7 +472,7 @@ body{
 .progress-bar{
     height: 100%;
     background: var(--primary);
-    transition: width 0.2s ease;
+    transition: width 0.2s ease, background-color 0.3s ease;
 }
 .difficulty-select,
 .scope-select{
@@ -453,7 +485,7 @@ body{
     color: var(--text-primary);
     font-size: 0.75rem;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all var(--transition-fast), background-color 0.3s ease, border-color 0.3s ease;
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -508,7 +540,7 @@ body{
     backdrop-filter: blur(calc(var(--blur-amount) / 2));
     -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all var(--transition-fast), background-color 0.3s ease, border-color 0.3s ease;
     position: relative;
     box-shadow: var(--shadow-sm);
 }
@@ -549,7 +581,7 @@ body{
     padding: 2px 8px;
     border-radius: var(--radius-full);
     border: 1px solid var(--border);
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color 0.3s ease;
     box-shadow: var(--shadow-sm);
 }
 #timer-display:hover, #score-display:hover{
@@ -580,7 +612,7 @@ body{
     border: 1px solid var(--border);
     padding: var(--spacing-md);
     box-shadow: var(--shadow-glass);
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color 0.3s ease;
 }
 .main-content:hover{
     border-color: var(--primary-light);
@@ -602,13 +634,18 @@ body{
     -webkit-backdrop-filter: blur(var(--blur-amount));
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color 0.3s ease;
     overflow: hidden;
     box-shadow: var(--shadow-glass);
+    animation: cardFadeIn 0.3s ease;
 }
 .card:hover{
     border-color: var(--primary);
     box-shadow: var(--shadow-glass), 0 12px 40px rgba(0,0,0,0.25);
+}
+@keyframes cardFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 .card-header{
     padding: var(--spacing-sm) var(--spacing-md);
@@ -619,7 +656,7 @@ body{
     background: var(--surface-alt);
     backdrop-filter: blur(calc(var(--blur-amount) / 2));
     -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    transition: opacity var(--transition-fast);
+    transition: opacity var(--transition-fast), background-color 0.3s ease;
 }
 .card:hover .card-header{
     opacity: 1;
@@ -631,6 +668,7 @@ body{
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
+    transition: color 0.3s ease;
 }
 .card-title::before{
     content: '';
@@ -639,6 +677,7 @@ body{
     background: var(--primary);
     border-radius: 50%;
     display: block;
+    transition: background-color 0.3s ease;
 }
 .card-subtitle{
     font-size: 0.7rem;
@@ -650,7 +689,7 @@ body{
     padding: 2px 6px;
     border-radius: var(--radius-full);
     border: 1px solid var(--border);
-    transition: color var(--transition-fast), border-color var(--transition-fast);
+    transition: color var(--transition-fast), border-color var(--transition-fast), background-color 0.3s ease;
     box-shadow: var(--shadow-sm);
 }
 .card:hover .card-subtitle{
@@ -675,7 +714,7 @@ body{
     background: var(--app-bg);
     border-radius: var(--radius-md);
     border: 1px dashed var(--border);
-    transition: border-color var(--transition-fast);
+    transition: border-color var(--transition-fast), background-color 0.3s ease;
     box-shadow: var(--shadow-sm);
 }
 .question-display.has-content{
@@ -723,7 +762,7 @@ body{
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     resize: vertical;
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color 0.3s ease;
     box-shadow: var(--shadow-sm);
 }
 .answer-input:focus{
@@ -1052,6 +1091,10 @@ body{
     max-height: 80vh;
     overflow-y: auto;
     animation: scaleIn 0.2s ease;
+}
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
 }
 .modal-header{
     display: flex;
