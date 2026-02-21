@@ -84,6 +84,7 @@ let topics: Topic[]=[
 {id: "perm", name: "Permutation", icon: "P", category: "Discrete Math"},
 {id: "comb", name: "Combination", icon: "C", category: "Discrete Math"},
 {id: "prob", name: "Probability", icon: "%", category: "Discrete Math"},
+{id: "stats", name: "Statistics", icon: "σ", category: "Discrete Math"},
 {id: "ser", name: "Series", icon: "Σ", category: "Algebra"},
 {id: "lim", name: "Limits", icon: "lim", category: "Calculus"},
 {id: "relRates", name: "Related Rates", icon: "dx/dt", category: "Calculus"}
@@ -91,7 +92,7 @@ let topics: Topic[]=[
 const scopeTopics={
     simple: ["add", "subtrt", "mult", "divid"],
     algebra: ["add", "subtrt", "mult", "divid", "root", "log", "exp", "fact", "ser", "perm", "comb", "prob"],
-    precalc: ["add", "subtrt", "mult", "divid", "root", "log", "exp", "fact", "ser", "perm", "comb", "prob", "sin", "cos", "tan", "cosec", "sec", "cot"],
+    precalc: ["add", "subtrt", "mult", "divid", "root", "log", "exp", "fact", "ser", "perm", "comb", "prob", "sin", "cos", "tan", "cosec", "sec", "cot", "stats"],
     calc: ["add", "subtrt", "mult", "divid", "root", "log", "exp", "fact", "ser", "perm", "comb", "prob", "deri", "inte", "lim", "relRates"],
     all: topics.map(t=>t.id)
 };
@@ -758,6 +759,9 @@ function generateQuestion(): void{
         case "prob":
             DiscreteMathematics.generateProbability();
             break;
+        case "stats":
+            DiscreteMathematics.generateStatistics();
+            break;
         case "ser":
             Algebra.generateSeries();
             break;
@@ -1340,6 +1344,9 @@ function generateNextMentalQuestion(): void{
             break;
         case "prob":
             DiscreteMathematics.generateProbability(currentDifficulty);
+            break;
+        case "stats":
+            DiscreteMathematics.generateStatistics(currentDifficulty);
             break;
         case "ser":
             Algebra.generateSeries(currentDifficulty);
