@@ -28,13 +28,15 @@
     "mathjax": "^3.2.2",
     "mathjs": "^15.1.0",
     "path": "^0.12.7",
-    "terser": "^5.39.0"
+    "terser": "^5.39.0",
+    "three": "^0.183.1"
   },
   "description": "Random math question generator made with HTML, CSS, and JS.",
   "devDependencies": {
     "@tauri-apps/cli": "^2",
     "@types/mathjs": "^9.4.1",
     "@types/node": "^25.2.3",
+    "@types/three": "^0.183.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-compression": "^0.5.1",

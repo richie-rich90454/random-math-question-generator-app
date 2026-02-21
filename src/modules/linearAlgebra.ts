@@ -1,4 +1,3 @@
-// linearAlgebra.ts
 import {questionArea} from "../script.js";
 
 interface Matrix2x2{

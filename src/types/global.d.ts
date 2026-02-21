@@ -28,4 +28,6 @@ declare global{
         katex: any;
     }
 }
+declare module "three";
+declare module "three/addons/controls/OrbitControls.js";
 export {};
