@@ -4,6 +4,7 @@ import * as Calculus from "./modules/Calculus";
 import * as DiscreteMathematics from "./modules/DiscreteMathematics";
 import * as LinearAlgebra from "./modules/LinearAlgebra";
 import * as Trigonometry from "./modules/Trigonometry";
+import * as Geometry from "./modules/Geometry";
 import type {Topic} from "./types/global";
 import * as math from "mathjs";
 import {getCurrentWindow, type Window} from "@tauri-apps/api/window";
@@ -87,7 +88,10 @@ let topics: Topic[]=[
 {id: "stats", name: "Statistics", icon: "σ", category: "Discrete Math"},
 {id: "ser", name: "Series", icon: "Σ", category: "Algebra"},
 {id: "lim", name: "Limits", icon: "lim", category: "Calculus"},
-{id: "relRates", name: "Related Rates", icon: "dx/dt", category: "Calculus"}
+{id: "relRates", name: "Related Rates", icon: "dx/dt", category: "Calculus"},
+{id: "area_circle", name: "Area of Circle", icon: "◯", category: "Geometry"},
+{id: "pythag", name: "Pythagorean Theorem", icon: "△", category: "Geometry"},
+{id: "volume_sphere", name: "Volume of Sphere", icon: "○", category: "Geometry"}
 ];
 const scopeTopics={
     simple: ["add", "subtrt", "mult", "divid"],
@@ -771,6 +775,15 @@ function generateQuestion(): void{
         case "relRates":
             Calculus.generateRelatedRates();
             break;
+        case "area_circle":
+            Geometry.generateAreaCircle();
+            break;
+        case "pythag":
+            Geometry.generatePythagorean();
+            break;
+        case "volume_sphere":
+            Geometry.generateVolumeSphere();
+            break;
         default:
             questionArea.innerHTML=`<div class="empty-state"><p>Please select a topic to generate a question</p></div>`;
             return;
@@ -1356,6 +1369,15 @@ function generateNextMentalQuestion(): void{
             break;
         case "relRates":
             Calculus.generateRelatedRates(currentDifficulty);
+            break;
+        case "area_circle":
+            Geometry.generateAreaCircle(currentDifficulty);
+            break;
+        case "pythag":
+            Geometry.generatePythagorean(currentDifficulty);
+            break;
+        case "volume_sphere":
+            Geometry.generateVolumeSphere(currentDifficulty);
             break;
         default:
             questionArea.innerHTML=`<div class="empty-state"><p>Unknown topic</p></div>`;

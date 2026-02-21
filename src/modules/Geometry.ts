@@ -1,756 +1,442 @@
-import {questionArea} from "../script.js";
 import * as THREE from "three";
-import {OrbitControls} from "three/addons/controls/OrbitControls.js";
-function getAngleRange(difficulty?: string): number[]{
-    if (difficulty==="easy") return [0, 90];
-    if (difficulty==="hard") return [0, 360];
-    return [0, 180];
+import {questionArea} from "../script.js";
+
+function getMaxForDifficulty(difficulty?: string, baseMax: number=10): number{
+    if(difficulty==="easy") return Math.floor(baseMax*0.5);
+    if(difficulty==="hard") return Math.floor(baseMax*2);
+    return baseMax;
 }
-function setup3DScene(container: HTMLElement, width: number=400, height: number=300):{scene: THREE.Scene; camera: THREE.PerspectiveCamera; renderer: THREE.WebGLRenderer}{
-    while (container.firstChild) container.removeChild(container.firstChild);
-    const scene=new THREE.Scene();
-    scene.background=new THREE.Color(0x111122);
-    const camera=new THREE.PerspectiveCamera(45, width/height, 0.1, 1000);
-    camera.position.set(5, 5, 10);
-    camera.lookAt(0, 0, 0);
-    const renderer=new THREE.WebGLRenderer({antialias: true});
+function cleanupVisualization(): void{
+    const existingCanvas=document.getElementById("geometry-canvas");
+    if(existingCanvas) existingCanvas.remove();
+    const existingInfo=document.getElementById("geometry-info");
+    if(existingInfo) existingInfo.remove();
+}
+function createVisualization(shape: string, params: any): void{
+    cleanupVisualization();
+    const container=document.createElement("div");
+    container.id="geometry-visualization";
+    container.style.width="100%";
+    container.style.height="300px";
+    container.style.marginTop="20px";
+    container.style.position="relative";
+    container.style.borderRadius="12px";
+    container.style.overflow="hidden";
+    container.style.boxShadow="0 4px 12px rgba(0,0,0,0.1)";
+    const canvas=document.createElement("canvas");
+    canvas.id="geometry-canvas";
+    canvas.style.width="100%";
+    canvas.style.height="100%";
+    canvas.style.display="block";
+    container.appendChild(canvas);
+    const info=document.createElement("div");
+    info.id="geometry-info";
+    info.style.position="absolute";
+    info.style.bottom="10px";
+    info.style.left="10px";
+    info.style.backgroundColor="rgba(0,0,0,0.7)";
+    info.style.color="white";
+    info.style.padding="4px 12px";
+    info.style.borderRadius="20px";
+    info.style.fontSize="14px";
+    info.style.pointerEvents="none";
+    container.appendChild(info);
+    questionArea?.appendChild(container);
+    const width=container.clientWidth;
+    const height=container.clientHeight;
+    const renderer=new THREE.WebGLRenderer({canvas, antialias: true, alpha: false});
     renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    container.appendChild(renderer.domElement);
+    renderer.setClearColor(0x1a1a2e);
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(45, width/height, 0.1, 1000);
+    camera.position.set(5,5,10);
+    camera.lookAt(0,0,0);
     const ambientLight=new THREE.AmbientLight(0x404060);
     scene.add(ambientLight);
     const dirLight=new THREE.DirectionalLight(0xffffff, 1);
-    dirLight.position.set(2, 5, 3);
+    dirLight.position.set(1,2,1);
     scene.add(dirLight);
-    const controls=new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping=true;
-    controls.autoRotate=true;
-    controls.autoRotateSpeed=2.0;
+    const backLight=new THREE.DirectionalLight(0x99aaff, 0.5);
+    backLight.position.set(-1,-1,-1);
+    scene.add(backLight);
+    const gridHelper=new THREE.GridHelper(20,20,0x99aaff,0x334466);
+    scene.add(gridHelper);
+    const axesHelper=new THREE.AxesHelper(5);
+    scene.add(axesHelper);
+    let geometry: THREE.BufferGeometry;
+    let material: THREE.Material;
+    let mesh: THREE.Mesh;
+    let infoText="";
+    switch(shape){
+        case "circle":
+            geometry=new THREE.CircleGeometry(params.radius||2,64);
+            material=new THREE.MeshStandardMaterial({color:0x44aaff,side:THREE.DoubleSide,emissive:0x113366});
+            mesh=new THREE.Mesh(geometry,material);
+            mesh.rotation.x=-Math.PI/2;
+            scene.add(mesh);
+            infoText=`Circle: radius = ${params.radius}`;
+            break;
+        case "sphere":
+            geometry=new THREE.SphereGeometry(params.radius||2,32,16);
+            material=new THREE.MeshStandardMaterial({color:0xffaa44,emissive:0x442200});
+            mesh=new THREE.Mesh(geometry,material);
+            scene.add(mesh);
+            infoText=`Sphere: radius = ${params.radius}`;
+            break;
+        case "cube":
+            geometry=new THREE.BoxGeometry(params.size||2,params.size||2,params.size||2);
+            material=new THREE.MeshStandardMaterial({color:0x88ccff,emissive:0x224466});
+            mesh=new THREE.Mesh(geometry,material);
+            scene.add(mesh);
+            infoText=`Cube: side = ${params.size}`;
+            break;
+        case "cylinder":
+            geometry=new THREE.CylinderGeometry(params.radius||1.5,params.radius||1.5,params.height||3,32);
+            material=new THREE.MeshStandardMaterial({color:0x66cc66,emissive:0x224422});
+            mesh=new THREE.Mesh(geometry,material);
+            scene.add(mesh);
+            infoText=`Cylinder: radius = ${params.radius}, height = ${params.height}`;
+            break;
+        case "cone":
+            geometry=new THREE.ConeGeometry(params.radius||1.5,params.height||3,32);
+            material=new THREE.MeshStandardMaterial({color:0xff8866,emissive:0x442211});
+            mesh=new THREE.Mesh(geometry,material);
+            scene.add(mesh);
+            infoText=`Cone: radius = ${params.radius}, height = ${params.height}`;
+            break;
+        case "pyramid":
+            geometry=new THREE.ConeGeometry(params.radius||1.5,params.height||3,4);
+            material=new THREE.MeshStandardMaterial({color:0xaa88ff,emissive:0x332266});
+            mesh=new THREE.Mesh(geometry,material);
+            scene.add(mesh);
+            infoText=`Pyramid: base side ≈ ${(params.radius*1.414).toFixed(2)}, height = ${params.height}`;
+            break;
+        case "torus":
+            geometry=new THREE.TorusGeometry(params.radius||2,params.tube||0.5,16,64);
+            material=new THREE.MeshStandardMaterial({color:0xff66aa,emissive:0x442233});
+            mesh=new THREE.Mesh(geometry,material);
+            scene.add(mesh);
+            infoText=`Torus (circle): major radius = ${params.radius}, minor = ${params.tube}`;
+            break;
+        case "triangle":
+            const vertices=new Float32Array([
+                -params.base/2,0,0,
+                params.base/2,0,0,
+                0,params.height,0
+            ]);
+            geometry=new THREE.BufferGeometry();
+            geometry.setAttribute("position",new THREE.BufferAttribute(vertices,3));
+            geometry.setIndex([0,1,2]);
+            geometry.computeVertexNormals();
+            material=new THREE.MeshStandardMaterial({color:0xffaa44,side:THREE.DoubleSide});
+            mesh=new THREE.Mesh(geometry,material);
+            scene.add(mesh);
+            infoText=`Triangle: base = ${params.base}, height = ${params.height}`;
+            break;
+        default:
+            return;
+    }
+    info.textContent=infoText;
     function animate(){
         requestAnimationFrame(animate);
-        controls.update();
-        renderer.render(scene, camera);
+        mesh.rotation.y+=0.005;
+        renderer.render(scene,camera);
     }
     animate();
-    return{scene, camera, renderer};
+    const resizeObserver=new ResizeObserver(entries=>{
+        for(let entry of entries){
+            const{width,height}=entry.contentRect;
+            renderer.setSize(width,height);
+            camera.aspect=width/height;
+            camera.updateProjectionMatrix();
+        }
+    });
+    resizeObserver.observe(container);
 }
-function drawAxes(scene: THREE.Scene, size: number=5): void{
-    const xMat=new THREE.LineBasicMaterial({color: 0xff0000});
-    const xPoints=[new THREE.Vector3(-size, 0, 0), new THREE.Vector3(size, 0, 0)];
-    const xGeo=new THREE.BufferGeometry().setFromPoints(xPoints);
-    const xLine=new THREE.Line(xGeo, xMat);
-    scene.add(xLine);
-    const yMat=new THREE.LineBasicMaterial({color: 0x00ff00});
-    const yPoints=[new THREE.Vector3(0, -size, 0), new THREE.Vector3(0, size, 0)];
-    const yGeo=new THREE.BufferGeometry().setFromPoints(yPoints);
-    const yLine=new THREE.Line(yGeo, yMat);
-    scene.add(yLine);
-    const zMat=new THREE.LineBasicMaterial({color: 0x0000ff});
-    const zPoints=[new THREE.Vector3(0, 0, -size), new THREE.Vector3(0, 0, size)];
-    const zGeo=new THREE.BufferGeometry().setFromPoints(zPoints);
-    const zLine=new THREE.Line(zGeo, zMat);
-    scene.add(zLine);
-}
-export function generateSin(difficulty?: string): void{
-    if (!questionArea) return;
+export function generateAreaCircle(difficulty?: string): void{
+    if(!questionArea) return;
     questionArea.innerHTML="";
-    let types=["evaluate", "solve", "amplitude", "period", "phase_shift", "law_sines", "unit_circle", "identity"];
-    let type=types[Math.floor(Math.random()*types.length)];
-    let angleRange=getAngleRange(difficulty);
-    switch (type){
-        case "evaluate":{
-            let isDegree=Math.random()<0.5;
-            if (isDegree){
-                let commonAngles=[0, 30, 45, 60, 90, 120, 135, 150, 180, 210, 225, 240, 270, 300, 315, 330];
-                let angle=commonAngles[Math.floor(Math.random()*commonAngles.length)];
-                let value=Math.sin(angle*Math.PI/180).toFixed(2);
-                questionArea.innerHTML=`Evaluate \$\\sin(${angle}^\\circ)\$`;
-                window.correctAnswer={ correct: value, alternate: value };
-                window.expectedFormat="Enter a decimal number (e.g., 0.5)";
-            }
-            else{
-                let radianAngles=[
-            {value: 0, label: "0"},
-            {value: Math.PI/6, label: "\\frac{\\pi}{6}"},
-            {value: Math.PI/4, label: "\\frac{\\pi}{4}"},
-            {value: Math.PI/3, label: "\\frac{\\pi}{3}"},
-            {value: Math.PI/2, label: "\\frac{\\pi}{2}"},
-            {value: 2*Math.PI/3, label: "\\frac{2\\pi}{3}"},
-            {value: 3*Math.PI/4, label: "\\frac{3\\pi}{4}"},
-            {value: 5*Math.PI/6, label: "\\frac{5\\pi}{6}"},
-            {value: Math.PI, label: "\\pi"},
-            {value: 7*Math.PI/6, label: "\\frac{7\\pi}{6}"},
-            {value: 5*Math.PI/4, label: "\\frac{5\\pi}{4}"},
-            {value: 4*Math.PI/3, label: "\\frac{4\\pi}{3}"},
-            {value: 3*Math.PI/2, label: "\\frac{3\\pi}{2}"},
-            {value: 5*Math.PI/3, label: "\\frac{5\\pi}{3}"},
-            {value: 7*Math.PI/4, label: "\\frac{7\\pi}{4}"},
-            {value: 11*Math.PI/6, label: "\\frac{11\\pi}{6}"}
-                ];
-                let obj=radianAngles[Math.floor(Math.random()*radianAngles.length)];
-                let value=Math.sin(obj.value).toFixed(2);
-                questionArea.innerHTML=`Evaluate \$\\sin(${obj.label})\$`;
-                window.correctAnswer={ correct: value, alternate: value };
-                window.expectedFormat="Enter a decimal number (e.g., 0.5)";
-            }
-            break;
-        }
-        case "solve":{
-            let k=(Math.random()*2-1).toFixed(2);
-            let isDegree=Math.random()<0.5;
-            let solutions: string[]=[];
-            let plainNumbers: string[]=[];
-            let principal=Math.asin(parseFloat(k));
-            if (isDegree){
-                let principalDeg=principal*180/Math.PI;
-                let sol1=principalDeg;
-                let sol2=180-principalDeg;
-                [sol1, sol2].forEach(sol =>{
-                    if (sol>=angleRange[0]&&sol<angleRange[1]){
-                        solutions.push(`${sol.toFixed(0)}°`);
-                        plainNumbers.push(sol.toFixed(0));
-                    }
-                });
-                questionArea.innerHTML=`Solve \$\\sin\\theta=${k}\$ (in degrees)`;
-                window.correctAnswer={
-                    correct: solutions.join(", "),
-                    alternate: plainNumbers.join(", ")
-                };
-                window.expectedFormat="Enter angles in degrees, e.g., 30°, 150° or just 30, 150";
-            }
-            else{
-                let sol1=principal;
-                let sol2=Math.PI-principal;
-                [sol1, sol2].forEach(sol =>{
-                    if (sol>=0&&sol<2*Math.PI) solutions.push(sol.toFixed(2));
-                });
-                questionArea.innerHTML=`Solve \$\\sin\\theta=${k}\$ (in radians)`;
-                window.correctAnswer={
-                    correct: solutions.join(", "),
-                    alternate: solutions.join(", ")
-                };
-                window.expectedFormat="Enter angles in radians, e.g., 0.52, 2.62";
-            }
-            break;
-        }
-        case "amplitude":{
-            let A=(Math.random()*4+1).toFixed(1);
-            if (difficulty==="easy") A=(Math.random()*2+1).toFixed(1);
-            if (difficulty==="hard") A=(Math.random()*6+1).toFixed(1);
-            questionArea.innerHTML=`Find the amplitude of \$y=${A}\\sin(3x+\\pi/4)\$`;
-            window.correctAnswer={ correct: A, alternate: A };
-            window.expectedFormat="Enter a number (e.g., 2.5)";
-            break;
-        }
-        case "period":{
-            let B=Math.floor(Math.random()*4+1);
-            questionArea.innerHTML=`What is the period of \$y=\\sin(${B}x)\$?`;
-            window.correctAnswer={
-                correct: (2*Math.PI/B).toFixed(2)+" radians",
-                alternate: `(2π)/${B} radians`
-            };
-            window.expectedFormat="Enter as 'x radians' or '2π/B radians'";
-            break;
-        }
-        case "phase_shift":{
-            let C=(Math.random()*Math.PI).toFixed(2);
-            let shiftDirection=(parseFloat(C) > 0)?"left":"right";
-            let shiftText=(parseFloat(C)==0)?"0":`${C} units ${shiftDirection}`;
-            questionArea.innerHTML=`Identify the phase shift of \$y=\\sin(x+${C})\$`;
-            window.correctAnswer={
-                correct: shiftText,
-                alternate: (parseFloat(C)==0)?"0":`-${C}`
-            };
-            window.expectedFormat="Enter as 'x units left/right' or '-x'";
-            break;
-        }
-        case "law_sines":{
-            let angleA=Math.floor(Math.random()*50+30);
-            let angleB=Math.floor(Math.random()*50+30);
-            let sideA=Math.floor(Math.random()*10+5);
-            if (difficulty==="easy"){
-                angleA=Math.floor(Math.random()*30+30);
-                angleB=Math.floor(Math.random()*30+30);
-                sideA=Math.floor(Math.random()*5+5);
-            }
-            let sideB=(sideA*Math.sin(angleB*Math.PI/180)/Math.sin(angleA*Math.PI/180)).toFixed(1);
-            questionArea.innerHTML=`Using the Law of Sines:<br>
-                In triangle ABC, ∠A=${angleA}deg, ∠B=${angleB}deg, and side a=${sideA}.<br>
-                Find side b.`;
-            window.correctAnswer={ correct: sideB, alternate: sideB };
-            window.expectedFormat="Enter a number (e.g., 7.2)";
-            break;
-        }
-        case "unit_circle":{
-            let angles=[0, 30, 45, 60, 90, 120, 135, 150, 180, 210, 225, 240, 270, 300, 315, 330];
-            let angle=angles[Math.floor(Math.random()*angles.length)];
-            let cosVal=Math.cos(angle*Math.PI/180).toFixed(2);
-            let sinVal=Math.sin(angle*Math.PI/180).toFixed(2);
-            questionArea.innerHTML=`Find the coordinates on the unit circle for an angle of ${angle}deg (format: (cos, sin))`;
-            window.correctAnswer={ correct: `(${cosVal}, ${sinVal})`, alternate: `(${cosVal}, ${sinVal})` };
-            window.expectedFormat="Enter as (cos, sin) e.g., (0.71, 0.71)";
-            break;
-        }
-        case "identity":{
-            questionArea.innerHTML=`Complete the identity: \$\\sin^2\\theta+\\cos^2\\theta=\\; ?\$`;
-            window.correctAnswer={ correct: "1", alternate: "one"};
-            window.expectedFormat="Enter '1'";
-            break;
-        }
-        default:
-            questionArea.innerHTML="Unknown sine question type";
-    }
-    window.MathJax?.typeset();
+    cleanupVisualization();
+    const maxRadius=getMaxForDifficulty(difficulty,10);
+    const radius=Math.floor(Math.random()*maxRadius)+2;
+    const area=Math.PI*radius*radius;
+    const rounded=Math.round(area*100)/100;
+    questionArea.innerHTML=`Find the area of a circle with radius \\( ${radius} \\). (Use \\( \\pi \\approx 3.14 \\))`;
+    window.correctAnswer={
+        correct: rounded.toFixed(2),
+        alternate: (Math.PI*radius*radius).toFixed(2)
+    };
+    window.expectedFormat="Enter a decimal (e.g., 78.54)";
+    createVisualization("circle",{radius});
+    if(window.MathJax?.typeset) window.MathJax.typeset();
 }
-export function generateCosine(difficulty?: string): void{
-    if (!questionArea) return;
+export function generatePythagorean(difficulty?: string): void{
+    if(!questionArea) return;
     questionArea.innerHTML="";
-    let types=["evaluate", "solve", "amplitude", "period", "phase_shift", "law_cosines", "identity"];
-    let type=types[Math.floor(Math.random()*types.length)];
-    let angleRange=getAngleRange(difficulty);
-    switch (type){
-        case "evaluate":{
-            let isDegree=Math.random()<0.5;
-            if (isDegree){
-                let angles=[0, 60, 90, 120, 180, 240, 270, 300];
-                let angle=angles[Math.floor(Math.random()*angles.length)];
-                let value=Math.cos(angle*Math.PI/180).toFixed(2);
-                questionArea.innerHTML=`Evaluate \$\\cos(${angle}^\\circ)\$`;
-                window.correctAnswer={ correct: value, alternate: value };
-                window.expectedFormat="Enter a decimal number (e.g., 0.5)";
-            }
-            else{
-                let radianAngles=[
-            {value: 0, label: "0"},
-            {value: Math.PI/3, label: "\\frac{\\pi}{3}"},
-            {value: Math.PI/2, label: "\\frac{\\pi}{2}"},
-            {value: 2*Math.PI/3, label: "\\frac{2\\pi}{3}"},
-            {value: Math.PI, label: "\\pi"},
-            {value: 4*Math.PI/3, label: "\\frac{4\\pi}{3}"},
-            {value: 3*Math.PI/2, label: "\\frac{3\\pi}{2}"},
-            {value: 5*Math.PI/3, label: "\\frac{5\\pi}{3}"}
-                ];
-                let obj=radianAngles[Math.floor(Math.random()*radianAngles.length)];
-                let value=Math.cos(obj.value).toFixed(2);
-                questionArea.innerHTML=`Evaluate \$\\cos(${obj.label})\$`;
-                window.correctAnswer={ correct: value, alternate: value };
-                window.expectedFormat="Enter a decimal number (e.g., -0.5)";
-            }
-            break;
-        }
-        case "solve":{
-            let k=(Math.random()*2-1).toFixed(2);
-            let isDegree=Math.random()<0.5;
-            let solutions: string[]=[];
-            let plainNumbers: string[]=[];
-            let principal=Math.acos(parseFloat(k));
-            if (isDegree){
-                let principalDeg=principal*180/Math.PI;
-                let sol1=principalDeg;
-                let sol2=360-principalDeg;
-                [sol1, sol2].forEach(sol =>{
-                    if (sol>=angleRange[0]&&sol<angleRange[1]){
-                        solutions.push(`${sol.toFixed(0)}°`);
-                        plainNumbers.push(sol.toFixed(0));
-                    }
-                });
-                questionArea.innerHTML=`Solve \$\\cos\\theta=${k}\$ (in degrees)`;
-                window.correctAnswer={
-                    correct: solutions.join(", "),
-                    alternate: plainNumbers.join(", ")
-                };
-                window.expectedFormat="Enter angles in degrees, e.g., 60°, 300° or just 60, 300";
-            }
-            else{
-                let sol1=principal;
-                let sol2=2*Math.PI-principal;
-                [sol1, sol2].forEach(sol =>{
-                    if (sol>=0&&sol<2*Math.PI) solutions.push(sol.toFixed(2));
-                });
-                questionArea.innerHTML=`Solve \$\\cos\\theta=${k}\$ (in radians)`;
-                window.correctAnswer={
-                    correct: solutions.join(", "),
-                    alternate: solutions.join(", ")
-                };
-                window.expectedFormat="Enter angles in radians, e.g., 1.05, 5.24";
-            }
-            break;
-        }
-        case "amplitude":{
-            let A=(Math.random()*4+1).toFixed(1);
-            if (difficulty==="easy") A=(Math.random()*2+1).toFixed(1);
-            if (difficulty==="hard") A=(Math.random()*6+1).toFixed(1);
-            questionArea.innerHTML=`Find the amplitude of \$y=${A}\\cos(2x-\\pi/3)\$`;
-            window.correctAnswer={ correct: A, alternate: A };
-            window.expectedFormat="Enter a number (e.g., 2.5)";
-            break;
-        }
-        case "period":{
-            let B=Math.floor(Math.random()*4+1);
-            questionArea.innerHTML=`What is the period of \$y=\\cos(${B}x)\$?`;
-            window.correctAnswer={
-                correct: (2*Math.PI/B).toFixed(2)+" radians",
-                alternate: `(2π)/${B} radians`
-            };
-            window.expectedFormat="Enter as 'x radians' or '2π/B radians'";
-            break;
-        }
-        case "phase_shift":{
-            let C=(Math.random()*Math.PI).toFixed(2);
-            let shiftDirection=(parseFloat(C) > 0)?"left":"right";
-            let shiftText=(parseFloat(C)==0)?"0":`${C} units ${shiftDirection}`;
-            questionArea.innerHTML=`Identify the phase shift of \$y=\\cos(x+${C})\$`;
-            window.correctAnswer={
-                correct: shiftText,
-                alternate: (parseFloat(C)==0)?"0":`-${C}`
-            };
-            window.expectedFormat="Enter as 'x units left/right' or '-x'";
-            break;
-        }
-        case "law_cosines":{
-            let a=Math.floor(Math.random()*10+5);
-            let b=Math.floor(Math.random()*10+5);
-            let angleC=Math.floor(Math.random()*50+30);
-            if (difficulty==="easy"){
-                a=Math.floor(Math.random()*5+5);
-                b=Math.floor(Math.random()*5+5);
-                angleC=Math.floor(Math.random()*30+30);
-            }
-            let c=Math.sqrt(a*a+b*b-2*a*b*Math.cos(angleC*Math.PI/180)).toFixed(1);
-
-            questionArea.innerHTML=`Using the Law of Cosines:<br>
-                In triangle ABC, sides a=${a}, b=${b}, and ∠C=${angleC}deg.<br>
-                Find side c.`;
-            window.correctAnswer={ correct: c, alternate: c };
-            window.expectedFormat="Enter a number (e.g., 7.2)";
-            break;
-        }
-        case "identity":{
-            questionArea.innerHTML=`Complete the identity: \$\\cos^2\\theta+\\sin^2\\theta=\\; ?\$`;
-            window.correctAnswer={ correct: "1", alternate: "one"};
-            window.expectedFormat="Enter '1'";
-            break;
-        }
-        default:
-            questionArea.innerHTML="Unknown cosine question type";
-    }
-    window.MathJax?.typeset();
+    cleanupVisualization();
+    const maxLeg=getMaxForDifficulty(difficulty,8);
+    let a=Math.floor(Math.random()*maxLeg)+3;
+    let b=Math.floor(Math.random()*maxLeg)+3;
+    const c=Math.sqrt(a*a+b*b);
+    const roundedC=Math.round(c*100)/100;
+    questionArea.innerHTML=`In a right triangle, the legs are \\( ${a} \\) and \\( ${b} \\). Find the hypotenuse.`;
+    window.correctAnswer={
+        correct: roundedC.toFixed(2),
+        alternate: Math.sqrt(a*a+b*b).toFixed(2)
+    };
+    window.expectedFormat="Enter a decimal (e.g., 5.83)";
+    createVisualization("triangle",{base:a,height:b});
+    if(window.MathJax?.typeset) window.MathJax.typeset();
 }
-export function generateTangent(_difficulty?: string): void{
-    if (!questionArea) return;
+export function generateVolumeSphere(difficulty?: string): void{
+    if(!questionArea) return;
     questionArea.innerHTML="";
-    let types=["evaluate", "solve", "period", "asymptote", "identity"];
-    let type=types[Math.floor(Math.random()*types.length)];
-    switch (type){
-        case "evaluate":{
-            let angles=[0, 45, 135, 225, 315];
-            let angle=angles[Math.floor(Math.random()*angles.length)];
-            let value=Math.tan(angle*Math.PI/180).toFixed(2);
-            questionArea.innerHTML=`Evaluate \$\\tan(${angle}^\\circ)\$`;
-            window.correctAnswer={ correct: value, alternate: value };
-            window.expectedFormat="Enter a decimal number (e.g., 1.0)";
-            break;
-        }
-        case "solve":{
-            let k=(Math.random()*10-5).toFixed(2);
-            let isDegree=Math.random()<0.5;
-            let principal=Math.atan(parseFloat(k));
-            if (isDegree){
-                let principalDeg=principal*180/Math.PI;
-                questionArea.innerHTML=`Solve \$\\tan\\theta=${k}\$ (in degrees, give the principal solution)`;
-                window.correctAnswer={
-                    correct: `${principalDeg.toFixed(0)}°+180°n`,
-                    alternate: `${principalDeg.toFixed(0)}+180n`
-                };
-                window.expectedFormat="Enter as 'θ°+180°n' e.g., '45°+180°n' or '45+180n'";
-            }
-            else{
-                questionArea.innerHTML=`Solve \$\\tan\\theta=${k}\$ (in radians, give the principal solution)`;
-                window.correctAnswer={
-                    correct: `${principal.toFixed(2)}+πn`,
-                    alternate: `${principal.toFixed(2)}+πn`
-                };
-                window.expectedFormat="Enter as 'θ+πn' e.g., '0.79+πn'";
-            }
-            break;
-        }
-        case "period":{
-            let B=Math.floor(Math.random()*3+1);
-            questionArea.innerHTML=`What is the period of \$y=\\tan(${B}x)\$?`;
-            window.correctAnswer={
-                correct: (Math.PI/B).toFixed(2)+" radians",
-                alternate: `π/${B} radians`
-            };
-            window.expectedFormat="Enter as 'x radians' or 'π/B radians'";
-            break;
-        }
-        case "asymptote":{
-            let B=Math.floor(Math.random()*2+1);
-            let asymptotes: string[]=[];
-            for (let k=-1; k <= 0; k++){
-                asymptotes.push(`x=\\frac{(2*${k}+1)\\pi}{2\\cdot${B}}`);
-            }
-            questionArea.innerHTML=`Find the vertical asymptotes of \$y=\\tan(${B}x)\$`;
-            window.correctAnswer={
-                correct: `x=π/(2*${B}) + πk/${B}`,
-                alternate: `x=π/(2*${B}) + πk/${B}`
-            };
-            window.expectedFormat="Enter as 'x=π/(2B) + πk/B'";
-            break;
-        }
-        case "identity":{
-            questionArea.innerHTML=`Complete the identity: \$1+\\tan^2\\theta=\\; ?\$`;
-            window.correctAnswer={ correct: "sec^2theta", alternate: "sec^2θ"};
-            window.expectedFormat="Enter 'sec^2θ'";
-            break;
-        }
-        default:
-            questionArea.innerHTML="Unknown tangent question type";
-    }
-    window.MathJax?.typeset();
+    cleanupVisualization();
+    const maxRadius=getMaxForDifficulty(difficulty,6);
+    const radius=Math.floor(Math.random()*maxRadius)+2;
+    const volume=(4/3)*Math.PI*Math.pow(radius,3);
+    const rounded=Math.round(volume*100)/100;
+    questionArea.innerHTML=`Find the volume of a sphere with radius \\( ${radius} \\). (Use \\( \\pi \\approx 3.14 \\))`;
+    window.correctAnswer={
+        correct: rounded.toFixed(2),
+        alternate: (4/3*Math.PI*radius**3).toFixed(2)
+    };
+    window.expectedFormat="Enter a decimal (e.g., 113.10)";
+    createVisualization("sphere",{radius});
+    if(window.MathJax?.typeset) window.MathJax.typeset();
 }
-export function generateCosecant(_difficulty?: string): void{
-    if (!questionArea) return;
+export function generateAreaRectangle(difficulty?: string): void{
+    if(!questionArea) return;
     questionArea.innerHTML="";
-    let types=["evaluate", "relationship", "asymptote"];
-    let type=types[Math.floor(Math.random()*types.length)];
-    switch (type){
-        case "evaluate":{
-            let angles=[30, 150, 210, 330];
-            let angle=angles[Math.floor(Math.random()*angles.length)];
-            let value=(1/Math.sin(angle*Math.PI/180)).toFixed(2);
-            questionArea.innerHTML=`Evaluate \$\\csc(${angle}^\\circ)\$`;
-            window.correctAnswer={ correct: value, alternate: value };
-            window.expectedFormat="Enter a decimal number (e.g., 2.0)";
-            break;
-        }
-        case "relationship":{
-            let angle=Math.floor(Math.random()*360);
-            questionArea.innerHTML=`Express \$\\csc(${angle}^\\circ)\$ in terms of sine.`;
-            window.correctAnswer={
-                correct: `1/sin(${angle}°)`,
-                alternate: `1/sin(${angle}°)`
-            };
-            window.expectedFormat="Enter as '1/sin(θ)'";
-            break;
-        }
-        case "asymptote":{
-            questionArea.innerHTML=`Find the vertical asymptotes of \$y=\\csc(x)\$ (in radians).`;
-            window.correctAnswer={ correct: "x=nπ", alternate: "x=nπ"};
-            window.expectedFormat="Enter as 'x=nπ'";
-            break;
-        }
-        default:
-            questionArea.innerHTML="Unknown cosecant question type";
-    }
-    window.MathJax?.typeset();
+    cleanupVisualization();
+    const maxDim=getMaxForDifficulty(difficulty,12);
+    const length=Math.floor(Math.random()*maxDim)+3;
+    const width=Math.floor(Math.random()*maxDim)+2;
+    const area=length*width;
+    questionArea.innerHTML=`Find the area of a rectangle with length \\( ${length} \\) and width \\( ${width} \\).`;
+    window.correctAnswer={correct:area.toString(),alternate:area.toString()};
+    window.expectedFormat="Enter a whole number";
+    createVisualization("cube",{size:Math.min(length,width,5)});
+    if(window.MathJax?.typeset) window.MathJax.typeset();
 }
-export function generateSecant(_difficulty?: string): void{
-    if (!questionArea) return;
+export function generateAreaTriangle(difficulty?: string): void{
+    if(!questionArea) return;
     questionArea.innerHTML="";
-    let type=Math.random()<0.5?"evaluate":"identity";
-    switch (type){
-        case "evaluate":{
-            let angles=[0, 60, 180, 300];
-            let angle=angles[Math.floor(Math.random()*angles.length)];
-            let value=(1/Math.cos(angle*Math.PI/180)).toFixed(2);
-            questionArea.innerHTML=`Evaluate \$\\sec(${angle}^\\circ)\$`;
-            window.correctAnswer={ correct: value, alternate: value };
-            window.expectedFormat="Enter a decimal number (e.g., 2.0)";
-            break;
-        }
-        case "identity":{
-            questionArea.innerHTML=`Complete the identity: \$\\sec^2\\theta-\\tan^2\\theta=?\$`;
-            window.correctAnswer={ correct: "1", alternate: "1"};
-            window.expectedFormat="Enter '1'";
-            break;
-        }
-        default:
-            questionArea.innerHTML="Unknown secant question type";
-    }
-    window.MathJax?.typeset();
+    cleanupVisualization();
+    const maxBase=getMaxForDifficulty(difficulty,10);
+    const maxHeight=getMaxForDifficulty(difficulty,10);
+    const base=Math.floor(Math.random()*maxBase)+3;
+    const height=Math.floor(Math.random()*maxHeight)+3;
+    const area=0.5*base*height;
+    const rounded=Math.round(area*100)/100;
+    questionArea.innerHTML=`Find the area of a triangle with base \\( ${base} \\) and height \\( ${height} \\).`;
+    window.correctAnswer={
+        correct: rounded.toFixed(2),
+        alternate: (0.5*base*height).toFixed(2)
+    };
+    window.expectedFormat="Enter a decimal (e.g., 12.5)";
+    createVisualization("triangle",{base,height});
+    if(window.MathJax?.typeset) window.MathJax.typeset();
 }
-export function generateCotangent(_difficulty?: string): void{
-    if (!questionArea) return;
+export function generatePerimeter(difficulty?: string): void{
+    if(!questionArea) return;
     questionArea.innerHTML="";
-    let type=Math.random()<0.5?"evaluate":"relationship";
-    switch (type){
-        case "evaluate":{
-            let angles=[45, 135, 225, 315];
-            let angle=angles[Math.floor(Math.random()*angles.length)];
-            let value=(1/Math.tan(angle*Math.PI/180)).toFixed(2);
-            questionArea.innerHTML=`Evaluate \$\\cot(${angle}^\\circ)\$`;
-            window.correctAnswer={ correct: value, alternate: value };
-            window.expectedFormat="Enter a decimal number (e.g., 1.0)";
-            break;
-        }
-        case "relationship":{
-            questionArea.innerHTML=`Express \$\\cot\\theta\$ in terms of tangent.`;
-            window.correctAnswer={
-                correct: `1/tanθ`,
-                alternate: `1/tanθ`
-            };
-            window.expectedFormat="Enter '1/tanθ'";
-            break;
-        }
-        default:
-            questionArea.innerHTML="Unknown cotangent question type";
-    }
-    window.MathJax?.typeset();
-}
-export function generateInverseTrig(difficulty?: string): void{
-    if (!questionArea) return;
-    questionArea.innerHTML="";
-    let types=["arcsin", "arccos", "arctan"];
-    let type=types[Math.floor(Math.random()*types.length)];
-    let hint="", questionText="", answer="";
-    let valRange: number;
-    if (difficulty==="easy") valRange=2;
-    else if (difficulty==="hard") valRange=20;
-    else valRange=10;
-    let val: number;
-    if (type==="arctan"){
-        val=Math.floor(Math.random()*valRange*2) - valRange;
+    cleanupVisualization();
+    const shape=Math.random()>0.5?"rectangle":"triangle";
+    if(shape==="rectangle"){
+        const maxDim=getMaxForDifficulty(difficulty,10);
+        const l=Math.floor(Math.random()*maxDim)+3;
+        const w=Math.floor(Math.random()*maxDim)+2;
+        const perimeter=2*(l+w);
+        questionArea.innerHTML=`Find the perimeter of a rectangle with length \\( ${l} \\) and width \\( ${w} \\).`;
+        window.correctAnswer={correct:perimeter.toString(),alternate:perimeter.toString()};
+        createVisualization("cube",{size:Math.min(l,w,4)});
     }
     else{
-        if (difficulty==="easy"){
-            let simple=[0, 0.5, 0.707, 1];
-            val=simple[Math.floor(Math.random()*simple.length)] * (Math.random()<0.5?1:-1);
-        }
-        else{
-            val=(Math.floor(Math.random()*20)/10) -1;
-        }
+        const maxSide=getMaxForDifficulty(difficulty,8);
+        const a=Math.floor(Math.random()*maxSide)+3;
+        const b=Math.floor(Math.random()*maxSide)+3;
+        const c=Math.floor(Math.random()*maxSide)+3;
+        const perimeter=a+b+c;
+        questionArea.innerHTML=`Find the perimeter of a triangle with sides \\( ${a}, ${b}, ${c} \\).`;
+        window.correctAnswer={correct:perimeter.toString(),alternate:perimeter.toString()};
+        createVisualization("triangle",{base:a,height:b});
     }
-    let isDegree=Math.random()<0.5;
-    let principal: number;
-    if (type==="arcsin") principal=Math.asin(val);
-    else if (type==="arccos") principal=Math.acos(val);
-    else principal=Math.atan(val);
-    if (isDegree){
-        let deg=(principal*180/Math.PI).toFixed(1);
-        questionText=`Evaluate \\( ${type}(${val.toFixed(2)}) \\) in degrees.`;
-        answer=`${deg}°`;
-        hint="Enter an angle in degrees (e.g., 30.0°)";
-    }
-    else{
-        questionText=`Evaluate \\( ${type}(${val.toFixed(2)}) \\) in radians.`;
-        answer=principal.toFixed(2)+" rad";
-        hint="Enter an angle in radians (e.g., 0.52)";
-    }
-    const container=document.createElement("div");
-    container.style.display="flex";
-    container.style.flexDirection="column";
-    container.style.alignItems="center";
-    questionArea.appendChild(container);
-    const textDiv=document.createElement("div");
-    textDiv.innerHTML=questionText;
-    textDiv.style.marginBottom="10px";
-    container.appendChild(textDiv);
-    window.correctAnswer={
-        correct: answer,
-        alternate: answer
-    };
-    window.expectedFormat=hint;
-    if (window.MathJax&&window.MathJax.typeset){
-        window.MathJax.typeset();
-    }
+    window.expectedFormat="Enter a whole number";
+    if(window.MathJax?.typeset) window.MathJax.typeset();
 }
-export function generateTrigEquations(difficulty?: string): void{
-    if (!questionArea) return;
+export function generateVolumeCylinder(difficulty?: string): void{
+    if(!questionArea) return;
     questionArea.innerHTML="";
-    let types=["basic", "multiple_angle", "using_identity"];
-    let type=types[Math.floor(Math.random()*types.length)];
-    let hint="", questionText="", answer="";
-    let isDegree=Math.random()<0.5;
-    let unit=isDegree ? "°" : "";
-    let maxCoeff=(difficulty==="easy") ? 2 : (difficulty==="hard" ? 4 : 3);
-    let simpleValues=[0, 0.5, Math.sqrt(2)/2, Math.sqrt(3)/2, 1];
-    let useSimpleValues=(difficulty==="easy");
-    switch (type){
-        case "basic":{
-            let func=Math.random()<0.5?"sin":"cos";
-            let val: number;
-            if (useSimpleValues){
-                val=simpleValues[Math.floor(Math.random()*simpleValues.length)];
-            }
-            else{
-                val=(Math.floor(Math.random()*10)/10);
-            }
-            val=Math.min(0.99, Math.max(-0.99, val));
-            let angle=Math.asin(val)*(isDegree?180/Math.PI:1);
-            let sol1=angle;
-            let sol2=func==="sin"? 180-angle : 360-angle;
-            if (!isDegree){
-                sol1=angle;
-                sol2=func==="sin"? Math.PI-angle : 2*Math.PI-angle;
-            }
-            questionText=`Solve \\( ${func}\\theta=${val.toFixed(2)} \\) for \\( 0 \\le \\theta < ${isDegree?360:"2\\pi"} \\) (in ${isDegree?"degrees":"radians"}).`;
-            answer=`${sol1.toFixed(2)}${unit}, ${sol2.toFixed(2)}${unit}`;
-            hint="Enter angles separated by commas";
-            break;
-        }
-        case "multiple_angle":{
-            let func=Math.random()<0.5?"sin":"cos";
-            let coeff=Math.floor(Math.random()*maxCoeff)+2;
-            let val: number;
-            if (useSimpleValues){
-                val=simpleValues[Math.floor(Math.random()*simpleValues.length)];
-            }
-            else{
-                val=(Math.floor(Math.random()*10)/10);
-            }
-            val=Math.min(0.99, Math.max(-0.99, val));
-            let angle=Math.acos(val)*(isDegree?180/Math.PI:1);
-            let sols: number[]=[];
-            for (let n=0; n<coeff; n++){
-                let base=(angle + 360*n)/coeff;
-                sols.push(base);
-                if (func==="cos"){
-                    sols.push((360-angle + 360*n)/coeff);
-                }
-                else{
-                    sols.push((180-angle + 360*n)/coeff);
-                }
-            }
-            sols=sols.filter(a => a>=0 && a<(isDegree?360:2*Math.PI)).map(a=>a);
-            questionText=`Solve \\( ${func}(${coeff}\\theta)=${val.toFixed(2)} \\) for \\( 0 \\le \\theta < ${isDegree?360:"2\\pi"} \\) (in ${isDegree?"degrees":"radians"}).`;
-            answer=sols.map(a=>a.toFixed(2)).join(", ")+unit;
-            hint="Enter angles separated by commas";
-            break;
-        }
-        case "using_identity":{
-            let c: number;
-            if (useSimpleValues){
-                c=0.25;
-            }
-            else{
-                c=(Math.floor(Math.random()*8)+1)/16;
-            }
-            questionText=`Solve \\( \\sin^2\\theta=${c.toFixed(2)} \\) for \\( 0 \\le \\theta < ${isDegree?360:"2\\pi"} \\) (in ${isDegree?"degrees":"radians"}).`;
-            let baseAngle=Math.asin(Math.sqrt(c))*(isDegree?180/Math.PI:1);
-            let sols=[baseAngle, 180-baseAngle, 180+baseAngle, 360-baseAngle];
-            if (!isDegree){
-                sols=[baseAngle, Math.PI-baseAngle, Math.PI+baseAngle, 2*Math.PI-baseAngle];
-            }
-            answer=sols.map(a=>a.toFixed(2)).join(", ")+unit;
-            hint="Enter angles separated by commas";
-            break;
-        }
-    }
-    const container=document.createElement("div");
-    container.style.display="flex";
-    container.style.flexDirection="column";
-    container.style.alignItems="center";
-    questionArea.appendChild(container);
-    const textDiv=document.createElement("div");
-    textDiv.innerHTML=questionText;
-    textDiv.style.marginBottom="10px";
-    container.appendChild(textDiv);
+    cleanupVisualization();
+    const maxRadius=getMaxForDifficulty(difficulty,5);
+    const maxHeight=getMaxForDifficulty(difficulty,8);
+    const r=Math.floor(Math.random()*maxRadius)+2;
+    const h=Math.floor(Math.random()*maxHeight)+3;
+    const volume=Math.PI*r*r*h;
+    const rounded=Math.round(volume*100)/100;
+    questionArea.innerHTML=`Find the volume of a cylinder with radius \\( ${r} \\) and height \\( ${h} \\). (Use \\( \\pi \\approx 3.14 \\))`;
     window.correctAnswer={
-        correct: answer,
-        alternate: answer
+        correct: rounded.toFixed(2),
+        alternate: (Math.PI*r*r*h).toFixed(2)
     };
-    window.expectedFormat=hint;
-    if (window.MathJax&&window.MathJax.typeset){
-        window.MathJax.typeset();
-    }
+    window.expectedFormat="Enter a decimal";
+    createVisualization("cylinder",{radius:r,height:h});
+    if(window.MathJax?.typeset) window.MathJax.typeset();
 }
-export function generateTrigGraphs(difficulty?: string): void{
-    if (!questionArea) return;
+export function generateSurfaceAreaCube(difficulty?: string): void{
+    if(!questionArea) return;
     questionArea.innerHTML="";
-    let types=["sine", "cosine", "tangent"];
-    let type=types[Math.floor(Math.random()*types.length)];
-    let hint="", questionText="", answer="";
-    let maxA=(difficulty==="easy") ? 2 : (difficulty==="hard" ? 5 : 3);
-    let maxB=(difficulty==="easy") ? 2 : (difficulty==="hard" ? 4 : 3);
-    let A=Math.floor(Math.random()*maxA)+1;
-    let B=Math.floor(Math.random()*maxB)+1;
-    let C=Math.floor(Math.random()*2);
-    const container=document.createElement("div");
-    container.style.display="flex";
-    container.style.flexDirection="column";
-    container.style.alignItems="center";
-    questionArea.appendChild(container);
-    const canvasContainer=document.createElement("div");
-    canvasContainer.style.width="400px";
-    canvasContainer.style.height="300px";
-    canvasContainer.style.marginBottom="20px";
-    container.appendChild(canvasContainer);
-    const{scene}=setup3DScene(canvasContainer, 400, 300);
-    drawAxes(scene, 5);
-    const points=[];
-    const steps=200;
-    const xMin=-2*Math.PI/B;
-    const xMax=2*Math.PI/B;
-    for (let i=0; i<=steps; i++){
-        let x=xMin + (i/steps)*(xMax-xMin);
-        let y=0;
-        switch (type){
-            case "sine":
-                y=A * Math.sin(B*x + C);
-                break;
-            case "cosine":
-                y=A * Math.cos(B*x + C);
-                break;
-            case "tangent":
-                y=A * Math.tan(B*x + C);
-                if (Math.abs(y)>5) continue;
-                break;
-        }
-        points.push(new THREE.Vector3(x, y, 0));
-    }
-    const lineGeo=new THREE.BufferGeometry().setFromPoints(points);
-    const lineMat=new THREE.LineBasicMaterial({color: 0xffaa00});
-    const line=new THREE.Line(lineGeo, lineMat);
-    scene.add(line);
-    switch (type){
-        case "sine":
-        case "cosine":
-        {
-                let askType=Math.floor(Math.random()*3);
-                if (askType===0){
-                    questionText=`What is the amplitude of the graphed ${type} function?`;
-                    answer=A.toString();
-                }
-                else if (askType===1){
-                    let period=2*Math.PI/B;
-                    questionText=`What is the period of the graphed ${type} function?`;
-                    answer=period.toFixed(2)+" rad";
-                }
-                else{
-                    let phaseShift=-C/B;
-                    questionText=`What is the phase shift of the graphed ${type} function?`;
-                    answer=phaseShift.toFixed(2)+" rad";
-                }
-                hint="Enter a number";
-            }
-            break;
-        case "tangent":
-        {
-                let askType=Math.floor(Math.random()*2);
-                if (askType===0){
-                    let period=Math.PI/B;
-                    questionText=`What is the period of the graphed tangent function?`;
-                    answer=period.toFixed(2)+" rad";
-                }
-                else{
-                    questionText=`Give the equation of the vertical asymptotes for the graphed tangent function.`;
-                    answer=`x=π/(2*${B}) + πk/${B}`;
-                }
-                hint="Enter as described";
-            }
-            break;
-    }
-    const textDiv=document.createElement("div");
-    textDiv.innerHTML=questionText;
-    textDiv.style.marginBottom="10px";
-    container.appendChild(textDiv);
+    cleanupVisualization();
+    const maxSide=getMaxForDifficulty(difficulty,6);
+    const s=Math.floor(Math.random()*maxSide)+2;
+    const area=6*s*s;
+    questionArea.innerHTML=`Find the surface area of a cube with side \\( ${s} \\).`;
+    window.correctAnswer={correct:area.toString(),alternate:area.toString()};
+    window.expectedFormat="Enter a whole number";
+    createVisualization("cube",{size:s});
+    if(window.MathJax?.typeset) window.MathJax.typeset();
+}
+export function generateSimilarTriangles(difficulty?: string): void{
+    if(!questionArea) return;
+    questionArea.innerHTML="";
+    cleanupVisualization();
+    const maxScale=getMaxForDifficulty(difficulty,4);
+    const scale=Math.floor(Math.random()*maxScale)+2;
+    const side1=Math.floor(Math.random()*5)+3;
+    const side2=side1*scale;
+    questionArea.innerHTML=`Triangle A has a side of length \\( ${side1} \\). Triangle B is similar with scale factor \\( ${scale} \\). Find the corresponding side in triangle B.`;
+    window.correctAnswer={correct:side2.toString(),alternate:side2.toString()};
+    window.expectedFormat="Enter a whole number";
+    createVisualization("triangle",{base:side1,height:side1});
+    if(window.MathJax?.typeset) window.MathJax.typeset();
+}
+export function generateArcLength(difficulty?: string): void{
+    if(!questionArea) return;
+    questionArea.innerHTML="";
+    cleanupVisualization();
+    const maxRadius=getMaxForDifficulty(difficulty,8);
+    const r=Math.floor(Math.random()*maxRadius)+3;
+    const angle=Math.floor(Math.random()*90)+30;
+    const arc=(angle/360)*2*Math.PI*r;
+    const rounded=Math.round(arc*100)/100;
+    questionArea.innerHTML=`Find the length of an arc with central angle \\( ${angle}^\\circ \\) in a circle of radius \\( ${r} \\).`;
     window.correctAnswer={
-        correct: answer,
-        alternate: answer
+        correct: rounded.toFixed(2),
+        alternate: ((angle/360)*2*Math.PI*r).toFixed(2)
     };
-    window.expectedFormat=hint;
-    if (window.MathJax&&window.MathJax.typeset){
-        window.MathJax.typeset();
-    }
+    window.expectedFormat="Enter a decimal";
+    createVisualization("torus",{radius:r,tube:0.2});
+    if(window.MathJax?.typeset) window.MathJax.typeset();
+}
+export function generateSectorArea(difficulty?: string): void{
+    if(!questionArea) return;
+    questionArea.innerHTML="";
+    cleanupVisualization();
+    const maxRadius=getMaxForDifficulty(difficulty,8);
+    const r=Math.floor(Math.random()*maxRadius)+3;
+    const angle=Math.floor(Math.random()*90)+30;
+    const area=(angle/360)*Math.PI*r*r;
+    const rounded=Math.round(area*100)/100;
+    questionArea.innerHTML=`Find the area of a sector with central angle \\( ${angle}^\\circ \\) in a circle of radius \\( ${r} \\).`;
+    window.correctAnswer={
+        correct: rounded.toFixed(2),
+        alternate: ((angle/360)*Math.PI*r*r).toFixed(2)
+    };
+    window.expectedFormat="Enter a decimal";
+    createVisualization("circle",{radius:r});
+    if(window.MathJax?.typeset) window.MathJax.typeset();
+}
+export function generateVolumeCone(difficulty?: string): void{
+    if(!questionArea) return;
+    questionArea.innerHTML="";
+    cleanupVisualization();
+    const maxRadius=getMaxForDifficulty(difficulty,5);
+    const maxHeight=getMaxForDifficulty(difficulty,8);
+    const r=Math.floor(Math.random()*maxRadius)+2;
+    const h=Math.floor(Math.random()*maxHeight)+3;
+    const volume=(1/3)*Math.PI*r*r*h;
+    const rounded=Math.round(volume*100)/100;
+    questionArea.innerHTML=`Find the volume of a cone with radius \\( ${r} \\) and height \\( ${h} \\).`;
+    window.correctAnswer={
+        correct: rounded.toFixed(2),
+        alternate: ((1/3)*Math.PI*r*r*h).toFixed(2)
+    };
+    window.expectedFormat="Enter a decimal";
+    createVisualization("cone",{radius:r,height:h});
+    if(window.MathJax?.typeset) window.MathJax.typeset();
+}
+export function generateVolumePyramid(difficulty?: string): void{
+    if(!questionArea) return;
+    questionArea.innerHTML="";
+    cleanupVisualization();
+    const maxBase=getMaxForDifficulty(difficulty,6);
+    const base=Math.floor(Math.random()*maxBase)+3;
+    const height=Math.floor(Math.random()*maxBase)+4;
+    const volume=(1/3)*base*base*height;
+    const rounded=Math.round(volume*100)/100;
+    questionArea.innerHTML=`Find the volume of a square pyramid with base side \\( ${base} \\) and height \\( ${height} \\).`;
+    window.correctAnswer={
+        correct: rounded.toFixed(2),
+        alternate: ((1/3)*base*base*height).toFixed(2)
+    };
+    window.expectedFormat="Enter a decimal";
+    createVisualization("pyramid",{radius:base/2,height});
+    if(window.MathJax?.typeset) window.MathJax.typeset();
+}
+export function generateDistanceFormula(difficulty?: string): void{
+    if(!questionArea) return;
+    questionArea.innerHTML="";
+    cleanupVisualization();
+    const maxCoord=getMaxForDifficulty(difficulty,8);
+    const x1=Math.floor(Math.random()*maxCoord)-4;
+    const y1=Math.floor(Math.random()*maxCoord)-4;
+    const x2=Math.floor(Math.random()*maxCoord)-4;
+    const y2=Math.floor(Math.random()*maxCoord)-4;
+    const dist=Math.sqrt((x2-x1)**2+(y2-y1)**2);
+    const rounded=Math.round(dist*100)/100;
+    questionArea.innerHTML=`Find the distance between points \\( (${x1},${y1}) \\) and \\( (${x2},${y2}) \\).`;
+    window.correctAnswer={
+        correct: rounded.toFixed(2),
+        alternate: Math.sqrt((x2-x1)**2+(y2-y1)**2).toFixed(2)
+    };
+    window.expectedFormat="Enter a decimal";
+    if(window.MathJax?.typeset) window.MathJax.typeset();
+}
+export function generateAngleRelations(_difficulty?: string): void{
+    if(!questionArea) return;
+    questionArea.innerHTML="";
+    cleanupVisualization();
+    const angle=Math.floor(Math.random()*60)+20;
+    const comp=90-angle;
+    const supp=180-angle;
+    questionArea.innerHTML=`An angle measures \\( ${angle}^\\circ \\). Find its complementary and supplementary angles.`;
+    window.correctAnswer={
+        correct: `complement: ${comp}, supplement: ${supp}`,
+        alternate: `${comp}, ${supp}`
+    };
+    window.expectedFormat="Enter as \"complement: X, supplement: Y\"";
+    if(window.MathJax?.typeset) window.MathJax.typeset();
+}
+export function generateTriangleClassification(_difficulty?: string): void{
+    if(!questionArea) return;
+    questionArea.innerHTML="";
+    cleanupVisualization();
+    const sides=[
+        [3,4,5],
+        [5,5,5],
+        [5,5,8],
+        [7,8,9]
+    ];
+    const pick=sides[Math.floor(Math.random()*sides.length)];
+    const [a,b,c]=pick;
+    let type="";
+    if(a===b&&b===c) type="equilateral";
+    else if(a===b||b===c||a===c) type="isosceles";
+    else type="scalene";
+    questionArea.innerHTML=`Classify the triangle with sides \\( ${a}, ${b}, ${c} \\).`;
+    window.correctAnswer={correct:type,alternate:type};
+    window.expectedFormat="Enter \"equilateral\", \"isosceles\", or \"scalene\"";
+    createVisualization("triangle",{base:a,height:b});
+    if(window.MathJax?.typeset) window.MathJax.typeset();
 }

@@ -1,12 +1,18 @@
 import {questionArea} from "../script.js";
 import * as THREE from "three";
 import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+
+let currentAnimationFrame: number | null=null;
 function getAngleRange(difficulty?: string): number[]{
     if (difficulty==="easy") return [0, 90];
     if (difficulty==="hard") return [0, 360];
     return [0, 180];
 }
 function setup3DScene(container: HTMLElement, width: number=400, height: number=300):{scene: THREE.Scene; camera: THREE.PerspectiveCamera; renderer: THREE.WebGLRenderer}{
+    if (currentAnimationFrame !== null) {
+        cancelAnimationFrame(currentAnimationFrame);
+        currentAnimationFrame=null;
+    }
     while (container.firstChild) container.removeChild(container.firstChild);
     const scene=new THREE.Scene();
     scene.background=new THREE.Color(0x111122);
@@ -27,7 +33,7 @@ function setup3DScene(container: HTMLElement, width: number=400, height: number=
     controls.autoRotate=true;
     controls.autoRotateSpeed=2.0;
     function animate(){
-        requestAnimationFrame(animate);
+        currentAnimationFrame=requestAnimationFrame(animate);
         controls.update();
         renderer.render(scene, camera);
     }
