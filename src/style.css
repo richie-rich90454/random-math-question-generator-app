@@ -40,8 +40,9 @@
     --transition-slow: 300ms cubic-bezier(0.2, 0, 0, 1);
     --footer-height: 28px;
     --blur-amount: 45px;
-    --wave-color: rgba(200, 60, 60, 0.35);
-    --wave-color-alt: rgba(160, 100, 220, 0.35);
+    --wave-color: rgba(160, 180, 220, 0.3);
+    --wave-color-alt: rgba(200, 160, 220, 0.3);
+    --overlay-color: rgba(0, 0, 0, 0.03);
 }
 .light{
     --primary: #2B579A;
@@ -68,7 +69,6 @@
     --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.08);
     --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.12);
     --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.16);
-    --wave-color-alt: rgba(160, 100, 220, 0.35);
 }
 .dark{
     --primary: #4F9BFF;
@@ -94,8 +94,9 @@
     --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.3);
     --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.35);
     --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15) inset;
-    --wave-color: rgba(255, 80, 80, 0.45);
-    --wave-color-alt: rgba(220, 130, 200, 0.45);
+    --wave-color: rgba(100, 120, 180, 0.4);
+    --wave-color-alt: rgba(150, 100, 180, 0.4);
+    --overlay-color: rgba(255, 255, 255, 0.03);
 }
 @media (prefers-color-scheme: dark){
     :root:not(.light){
@@ -122,7 +123,9 @@
         --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.3);
         --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.35);
         --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15) inset;
-        --wave-color-alt: rgba(220, 130, 200, 0.45);
+        --wave-color: rgba(100, 120, 180, 0.4);
+        --wave-color-alt: rgba(150, 100, 180, 0.4);
+        --overlay-color: rgba(255, 255, 255, 0.03);
     }
 }
 *{
@@ -153,6 +156,53 @@ body{
     font-display: swap;
     font-weight: 1 1000;
 }
+#wave-container{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+.liquid-bg{
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 50%, var(--wave-color) 0%, transparent 70%);
+    filter: blur(40px);
+    opacity: 0.6;
+    animation: flowLiquid 30s infinite alternate ease-in-out;
+    will-change: transform;
+}
+@keyframes flowLiquid{
+    0%{
+        transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+    100%{
+        transform: translate(-5%, -3%) rotate(2deg) scale(1.1);
+    }
+}
+@media (prefers-reduced-motion: reduce){
+    .liquid-bg{
+        animation: none;
+    }
+}
+#blur-layer{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(var(--blur-amount));
+    -webkit-backdrop-filter: blur(var(--blur-amount));
+    background: transparent;
+    pointer-events: none;
+    z-index: 1;
+}
 .app-container{
     display: flex;
     flex-direction: column;
@@ -173,10 +223,29 @@ body{
     flex-direction: column;
     gap: var(--spacing-lg);
 }
+.control-toolbar,
+.card,
+.main-content,
+.question-display,
+.answer-input,
+.stat-with-icon,
+.difficulty-select,
+.scope-select,
+.icon-button,
+.primary-button,
+.secondary-button,
+.topic-pill,
+.modal-content,
+.modal-header,
+.modal-footer,
+.setting-item select,
+.setting-item input[type="number"],
+.math-toolbar-btn {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
 .control-toolbar{
     background: var(--surface);
-    backdrop-filter: blur(var(--blur-amount));
-    -webkit-backdrop-filter: blur(var(--blur-amount));
     border-radius: var(--radius-md);
     border: 1px solid var(--border);
     padding: var(--spacing-sm) var(--spacing-md);
@@ -184,11 +253,13 @@ body{
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color 0.3s ease;
+    transition: all var(--transition-normal), background-color 0.3s ease;
 }
 .control-toolbar:hover{
-    border-color: var(--primary-light);
-    box-shadow: var(--shadow-glass), 0 12px 40px rgba(0,0,0,0.25);
+    background: var(--surface-elevated);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: var(--shadow-glass), 0 16px 48px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    transform: translateY(-1px);
 }
 .toolbar-row-top{
     display: flex;
@@ -217,8 +288,6 @@ body{
     margin-bottom: 4px;
     padding: 2px var(--spacing-sm);
     background: var(--surface-alt);
-    backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     border-radius: var(--radius-sm);
     display: inline-block;
     transition: color var(--transition-fast), background-color 0.3s ease;
@@ -226,6 +295,8 @@ body{
 }
 .toolbar-title:hover{
     color: var(--primary);
+    background: var(--surface-elevated);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 .utility-buttons{
     display: flex;
@@ -242,12 +313,10 @@ body{
 .topic-pill{
     padding: 2px var(--spacing-sm);
     background: var(--surface);
-    backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     border: 1px solid var(--border);
     border-radius: var(--radius-full);
     cursor: pointer;
-    transition: all var(--transition-fast), background-color 0.3s ease, border-color 0.3s ease;
+    transition: all var(--transition-normal), background-color 0.3s ease, border-color 0.3s ease;
     font-size: 0.7rem;
     color: var(--text-primary);
     display: flex;
@@ -257,10 +326,10 @@ body{
     box-shadow: var(--shadow-sm);
 }
 .topic-pill:hover{
-    background: var(--surface-alt);
-    border-color: var(--border-strong);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-glass);
+    background: var(--surface-elevated);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glass), 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 .topic-pill.active{
     background: var(--primary);
@@ -278,8 +347,6 @@ body{
 .mode-selector{
     display: flex;
     background: var(--surface-alt);
-    backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     border-radius: var(--radius-full);
     padding: 2px;
     font-size: 0.7rem;
@@ -296,10 +363,12 @@ body{
     font-weight: 500;
     cursor: pointer;
     color: var(--text-secondary);
-    transition: color var(--transition-fast), background var(--transition-fast), background-color 0.3s ease;
+    transition: all var(--transition-normal), background-color 0.3s ease;
 }
 .mode-button:hover{
     color: var(--primary);
+    background: var(--surface);
+    box-shadow: var(--shadow-glass);
 }
 .mode-button.active{
     background: var(--surface);
@@ -319,7 +388,7 @@ body{
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-fast), background-color 0.3s ease, border-color 0.3s ease;
+    transition: all var(--transition-normal), background-color 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -329,14 +398,13 @@ body{
     background: var(--accent-alt);
     color: var(--text-on-primary);
     box-shadow: var(--shadow-glass);
-    backdrop-filter: blur(calc(var(--blur-amount) / 4));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 4));
     border: 1px solid rgba(255,255,255,0.2);
 }
 .primary-button:hover:not(:disabled){
     background: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-glass), 0 8px 16px rgba(0,0,0,0.2);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glass), 0 12px 28px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+    border-color: rgba(255, 255, 255, 0.4);
 }
 .primary-button:active:not(:disabled){
     transform: translateY(0);
@@ -345,14 +413,12 @@ body{
     background: var(--surface);
     color: var(--text-primary);
     border: 1px solid var(--border);
-    backdrop-filter: blur(calc(var(--blur-amount) / 4));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 4));
 }
 .secondary-button:hover:not(:disabled){
-    background: var(--surface-alt);
-    border-color: var(--border-strong);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-glass);
+    background: var(--surface-elevated);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glass), 0 12px 28px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
 }
 .primary-button:disabled, .secondary-button:disabled{
     opacity: 0.5;
@@ -369,21 +435,19 @@ body{
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--transition-fast), background-color 0.3s ease, border-color 0.3s ease;
-    backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
+    transition: all var(--transition-normal), background-color 0.3s ease, border-color 0.3s ease;
     border: 1px solid var(--border);
     box-shadow: var(--shadow-sm);
 }
 .icon-button:hover{
-    background: var(--primary);
-    color: var(--text-on-primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-glass);
-    border-color: var(--primary-light);
+    background: var(--surface-elevated);
+    color: var(--primary);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: var(--shadow-glass), 0 8px 20px rgba(0, 0, 0, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
 }
 .icon-button:active{
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
 }
 .icon-button svg{
     width: 14px;
@@ -408,13 +472,16 @@ kbd.shortcut-hint{
     font-weight: 600;
     color: var(--text-primary);
     background: var(--surface-alt);
-    backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     padding: 2px 8px;
     border-radius: var(--radius-full);
     border: 1px solid var(--border);
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color 0.3s ease;
     box-shadow: var(--shadow-sm);
+}
+.stat-with-icon:hover{
+    border-color: rgba(255, 255, 255, 0.3);
+    background: var(--surface-elevated);
+    box-shadow: var(--shadow-glass);
 }
 .stat-with-icon svg{
     width: 14px;
@@ -480,8 +547,6 @@ kbd.shortcut-hint{
     border-radius: var(--radius-full);
     border: 1px solid var(--border);
     background: var(--surface);
-    backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     color: var(--text-primary);
     font-size: 0.75rem;
     cursor: pointer;
@@ -497,7 +562,8 @@ kbd.shortcut-hint{
 }
 .difficulty-select:hover,
 .scope-select:hover{
-    border-color: var(--primary-light);
+    border-color: rgba(255, 255, 255, 0.3);
+    background: var(--surface-elevated);
     box-shadow: var(--shadow-glass);
 }
 .difficulty-select:focus-visible,
@@ -537,8 +603,6 @@ kbd.shortcut-hint{
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-strong);
     background: var(--surface);
-    backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     cursor: pointer;
     transition: all var(--transition-fast), background-color 0.3s ease, border-color 0.3s ease;
     position: relative;
@@ -546,7 +610,8 @@ kbd.shortcut-hint{
 }
 .auto-toggle input[type="checkbox"]:hover,
 .shuffle-toggle input[type="checkbox"]:hover{
-    border-color: var(--primary-light);
+    border-color: rgba(255, 255, 255, 0.4);
+    background: var(--surface-elevated);
     box-shadow: var(--shadow-glass);
 }
 .auto-toggle input[type="checkbox"]:checked,
@@ -576,8 +641,6 @@ kbd.shortcut-hint{
     font-weight: 600;
     color: var(--text-primary);
     background: var(--surface-alt);
-    backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     padding: 2px 8px;
     border-radius: var(--radius-full);
     border: 1px solid var(--border);
@@ -585,7 +648,8 @@ kbd.shortcut-hint{
     box-shadow: var(--shadow-sm);
 }
 #timer-display:hover, #score-display:hover{
-    border-color: var(--primary-light);
+    border-color: rgba(255, 255, 255, 0.3);
+    background: var(--surface-elevated);
     box-shadow: var(--shadow-glass);
 }
 #start-session{
@@ -606,8 +670,6 @@ kbd.shortcut-hint{
     gap: var(--spacing-md);
     overflow-y: auto;
     background: var(--surface);
-    backdrop-filter: blur(var(--blur-amount));
-    -webkit-backdrop-filter: blur(var(--blur-amount));
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
     padding: var(--spacing-md);
@@ -615,8 +677,9 @@ kbd.shortcut-hint{
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color 0.3s ease;
 }
 .main-content:hover{
-    border-color: var(--primary-light);
-    box-shadow: var(--shadow-glass), 0 12px 40px rgba(0,0,0,0.25);
+    border-color: rgba(255, 255, 255, 0.3);
+    background: var(--surface-elevated);
+    box-shadow: var(--shadow-glass), 0 16px 48px rgba(0, 0, 0, 0.25);
 }
 .content-stack{
     display: flex;
@@ -630,23 +693,30 @@ kbd.shortcut-hint{
 }
 .card{
     background: var(--surface-elevated);
-    backdrop-filter: blur(var(--blur-amount));
-    -webkit-backdrop-filter: blur(var(--blur-amount));
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color 0.3s ease;
+    transition: all var(--transition-normal), background-color 0.3s ease;
     overflow: hidden;
     box-shadow: var(--shadow-glass);
     animation: cardFadeIn 0.3s ease;
 }
 .card:hover{
-    border-color: var(--primary);
-    box-shadow: var(--shadow-glass), 0 12px 40px rgba(0,0,0,0.25);
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: var(--shadow-glass), 0 20px 56px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+    transform: translateY(-2px);
+}
+.dark .card:hover{
+    background: rgba(45, 55, 72, 0.3);
 }
 @keyframes cardFadeIn{
-    from{ opacity: 0; transform: translateY(10px);
+    from{
+        opacity: 0;
+        transform: translateY(10px);
     }
-    to{ opacity: 1; transform: translateY(0);
+    to{
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 .card-header{
@@ -656,8 +726,6 @@ kbd.shortcut-hint{
     justify-content: space-between;
     align-items: center;
     background: var(--surface-alt);
-    backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     transition: opacity var(--transition-fast), background-color 0.3s ease;
 }
 .card:hover .card-header{
@@ -686,8 +754,6 @@ kbd.shortcut-hint{
     color: var(--text-secondary);
     font-weight: 500;
     background: var(--surface);
-    backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     padding: 2px 6px;
     border-radius: var(--radius-full);
     border: 1px solid var(--border);
@@ -696,7 +762,8 @@ kbd.shortcut-hint{
 }
 .card:hover .card-subtitle{
     color: var(--primary);
-    border-color: var(--primary-light);
+    border-color: rgba(255, 255, 255, 0.3);
+    background: var(--surface-elevated);
 }
 .card-content{
     padding: var(--spacing-md);
@@ -759,8 +826,6 @@ kbd.shortcut-hint{
     line-height: 1.5;
     color: var(--text-primary);
     background: var(--surface);
-    backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     resize: vertical;
@@ -792,8 +857,6 @@ kbd.shortcut-hint{
     font-family: monospace;
     color: var(--text-primary);
     background: var(--surface-alt);
-    backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
     padding: 1px 4px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
@@ -809,8 +872,6 @@ kbd.shortcut-hint{
     background: var(--surface-alt);
     border-radius: var(--radius-sm);
     border: 1px dashed var(--border);
-    backdrop-filter: blur(calc(var(--blur-amount) / 4));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 4));
 }
 .results-display{
     display: flex;
@@ -865,8 +926,6 @@ kbd.shortcut-hint{
 .app-footer{
     height: var(--footer-height);
     background: var(--surface);
-    backdrop-filter: blur(var(--blur-amount));
-    -webkit-backdrop-filter: blur(var(--blur-amount));
     border-top: 1px solid var(--border);
     display: flex;
     align-items: center;
@@ -1083,8 +1142,6 @@ kbd.shortcut-hint{
 }
 .modal-content{
     background: var(--surface-elevated);
-    backdrop-filter: blur(var(--blur-amount));
-    -webkit-backdrop-filter: blur(var(--blur-amount));
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-xl), var(--shadow-glass);
@@ -1094,10 +1151,15 @@ kbd.shortcut-hint{
     overflow-y: auto;
     animation: scaleIn 0.2s ease;
 }
+
 @keyframes scaleIn{
-    from{ opacity: 0; transform: scale(0.9);
+    from{
+        opacity: 0;
+        transform: scale(0.9);
     }
-    to{ opacity: 1; transform: scale(1);
+    to{
+        opacity: 1;
+        transform: scale(1);
     }
 }
 .modal-header{
@@ -1107,8 +1169,6 @@ kbd.shortcut-hint{
     padding: var(--spacing-md) var(--spacing-lg);
     border-bottom: 1px solid var(--divider);
     background: var(--surface-alt);
-    backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
 }
 .modal-header h2{
     font-size: 1.1rem;
@@ -1126,8 +1186,6 @@ kbd.shortcut-hint{
     border-top: 1px solid var(--divider);
     text-align: right;
     background: var(--surface-alt);
-    backdrop-filter: blur(calc(var(--blur-amount) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 2));
 }
 .settings-section{
     margin-bottom: var(--spacing-xl);
@@ -1159,8 +1217,6 @@ kbd.shortcut-hint{
     background: var(--surface);
     color: var(--text-primary);
     font-size: 0.8rem;
-    backdrop-filter: blur(calc(var(--blur-amount) / 4));
-    -webkit-backdrop-filter: blur(calc(var(--blur-amount) / 4));
     box-shadow: var(--shadow-sm);
 }
 .setting-item input[type="checkbox"]{
@@ -1178,113 +1234,6 @@ kbd.shortcut-hint{
 }
 #settings-reset{
     width: 100%;
-}
-#wave-container{
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    pointer-events: none;
-    overflow: hidden;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-}
-.liquid-bg{
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    animation: flowLiquid 18s infinite linear;
-}
-.liquid-bg::before,
-.liquid-bg::after,
-.liquid-bg .layer{
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 30% 50%, var(--wave-color) 0%, transparent 50%);
-    filter: blur(80px);
-    mix-blend-mode: overlay;
-    opacity: 0.8;
-    animation: var(--anim) infinite ease-in-out;
-    animation-duration: 22s, 19s, 26s;
-}
-.liquid-bg::before{
-    --anim: drift1, drift2, drift3;
-    background: radial-gradient(circle at 70% 30%, var(--wave-color-alt) 0%, transparent 50%);
-}
-.liquid-bg::after{
-    --anim: drift2, drift3, drift1;
-    background: radial-gradient(circle at 20% 80%, var(--wave-color) 0%, transparent 50%);
-}
-.liquid-bg .layer{
-    --anim: drift3, drift1, drift2;
-    background: radial-gradient(circle at 80% 70%, var(--wave-color-alt) 0%, transparent 50%);
-}
-@keyframes drift1{
-    0%{
-        transform: translate(0%, 0%) scale(1);
-    }
-    33%{
-        transform: translate(8%, 12%) scale(1.2);
-    }
-    66%{
-        transform: translate(-5%, 7%) scale(0.9);
-    }
-    100%{
-        transform: translate(0%, 0%) scale(1);
-    }
-}
-@keyframes drift2{
-    0%{
-        transform: translate(0%, 0%) scale(1);
-    }
-    33%{
-        transform: translate(-10%, 15%) scale(0.8);
-    }
-    66%{
-        transform: translate(12%, -8%) scale(1.3);
-    }
-    100%{
-        transform: translate(0%, 0%) scale(1);
-    }
-}
-@keyframes drift3{
-    0%{
-        transform: translate(0%, 0%) scale(1);
-    }
-    33%{
-        transform: translate(14%, -10%) scale(1.1);
-    }
-    66%{
-        transform: translate(-8%, 9%) scale(0.95);
-    }
-    100%{
-        transform: translate(0%, 0%) scale(1);
-    }
-}
-@keyframes flowLiquid{
-    0%{
-        transform: translate(0, 0) rotate(0deg) scale(1);
-    }
-    20%{
-        transform: translate(5%, 8%) rotate(3deg) scale(1.05);
-    }
-    40%{
-        transform: translate(12%, -5%) rotate(-4deg) scale(0.98);
-    }
-    60%{
-        transform: translate(-7%, 10%) rotate(5deg) scale(1.02);
-    }
-    80%{
-        transform: translate(-12%, -8%) rotate(-6deg) scale(0.95);
-    }
-    100%{
-        transform: translate(0, 0) rotate(0deg) scale(1);
-    }
 }
 .math-toolbar{
     display: flex;
@@ -1311,9 +1260,10 @@ kbd.shortcut-hint{
     justify-content: center;
 }
 .math-toolbar-btn:hover{
-    background: var(--surface-alt);
-    border-color: var(--primary-light);
-    transform: translateY(-1px);
+    background: var(--surface-elevated);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glass);
 }
 .math-toolbar-btn:active{
     transform: translateY(0);
@@ -1397,19 +1347,7 @@ body.font-opendyslexic *:not(.katex):not(.mjx-chtml){
     opacity: 0;
     transform: scaleY(0);
 }
-.no-blur .control-toolbar,
-.no-blur .card,
-.no-blur .modal-content,
-.no-blur .main-content,
-.no-blur .question-display,
-.no-blur .answer-input,
-.no-blur .stat-with-icon,
-.no-blur .difficulty-select,
-.no-blur .scope-select,
-.no-blur .icon-button,
-.no-blur .primary-button,
-.no-blur .secondary-button,
-.no-blur .topic-pill{
+.no-blur #blur-layer{
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
@@ -1421,7 +1359,4 @@ body.font-opendyslexic *:not(.katex):not(.mjx-chtml){
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-}
-.liquid-bg{
-    animation: flowLiquid 18s infinite linear;
 }
