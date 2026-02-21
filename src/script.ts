@@ -1,9 +1,9 @@
-import * as Algebra from "./modules/algebra";
-import * as Arithmetic from "./modules/arithmetic";
-import * as Calculus from "./modules/calculus";
-import * as DiscreteMathematics from "./modules/discreteMathematics";
-import * as LinearAlgebra from "./modules/linearAlgebra";
-import * as Trigonometry from "./modules/trigonometry";
+import * as Algebra from "./modules/Algebra";
+import * as Arithmetic from "./modules/Arithmetic";
+import * as Calculus from "./modules/Calculus";
+import * as DiscreteMathematics from "./modules/DiscreteMathematics";
+import * as LinearAlgebra from "./modules/LinearAlgebra";
+import * as Trigonometry from "./modules/Trigonometry";
 import type {Topic} from "./types/global";
 import * as math from "mathjs";
 import {getCurrentWindow, type Window} from "@tauri-apps/api/window";
